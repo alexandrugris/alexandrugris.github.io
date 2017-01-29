@@ -71,8 +71,8 @@
 
   <div class="post-content" itemprop="articleBody">
     <p>In the previous blog post I covered a lot of ground: variadic templates, improvements to classes, improvements to standard library, smart pointers and lambdas. 
-We also briefly touched move semantics as well as decltype and declval. In this part I am going to continue with move and local storage for threads while briefly touching 
-thread support in the new standard library, delegated constructors, user defined literals and static_assert.</p>
+We also briefly touched move semantics as well as decltype and declval. In this part I am going to continue with move, delegated constructors, user defined literals and static_assert. In the next article 
+I will write about local storage for threads while briefly touching thread support in the new standard library.</p>
 
 <h3 id="move">Move</h3>
 
@@ -306,7 +306,7 @@ An rvalue is a temporary value that does not persist beyond the expression that 
 
 <p><em>Static asserts</em></p>
 
-<p>This is a topic which is worth going into deeper details, but I am just going to hit at it through a very simple example.</p>
+<p>This is a topic which is worth going into deeper details, but I am just going to hint at it through a very simple example. The same example also hints at type-traits.</p>
 
 <div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">AX</span> <span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
@@ -316,7 +316,7 @@ An rvalue is a temporary value that does not persist beyond the expression that 
 <span class="k">class</span> <span class="nc">B</span> <span class="p">:</span> <span class="k">public</span> <span class="n">AX</span> <span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
 	<span class="nf">B</span><span class="p">()</span> <span class="p">{</span>
-		<span class="c1">// todo: check type traits
+		<span class="c1">// TODO: check type traits
 </span>		<span class="c1">// if the AX class does not have a virtual destructor, the code below 
 </span>		<span class="c1">// generates a compile error
 </span>		<span class="nf">static_assert</span><span class="p">(</span><span class="n">has_virtual_destructor</span><span class="p">&lt;</span><span class="n">AX</span><span class="p">&gt;::</span><span class="k">value</span><span class="p">,</span> 
@@ -356,6 +356,51 @@ is noexcept, and copy otherwise (unless the copy constructor is not accessible, 
 throwing move constructor is, in which case the strong exception guarantee is waived).</p>
 </blockquote>
 
+<h3 id="user-defined-literals">User defined literals</h3>
+
+<p>This is especially useful for code which relies on units conversion. For instance physics code. It allows type-safe conversions and compile-type error checking. Here is an example, just to wet your appetite:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Km</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">M</span> <span class="p">{</span>
+	<span class="kt">double</span> <span class="k">value</span><span class="p">;</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="n">constexpr</span> <span class="nf">M</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span><span class="p">&amp;</span> <span class="n">d</span><span class="p">)</span> <span class="p">:</span> <span class="k">value</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{}</span>
+	<span class="k">operator</span> <span class="kt">double</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="k">value</span><span class="p">;</span> <span class="p">}</span>
+	<span class="k">operator</span> <span class="nf">Km</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">Km</span> <span class="p">{</span>
+	<span class="kt">double</span> <span class="k">value</span><span class="p">;</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="n">constexpr</span> <span class="nf">Km</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span><span class="p">&amp;</span> <span class="n">d</span><span class="p">)</span> <span class="p">:</span> <span class="k">value</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{}</span>
+	<span class="k">operator</span> <span class="kt">double</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="k">value</span><span class="p">;</span> <span class="p">}</span>
+	<span class="k">operator</span> <span class="nf">M</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="nf">M</span><span class="p">(</span><span class="k">value</span> <span class="p">*</span> <span class="m">1000.0f</span><span class="p">);</span> <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">M</span><span class="p">::</span><span class="k">operator</span> <span class="nf">Km</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">value</span> <span class="p">/</span> <span class="m">1000.0f</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">constexpr</span> <span class="n">Km</span> <span class="k">operator</span> <span class="s">""</span> <span class="nf">_km</span><span class="p">(</span><span class="kt">long</span> <span class="kt">double</span> <span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">d</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">constexpr</span> <span class="n">M</span> <span class="k">operator</span> <span class="s">""</span> <span class="nf">_m</span><span class="p">(</span><span class="kt">long</span> <span class="kt">double</span> <span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">d</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">void</span> <span class="nf">test_user_defined_literals</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="n">Km</span> <span class="n">dist_in_km</span> <span class="p">=</span> <span class="m">10.5</span><span class="n">_km</span><span class="p">;</span>	
+
+	<span class="n">M</span> <span class="n">dist_in_m</span> <span class="p">=</span> <span class="n">dist_in_km</span><span class="p">;</span>
+	<span class="n">dist_in_km</span> <span class="p">=</span> <span class="n">dist_in_m</span><span class="p">;</span>
+
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"The distance is "</span> <span class="p">&lt;&lt;</span> <span class="n">dist_in_m</span> <span class="p">&lt;&lt;</span> <span class="s">"m"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"The distance is "</span> <span class="p">&lt;&lt;</span> <span class="n">dist_in_km</span> <span class="p">&lt;&lt;</span> <span class="s">"km"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
 
   </div>
 
