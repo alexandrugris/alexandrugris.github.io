@@ -147,8 +147,145 @@ I think it sends a stronger signal about ownership intent when used in new code.
 </code></pre>
 </div>
 
-<p><em>Note:</em> <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. If the receiving function accepts the <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> by value as parameter,
-it can only be passed using the <code class="highlighter-rouge">std::move</code> function, which will nullify the pointer in the calling function. This is called the <em>sink pattern</em> and it is exemplified in the <code class="highlighter-rouge">test_sync</code> function above. The copy constructor for <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> is explicitly deleted (later on this).</p>
+<p><em>Note:</em> <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. 
+If the receiving function accepts the <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> by value as parameter,
+it can only be passed using the <code class="highlighter-rouge">std::move</code> function, which will nullify the pointer in the calling function. 
+This is called the <em>sink pattern</em> and it is exemplified in the <code class="highlighter-rouge">test_sync</code> function above. 
+The copy constructor for <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> is explicitly deleted (later on this).</p>
+
+<h2 id="improvements-to-collections">Improvements to collections</h2>
+
+<p>C++11 brings us unordered associative containers, a fixed size array class and a singly-linked list (std::forwad_list): <a href="http://www.cplusplus.com/reference/stl/">http://www.cplusplus.com/reference/stl/</a>.</p>
+
+<p>Because of the new language features (move semantics, std::initializer_list and variadic templates), collections have become much more useful and expressive 
+For instance, now you can actually consider storing a full instance in a collection instead of just a pointer,
+without worrying about endless copies and reallocations. This improves data locality and cache friendliness (provided that you have the appropriate move operations in place). 
+For instance, old pattern in which we push pointers to <code class="highlighter-rouge">std::vector&lt;FullType*&gt;</code> is now similar in iteration speed with <code class="highlighter-rouge">std::lists&lt;FullType&gt;::emplace_back</code>. See below.</p>
+
+<p>Here are some small examples:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_collections</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="n">vector</span><span class="p">&lt;</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;&gt;</span> <span class="n">v_Test</span><span class="p">;</span>
+
+	<span class="c1">// uses move semantics to fully change the ownership of the pointer to the collection.
+</span>	<span class="c1">// provided that we had a full type with move constructor / move assignment,
+</span>	<span class="c1">// on vector reallocation only the move operations would have been called.
+</span>	<span class="n">v_Test</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;());</span> 
+
+	<span class="c1">// initializer list for vector and list
+</span>	<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">v_Int</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
+
+	<span class="n">list</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">tst</span> <span class="p">=</span> <span class="p">{</span>
+		<span class="nf">Test</span><span class="p">()</span>
+	<span class="p">};</span>
+
+	<span class="c1">// new member function, based on variadic templates argument. 
+</span>	<span class="c1">// No copy constructor, no move. 
+</span>	<span class="c1">// Just construct the object at the end of the collection, invoking the right parameters
+</span>	<span class="c1">// Better locality as the two pointers to back and forward from the list are stored next to the 
+</span>	<span class="c1">// allocated memory for the Test object in this case.
+</span>	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="s">"Test test test"</span><span class="p">);</span> 
+<span class="p">}</span>
+
+<span class="k">void</span> <span class="nf">test_collections_priority_queue</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="c1">// deque does not do copies on increase; a little bit slower random access though
+</span>	<span class="n">priority_queue</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">,</span> <span class="n">deque</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="p">&gt;</span> <span class="n">tst</span><span class="p">;</span> 
+
+	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace</span><span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="s">"A"</span><span class="p">);</span>
+	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="s">"B"</span><span class="p">);</span>
+	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace</span><span class="p">(</span><span class="m">2</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="s">"C"</span><span class="p">);</span>
+
+	<span class="n">std</span><span class="p">::</span><span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Popping out elements..."</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="k">while</span> <span class="p">(!</span><span class="n">tst</span><span class="p">.</span><span class="nf">empty</span><span class="p">())</span>
+	<span class="p">{</span>
+		<span class="k">const</span> <span class="n">Test</span><span class="p">&amp;</span> <span class="n">t</span> <span class="p">=</span> <span class="n">tst</span><span class="p">.</span><span class="nf">top</span><span class="p">();</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">t</span><span class="p">.</span><span class="n">str</span><span class="p">.</span><span class="nf">c_str</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+		<span class="n">tst</span><span class="p">.</span><span class="nf">pop</span><span class="p">();</span>
+	<span class="p">}</span>
+	<span class="n">std</span><span class="p">::</span><span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h3 id="lambdas">Lambdas</h3>
+
+<p>I think it is pretty obvious why lambdas were introduced. Before lamdas, you were bind either to pointer to functions or to functor objects, 
+which were implemended “far” from the point of interest. This made the std-algorithms harder to use, due to code verbosity and scrolling back and forth in the source code. 
+All in all, lambdas are mostly syntactic sugar, but a very useful one.</p>
+
+<p><em>Returning a lambda from a function and storing a lambda in a variable</em></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">double</span><span class="p">()&gt;</span> <span class="nf">getPIFunction</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">static</span> <span class="kt">double</span> <span class="n">PI</span> <span class="p">=</span> <span class="m">3.1415</span><span class="p">;</span>
+
+	<span class="k">return</span> <span class="p">[]()</span> <span class="p">{</span> <span class="c1">// because PI is declared as static, it does not need to be captured explicitly;
+</span>		<span class="k">return</span> <span class="n">PI</span><span class="p">;</span>
+	<span class="p">};</span>
+<span class="p">}</span>
+
+<span class="c1">//....
+</span>
+<span class="n">auto</span> <span class="n">PI_func</span> <span class="p">=</span> <span class="nf">getPIFunction</span><span class="p">();</span>
+<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">typeid</span><span class="p">(</span><span class="n">PI_func</span><span class="p">).</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="s">": "</span> <span class="p">&lt;&lt;</span> <span class="nf">PI_func</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="c1">// output: class std::function&lt;double __cdecl(void)&gt;: 3.1415
+</span></code></pre>
+</div>
+
+<p><em>Using lambdas in std::algorithms - passing them as arguments</em></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">arr</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
+
+<span class="nf">for_each</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">arr</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="k">value</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="k">value</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">cubes</span><span class="p">;</span>
+
+<span class="c1">// back_inserter - very useful function
+</span><span class="nf">transform</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">arr</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="nf">back_inserter</span><span class="p">(</span><span class="n">cubes</span><span class="p">),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span> 
+	<span class="k">return</span> <span class="n">n</span> <span class="p">*</span> <span class="n">n</span> <span class="p">*</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="nf">for_each</span><span class="p">(</span><span class="n">cubes</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">cubes</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span>  <span class="k">value</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="k">value</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p><em>Improvements to lambdas starting with C++14</em></p>
+
+<p>These include type deduction for lambda parameters - no need to send them explicitly, <code class="highlighter-rouge">auto</code> is enough and also 
+initialization for capture parameters - useful when, for instance, you want to <code class="highlighter-rouge">move</code> an object when captured to lambda instead of just simply copy it by value, or apply any type of other transformation.</p>
+
+<p>The code below uses another cool feature from C++ 11, the vadiadic templates. The template <code class="highlighter-rouge">invoke</code> simply invokes the functor it receives with the list of parameters it receives, 
+all in a typesafe matter. This pattern can be applied when you want in a template to store a function and then invoke it later, with different paramters.</p>
+
+<p>Same for lambda, when writing it, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an <code class="highlighter-rouge">int</code> and p2 is a <code class="highlighter-rouge">const char*</code>. 
+Note though, this check is performed at compile time, so it is not at all a form of dynamic invocation.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">invoke</span><span class="p">(</span><span class="k">const</span> <span class="n">Fn</span><span class="p">&amp;</span> <span class="n">fn</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;...</span> <span class="k">params</span><span class="p">){</span>
+	<span class="nf">fn</span><span class="p">(</span><span class="k">params</span><span class="p">...);</span>
+<span class="p">}</span>
+
+<span class="k">void</span> <span class="nf">test_lambdas_cxx14</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="n">auto</span> <span class="n">ptr</span> <span class="p">=</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;();</span>
+
+	<span class="c1">// auto parameters for lambda, initialization for capture parameters (c++14)
+</span>	<span class="nf">invoke</span><span class="p">(</span> <span class="p">[</span><span class="n">ptr</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">ptr</span><span class="p">)]</span> <span class="p">(</span><span class="n">auto</span> <span class="n">p1</span><span class="p">,</span> <span class="n">auto</span> <span class="n">p2</span><span class="p">){</span> 
+
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">ptr</span><span class="p">-&gt;</span><span class="n">str</span><span class="p">.</span><span class="nf">c_str</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="n">p1</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="n">p2</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+
+	<span class="p">},</span> <span class="m">2</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
+
+	<span class="c1">// should be null because it was moved in the lambda initialization
+</span>	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Value of ptr:"</span> <span class="p">&lt;&lt;</span>  <span class="n">ptr</span><span class="p">.</span><span class="k">get</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
+
+<span class="p">}</span>
+</code></pre>
+</div>
 
 
   </div>
