@@ -341,9 +341,10 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 
 <p><em><code class="highlighter-rouge">this</code> can also be captured, like in the snipped below:</em></p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">CaptureThis</span><span class="p">()</span> <span class="p">{</span>
-	<span class="nf">PrintSmth</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="p">&amp;</span> <span class="k">out</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// "this" must be in the capture list for the following to work
-</span>
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="n">CaptureThis</span><span class="p">::</span><span class="nf">CaptureThis</span><span class="p">()</span> <span class="p">{</span>
+	<span class="c1">// "this" must be in the capture list for the following to work
+</span>	<span class="nf">PrintSmth</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="p">&amp;</span> <span class="k">out</span><span class="p">)</span> <span class="p">{</span> 
+
 	<span class="k">this</span><span class="p">-&gt;</span><span class="n">x</span><span class="p">++;</span> <span class="c1">// works
 </span>	<span class="k">this</span><span class="p">-&gt;</span><span class="n">y</span><span class="p">++;</span> <span class="c1">// works
 </span>
@@ -367,7 +368,8 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 	<span class="nf">for_each</span><span class="p">(</span><span class="n">numbers</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">numbers</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[</span><span class="n">prev</span><span class="p">](</span><span class="kt">int</span><span class="p">&amp;</span> <span class="k">value</span><span class="p">)</span> <span class="n">mutable</span> <span class="p">{</span> 
 		<span class="c1">// value is sent by reference, so I can modify it in place
 </span>		<span class="c1">// I send prev by value =&gt; prev does not modify in the upper scope BUT!
-</span>		<span class="c1">// because I define the function as mutable, I can modify it in the scope of the lambda (in the generated class)
+</span>		<span class="c1">// because I define the function as mutable, 
+</span>		<span class="c1">// I can modify it in the scope of the lambda (in the generated class)
 </span>		<span class="n">prev</span> <span class="p">=</span> <span class="k">value</span> <span class="p">=</span> <span class="n">prev</span> <span class="p">+</span> <span class="k">value</span><span class="p">;</span>
 	<span class="p">});</span>
 
@@ -429,7 +431,8 @@ the generated lambdas are similar with the following classes:</p>
 </ol>
 
 <div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="c1">// starting with c++14 compiler can autodeduce return type
-</span><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T1</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T2</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T3</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T4</span><span class="p">&gt;</span> <span class="n">auto</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">T1</span> <span class="n">t1</span><span class="p">,</span> <span class="n">T2</span> <span class="n">t2</span><span class="p">,</span> <span class="n">T3</span> <span class="n">t3</span><span class="p">,</span> <span class="n">T4</span> <span class="n">t4</span><span class="p">)</span>  <span class="cm">/*-&gt; decltype (t1 * t2 * t3 * t4) */</span> <span class="p">{</span> 
+</span><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T1</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T2</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T3</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T4</span><span class="p">&gt;</span> 
+<span class="n">auto</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">T1</span> <span class="n">t1</span><span class="p">,</span> <span class="n">T2</span> <span class="n">t2</span><span class="p">,</span> <span class="n">T3</span> <span class="n">t3</span><span class="p">,</span> <span class="n">T4</span> <span class="n">t4</span><span class="p">)</span>  <span class="cm">/*-&gt; decltype (t1 * t2 * t3 * t4) */</span> <span class="p">{</span> 
 
 	<span class="n">auto</span> <span class="n">ret</span> <span class="p">=</span> <span class="n">t1</span> <span class="p">*</span> <span class="n">t2</span> <span class="p">*</span> <span class="n">t3</span> <span class="p">*</span> <span class="n">t4</span><span class="p">;</span>
 
@@ -464,7 +467,8 @@ the generated lambdas are similar with the following classes:</p>
 
 <span class="c1">//...
 </span>
-<span class="c1">// declval can only be used where it will not be evaluated, but only checked for type - like in decltype
+<span class="c1">// declval can only be used where it will not be evaluated, 
+//but only checked for type - like in decltype
 </span><span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">typeid</span><span class="p">(</span><span class="nf">decltype</span><span class="p">(</span><span class="n">declval</span><span class="p">&lt;</span><span class="n">A</span><span class="p">&gt;())).</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
 </code></pre>
 </div>
@@ -510,17 +514,20 @@ which shows how to:</p>
 	<span class="kt">int</span> <span class="n">row_count</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 	<span class="n">Stream</span><span class="p">*</span> <span class="n">stream</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 
-	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="nf">validate</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// called for each parameter
-</span>		<span class="c1">//cout &lt;&lt; typeid(T).name() &lt;&lt; endl;
+	<span class="c1">// called for each parameter
+</span>	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="nf">validate</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span> 
+		<span class="c1">//cout &lt;&lt; typeid(T).name() &lt;&lt; endl;
 </span>		<span class="k">return</span> <span class="n">t</span><span class="p">;</span>
 	<span class="p">}</span>
 
-	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">FirstColumn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">Columns</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span> <span class="n">FirstColumn</span><span class="p">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">Columns</span><span class="p">&amp;...</span> <span class="n">reminder_columns</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">FirstColumn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">Columns</span><span class="p">&gt;</span>  
+	<span class="k">void</span> <span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span> <span class="n">FirstColumn</span><span class="p">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">Columns</span><span class="p">&amp;...</span> <span class="n">reminder_columns</span><span class="p">)</span> <span class="p">{</span>
 		<span class="p">*</span><span class="n">stream</span> <span class="p">&lt;&lt;</span> <span class="n">v</span> <span class="p">&lt;&lt;</span> <span class="s">", "</span><span class="p">;</span>
 		<span class="nf">print_row_internal</span><span class="p">(</span><span class="n">reminder_columns</span><span class="p">...);</span>
 	<span class="p">}</span>
 
-	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">LastColumn</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span> <span class="n">LastColumn</span><span class="p">&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">LastColumn</span><span class="p">&gt;</span> 
+	<span class="k">void</span> <span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span> <span class="n">LastColumn</span><span class="p">&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
 		<span class="p">*</span><span class="n">stream</span> <span class="p">&lt;&lt;</span> <span class="n">v</span><span class="p">;</span>
 	<span class="p">}</span>
 
@@ -536,7 +543,8 @@ which shows how to:</p>
 
 	<span class="p">~</span><span class="nf">CSVPrinter</span><span class="p">()</span> <span class="p">{</span> <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
 
-	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span><span class="p">...</span> <span class="n">Columns</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">print_row</span><span class="p">(</span><span class="k">const</span> <span class="n">Columns</span><span class="p">&amp;...</span> <span class="n">cols</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span><span class="p">...</span> <span class="n">Columns</span><span class="p">&gt;</span> 
+	<span class="k">void</span> <span class="nf">print_row</span><span class="p">(</span><span class="k">const</span> <span class="n">Columns</span><span class="p">&amp;...</span> <span class="n">cols</span><span class="p">)</span> <span class="p">{</span>
 
 		<span class="k">if</span> <span class="p">(</span><span class="n">row_count</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span> <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">", "</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="p">}</span>		
 		<span class="n">row_count</span><span class="p">++;</span>
