@@ -287,6 +287,58 @@ Note though, this check is performed at compile time, so it is not at all a form
 </code></pre>
 </div>
 
+<p>A little bit of extra explanation.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+<span class="na">[x = x + 1]</span><span class="p">(){</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}();</span>
+<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>This code prints <code class="highlighter-rouge">2</code> followed by <code class="highlighter-rouge">1</code>. The reason is that <code class="highlighter-rouge">x</code> in the lambda is a different variable than <code class="highlighter-rouge">x</code> in the outer function. 
+The code above is identical to the following (also running code, although <code class="highlighter-rouge">__x</code> is not specifically declared anywhere)</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+<span class="na">[__x = x + 1]</span><span class="p">(){</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">__x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}();</span>
+<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p><em>Lambdas can also be recursive</em></p>
+
+<p>But in this case, they need to be explicily captured like in the code below. Please note the capture by reference. 
+If an attempt is made to send the lambda by value the code compiles but you get a runtime error - the lambda has been declared but not defined yet.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_recursive_lambdas</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="c1">// a redundant implementation but serves the purpose :)
+</span>	<span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">(</span><span class="kt">int</span><span class="p">)&gt;</span> <span class="n">fibonacci</span> <span class="p">=</span> <span class="p">[&amp;</span><span class="n">fibonacci</span><span class="p">](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="kt">int</span><span class="p">{</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="p">&lt;</span> <span class="m">1</span><span class="p">)</span>
+			<span class="k">return</span> <span class="p">-</span><span class="m">1</span><span class="p">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="p">==</span> <span class="m">1</span> <span class="p">||</span> <span class="n">n</span> <span class="p">==</span> <span class="m">2</span><span class="p">)</span>
+			<span class="k">return</span> <span class="m">1</span><span class="p">;</span>
+
+		<span class="k">return</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="p">-</span> <span class="m">1</span><span class="p">)</span> <span class="p">+</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="p">-</span> <span class="m">2</span><span class="p">);</span>
+	<span class="p">};</span>
+
+	<span class="n">std</span><span class="p">::</span><span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">v</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">,</span> <span class="m">9</span><span class="p">,</span> <span class="m">10</span> <span class="p">};</span>
+
+	<span class="c1">// range for; prefered to use int&amp; in order to reference elements in v
+</span>	<span class="c1">// range for is a new C++ 11 construct
+</span>	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="p">&amp;</span><span class="n">number</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> 
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="p">&lt;&lt;</span> <span class="s">"; "</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
 
   </div>
 
