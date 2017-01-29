@@ -74,6 +74,288 @@
 We also briefly touched move semantics as well as decltype and declval. In this part I am going to continue with move and local storage for threads while briefly touching 
 thread support in the new standard library, delegated constructors, user defined literals and static_assert.</p>
 
+<h3 id="move">Move</h3>
+
+<p>The addition of move semantics was a major change to the language which had rippling effects on how libraries are designed, how code is written and how it performs. 
+While it adds a layer of complexity to the language and how surely lenghens the code of libraries, the usage becomes much more straight forward and clear in intent.</p>
+
+<p>Move solves several problems:</p>
+
+<ul>
+  <li>Storing a full type in a std:vector was in most of the cases a no-go, due to the overhead associated with repeated construction and destruction of each object, whenever the vector increased in size. 
+Therefore we usually stored only pointers (or smart pointers :) ) in such containers.</li>
+  <li>In order to have move-like semantics, one had o open the implementation and re-target the copy operators to move pointers or, in best case, add copy-on-write. This either made the usage of the objects non-obvious and non-uniform (the copy is not really a copy) or added another layer of complexity for the copy-on-write implementation.</li>
+  <li>Libraries (for instance maths) had to be coded in convoluted ways to avoid unnnecessary return copies. For instance, one might simply avoid overloading the <code class="highlighter-rouge">operator+</code> for a matrix class and only provide the <code class="highlighter-rouge">operator +=</code> just to make sure no unnecessary allocations are performed when not needed. This might sound like excessive optimization, but, hey, C++ was designed with the idea of maximum performance everywhere, so why squander it when it can be avoided?</li>
+</ul>
+
+<p>The addition of move brought in a another nice side benefit. From a esthetical point of view, I personally like the expressiveness of <a href="https://en.wikipedia.org/wiki/Fluent_interface">fluent-style</a> coding. 
+Move makes it easy to have high-performance code written like this.</p>
+
+<p>But let’s start with the beginning:</p>
+
+<p><em>Move syntax</em></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">MyMoveStuff</span> <span class="p">{</span>
+
+	<span class="nf">MyMoveStuff</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"  Constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="p">~</span><span class="nf">MyMoveStuff</span><span class="p">()</span> <span class="n">noexcept</span> <span class="p">{</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"  Destructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="nf">MyMoveStuff</span><span class="p">(</span><span class="k">const</span> <span class="n">MyMoveStuff</span><span class="p">&amp;)</span> <span class="p">{</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"  Copy constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="c1">// noexcept guarantees to the compiler that all exceptions are treated internally, 
+</span>	<span class="c1">// without thowing anything. 
+</span>	<span class="c1">// Needed for move operations. 
+</span>	<span class="c1">// There is also the operator noexcept which returns true 
+</span>	<span class="c1">// if the operations inside do not throw exceptions. 
+</span>	<span class="c1">// e.g. 
+</span>	<span class="c1">// template&lt;typename t&gt; 
+</span>	<span class="c1">// auto square(const T&amp; t) noexcept(noexcept(t * t)) -&gt; decltype(t*t) { return t * t; }	
+</span>	<span class="nf">MyMoveStuff</span><span class="p">(</span><span class="n">MyMoveStuff</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="n">noexcept</span> <span class="p">{</span> 
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"  Move constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+
+		<span class="c1">// ATTENTION!!!!! Great source of bugs if the case is not handled properly !!!!
+</span>		<span class="k">if</span> <span class="p">(</span><span class="k">this</span> <span class="p">==</span> <span class="p">&amp;</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span> 
+			<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Moving into itself -&gt; leave intact"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+		<span class="p">}</span>
+	<span class="p">}</span>	
+
+	<span class="k">static</span> <span class="n">MyMoveStuff</span> <span class="nf">create_through_variable</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">MyMoveStuff</span> <span class="n">m</span><span class="p">;</span>
+		<span class="k">return</span> <span class="n">m</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="k">static</span> <span class="n">MyMoveStuff</span> <span class="nf">create_no_variable</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nf">MyMoveStuff</span><span class="p">();</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>To keep things simple, we are sticking only with the constructors for the demo, 
+but please consider implemeting also <code class="highlighter-rouge">operator=(MyMoveStuff&amp;&amp; move) noexcept</code>. 
+Just like you would do with <code class="highlighter-rouge">operator=(const MyMoveStuff&amp; m)</code>.</p>
+
+<p>Now let’s run this test:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="cp">#define TEST(code) cout &lt;&lt; #code &lt;&lt; ": " &lt;&lt; endl; code; cout &lt;&lt; endl;
+</span>
+<span class="k">void</span> <span class="nf">test_move</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="c1">// test with vector
+</span>	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Test with vector"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span> <span class="p">&lt;&lt;</span> <span class="s">"========================="</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">{</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">MyMoveStuff</span> <span class="n">m</span><span class="p">);</span>
+
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="n">vector</span><span class="p">&lt;</span><span class="n">MyMoveStuff</span><span class="p">&gt;</span> <span class="n">vec</span> <span class="p">=</span> <span class="p">{</span> <span class="nf">MyMoveStuff</span><span class="p">()</span> <span class="p">});</span>
+
+		<span class="c1">// reserve does not use move semantics (uses copy constructor) inside 
+</span>		<span class="c1">// UNLESS move constructor and destructor are marked with noexcept 
+</span>		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">reserve</span><span class="p">(</span><span class="m">100</span><span class="p">));</span>				
+
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">m</span><span class="p">));</span>		<span class="c1">// copy constructor
+</span>		
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="n">m</span><span class="p">));</span>	<span class="c1">// copy constructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">());</span>	<span class="c1">// constructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="nf">MyMoveStuff</span><span class="p">()));</span> <span class="c1">// constructor, move, destructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">m</span><span class="p">)));</span><span class="c1">// move constructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="nf">MyMoveStuff</span><span class="p">())));</span> <span class="c1">// constructor, move , destructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="nf">MyMoveStuff</span><span class="p">()));</span> <span class="c1">// constructor, move, destructor
+</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="nf">clear</span><span class="p">());</span>					
+	<span class="p">}</span>
+
+	<span class="c1">// if reserve is not used, billions of allocations, deallocations occur
+</span>	<span class="c1">// if list&lt;&gt; is used instead of vector&lt;&gt; in the code above, 
+</span>	<span class="c1">// its execution is identical to std::vector followed by vec.reserve
+</span>
+	<span class="c1">//////////
+</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span> <span class="p">&lt;&lt;</span> <span class="s">"Test return from functions"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span> <span class="p">&lt;&lt;</span> <span class="s">"========================="</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">{</span>
+		<span class="c1">// just the constructor
+</span>		<span class="nf">TEST</span><span class="p">(</span><span class="n">MyMoveStuff</span> <span class="n">m</span> <span class="p">=</span> <span class="n">MyMoveStuff</span><span class="p">::</span><span class="nf">create_no_variable</span><span class="p">());</span>
+
+		<span class="c1">// constructor followed by move
+</span>		<span class="nf">TEST</span><span class="p">(</span><span class="n">MyMoveStuff</span> <span class="n">m2</span> <span class="p">=</span> <span class="n">MyMoveStuff</span><span class="p">::</span><span class="nf">create_through_variable</span><span class="p">());</span> 
+	<span class="p">}</span>
+
+	<span class="c1">// test with inheritance
+</span>	<span class="k">class</span> <span class="nc">MyMoveStuff2</span> <span class="p">:</span> <span class="k">public</span> <span class="n">MyMoveStuff</span> <span class="p">{</span>
+	<span class="k">public</span><span class="p">:</span>
+
+		<span class="nf">MyMoveStuff2</span><span class="p">()</span> <span class="p">:</span> <span class="nf">MyMoveStuff</span><span class="p">()</span> <span class="p">{}</span>
+
+		<span class="c1">// transformation is needed; otherwise copy constructor will be called
+</span>		<span class="c1">// std::move is implemented like this:
+</span>		<span class="c1">// template&lt;typename T&gt; constexpr T&amp;&amp; move(T&amp;&amp; t) { return t; }
+</span>		<span class="nf">MyMoveStuff2</span><span class="p">(</span><span class="n">MyMoveStuff2</span><span class="p">&amp;&amp;</span> <span class="k">value</span><span class="p">)</span> <span class="p">:</span> <span class="nf">MyMoveStuff</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="k">value</span><span class="p">))</span> <span class="p">{</span> 
+
+		<span class="p">}</span>
+	<span class="p">};</span>
+
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span> <span class="p">&lt;&lt;</span> <span class="s">"Test with inheritance"</span> <span class="p">&lt;&lt;</span> 
+		<span class="n">endl</span> <span class="p">&lt;&lt;</span> <span class="s">"========================="</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">{</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">MyMoveStuff2</span> <span class="n">m</span><span class="p">);</span>
+		<span class="nf">TEST</span><span class="p">(</span><span class="n">MyMoveStuff2</span> <span class="nf">m2</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">m</span><span class="p">)));</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p><em>Fluent-style</em></p>
+
+<p>Fluent style is possible due to the introduction of reference qualifiers for member functions. That is, the <code class="highlighter-rouge">&amp;</code> and <code class="highlighter-rouge">&amp;&amp;</code> operators appended to the end of the function declaration.
+C++ makes a clear distiction between lvalues and rvalues (<a href="https://msdn.microsoft.com/en-us/library/f90831hc.aspx">discussion here, from MSDN</a>). In short:</p>
+
+<blockquote>
+  <p>Every C++ expression is either an lvalue or an rvalue. An lvalue refers to an object that persists beyond a single expression. 
+You can think of an lvalue as an object that has a name. All variables, including nonmodifiable (const) variables, are lvalues. 
+An rvalue is a temporary value that does not persist beyond the expression that uses it.</p>
+</blockquote>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_reference_qualifiers_for_member_functions</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="k">class</span> <span class="nc">WithFluentProgrammingStyle</span> <span class="p">:</span> <span class="k">public</span> <span class="n">MyMoveStuff</span><span class="p">{</span>
+	<span class="k">public</span><span class="p">:</span>
+
+		<span class="k">using</span> <span class="nn">MyMoveStuff</span><span class="p">::</span><span class="n">MyMoveStuff</span><span class="p">;</span>
+
+		<span class="c1">// on lvalue, do not change the initial object
+</span>		<span class="n">WithFluentProgrammingStyle</span> <span class="nf">operation</span><span class="p">()</span> <span class="k">const</span> <span class="p">&amp;</span> <span class="p">{</span>	
+			<span class="k">return</span> <span class="p">*</span><span class="k">this</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="c1">// on rvalue, allow the object to pass through, 
+</span>		<span class="c1">// withount needs for copy intermediate objects to be created and destructed
+</span>		<span class="n">WithFluentProgrammingStyle</span> <span class="nf">operation</span><span class="p">()</span> <span class="p">&amp;&amp;</span> <span class="p">{</span>			 
+			<span class="k">return</span> <span class="nf">move</span><span class="p">(*</span><span class="k">this</span><span class="p">);</span>
+		<span class="p">}</span>
+
+		<span class="n">WithFluentProgrammingStyle</span> 
+		<span class="k">operator</span> <span class="p">+</span> <span class="p">(</span><span class="k">const</span> <span class="n">WithFluentProgrammingStyle</span><span class="p">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="k">const</span> <span class="p">&amp;</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="p">*</span><span class="k">this</span><span class="p">;</span> <span class="c1">// Copy
+</span>		<span class="p">}</span>
+
+		<span class="n">WithFluentProgrammingStyle</span> 
+		<span class="k">operator</span> <span class="p">+(</span><span class="k">const</span> <span class="n">WithFluentProgrammingStyle</span><span class="p">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nf">move</span><span class="p">(*</span><span class="k">this</span><span class="p">);</span> <span class="c1">// move
+</span>		<span class="p">}</span>
+
+	<span class="p">};</span>
+
+	<span class="nf">TEST</span><span class="p">(</span><span class="n">WithFluentProgrammingStyle</span> <span class="n">fluent</span><span class="p">);</span>
+
+	<span class="nf">TEST</span><span class="p">(</span><span class="n">fluent</span><span class="p">.</span><span class="nf">operation</span><span class="p">().</span>
+				<span class="nf">operation</span><span class="p">().</span>
+				<span class="nf">operation</span><span class="p">().</span>
+				<span class="nf">operation</span><span class="p">());</span>
+
+	<span class="nf">TEST</span><span class="p">(</span><span class="n">WithFluentProgrammingStyle</span> <span class="n">fluent2</span> <span class="p">=</span> <span class="n">fluent</span> <span class="p">+</span> <span class="n">fluent</span> <span class="p">+</span> <span class="n">fluent</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>### Inheriting constructors, delegated constructors, static_assert, exceptions</p>
+
+<p><em>Inheriting constructors</em></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Derived</span> <span class="p">:</span> <span class="n">Base</span>  
+<span class="p">{</span>  
+<span class="k">public</span><span class="p">:</span>  
+    <span class="c1">// Inherit all constructors from Base  
+</span>    <span class="k">using</span> <span class="nn">Base</span><span class="p">::</span><span class="n">Base</span><span class="p">;</span>    
+<span class="k">private</span><span class="p">:</span>      
+    <span class="kt">int</span> <span class="n">private_member</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>  <span class="c1">// x is initialized inline
+</span><span class="p">};</span>  
+</code></pre>
+</div>
+
+<p><em>Delegated constructors</em></p>
+
+<p>Please note the private <code class="highlighter-rouge">Test2(int x, int y)</code> and the invocation <code class="highlighter-rouge">Test2() : Test2(0, 0)</code></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Test2</span> <span class="p">{</span> <span class="c1">// Delegated constructors
+</span><span class="k">public</span><span class="p">:</span>
+	<span class="nf">Test2</span><span class="p">()</span> <span class="p">:</span> <span class="nf">Test2</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">){</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Test2 default constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="nf">Test2</span><span class="p">(</span><span class="n">Test2</span><span class="p">&amp;</span> <span class="n">tst2</span><span class="p">)</span> <span class="p">:</span> <span class="nf">Test2</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">1</span><span class="p">){</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Test2 copy constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+
+<span class="k">private</span><span class="p">:</span>
+	<span class="nf">Test2</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">){</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Test2 delegated constructor"</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p><em>Static asserts</em></p>
+
+<p>This is a topic which is worth going into deeper details, but I am just going to hit at it through a very simple example.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">AX</span> <span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="k">virtual</span> <span class="p">~</span><span class="nf">AX</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">B</span> <span class="p">:</span> <span class="k">public</span> <span class="n">AX</span> <span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="nf">B</span><span class="p">()</span> <span class="p">{</span>
+		<span class="c1">// todo: check type traits
+</span>		<span class="c1">// if the AX class does not have a virtual destructor, the code below 
+</span>		<span class="c1">// generates a compile error
+</span>		<span class="nf">static_assert</span><span class="p">(</span><span class="n">has_virtual_destructor</span><span class="p">&lt;</span><span class="n">AX</span><span class="p">&gt;::</span><span class="k">value</span><span class="p">,</span> 
+			<span class="s">"A must have a virtual destructor"</span><span class="p">);</span> 
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p><em>Exceptions - not new, but worth mentioning anyway</em></p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_exceptions</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">try</span> <span class="p">{</span>
+
+		<span class="n">auto</span> <span class="n">pTest</span> <span class="p">=</span> <span class="n">make_shared</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;(</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="s">"Trei"</span><span class="p">);</span> <span class="c1">// RAII
+</span>		<span class="k">throw</span> <span class="nf">exception</span><span class="p">(</span><span class="s">"Hello World! :)"</span><span class="p">);</span>
+
+	<span class="p">}</span>
+	<span class="c1">// catch as const &amp;; if not caught as "&amp;", you suffer slicing, 
+</span>	<span class="c1">// that is you lose part of the class that was derived from exception. 
+</span>	<span class="c1">// you only get the base class.
+</span>	<span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="n">exception</span><span class="p">&amp;</span> <span class="n">ex</span><span class="p">)</span> <span class="p">{</span> 
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">ex</span><span class="p">.</span><span class="nf">what</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Notable here is the <code class="highlighter-rouge">noexcept</code> keyword which marks that the method does not throw an exception. See above for use, in the “move” section. From the 
+<a href="http://en.cppreference.com/w/cpp/language/noexcept_spec">CPP Reference</a>:</p>
+
+<blockquote>
+  <p>The compiler can use this information to enable certain optimizations on non-throwing functions as well as enable the noexcept 
+operator, which can check at compile time if a particular expression is declared to throw any exceptions. 
+For example, containers such as <code class="highlighter-rouge">std::vector</code> will move their elements if the elements’ move constructor 
+is noexcept, and copy otherwise (unless the copy constructor is not accessible, but a potentially 
+throwing move constructor is, in which case the strong exception guarantee is waived).</p>
+</blockquote>
+
 
   </div>
 
