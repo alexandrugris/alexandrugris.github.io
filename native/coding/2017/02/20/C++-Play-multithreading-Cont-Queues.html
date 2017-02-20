@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>C++ Play - Multithreading (Queues)</title>
+  <meta name="description" content="In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. I am going to measure the cost of locking and t...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">C++ Play - Multithreading (Queues)</h1>
+    <p class="post-meta"><time datetime="2017-02-20T12:15:16+02:00" itemprop="datePublished">Feb 20, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
+I am going to measure the cost of locking and thread contention and provide some ideas to improve performance. 
+I am going to build the tests incrementally, refining the solution as I progress through the code, 
+but I will also skip some steps to keep the post meaningfully short.</p>
+
+<h3 id="first-testing">First, testing</h3>
+
+<p>In order to test the correctness of the application, I will use two types:</p>
+
+<ul>
+  <li>A test type, defined by me, with enough weight inside to allow performance tests to have a baseline to run against (compare the time spent in locking to actual work of copying and moving the object in and out of the queue). I will name this type <code class="highlighter-rouge">TestType</code>. :)</li>
+  <li>A <code class="highlighter-rouge">unique_ptr&lt;TestType&gt;</code> to validate against the common scenario of having a pointer stored in the queue, as well as making sure the move semantics work properly.</li>
+</ul>
+
+<p>For the <code class="highlighter-rouge">TestType</code> I am going to keep the type as simple as possible, with only move enabled, just to make sure all unnecessary copies are kept under control - deep copy errors will be found at compile time. Here is the definition:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TestType</span> <span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+
+	<span class="kt">int</span> <span class="n">arr</span><span class="p">[</span><span class="m">50</span><span class="p">];</span> <span class="c1">// put some weight into the object
+</span>
+	<span class="nf">TestType</span><span class="p">()</span> <span class="p">{</span>		
+		<span class="nf">iota</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">arr</span> <span class="p">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="p">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span> <span class="m">0</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="p">~</span><span class="nf">TestType</span><span class="p">()</span> <span class="p">{}</span>
+
+	<span class="nf">TestType</span><span class="p">(</span><span class="k">const</span> <span class="n">TestType</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
+
+	<span class="nf">TestType</span><span class="p">(</span><span class="n">TestType</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nf">memcpy</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">t</span><span class="p">.</span><span class="n">arr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">arr</span><span class="p">));</span>
+	<span class="p">}</span>
+
+	<span class="n">TestType</span><span class="p">&amp;</span> <span class="k">operator</span> <span class="p">=(</span><span class="n">TestType</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nf">memcpy</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">t</span><span class="p">.</span><span class="n">arr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">arr</span><span class="p">));</span>
+		<span class="k">return</span> <span class="p">*</span><span class="k">this</span><span class="p">;</span>
+	<span class="p">}</span>
+
+<span class="k">public</span><span class="p">:</span>
+	<span class="k">void</span> <span class="nf">not_null</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Yeey, not null?: "</span> <span class="p">&lt;&lt;</span> <span class="n">hex</span> <span class="p">&lt;&lt;</span> <span class="k">this</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<h3 id="the-most-basic-queue">The most basic queue:</h3>
+
+<p>A simple multithreaded queue with all operations synchronized with a mutex. I went for some design choices from the beginning:</p>
+
+<ul>
+  <li>I wanted be able to use various synchronization primitives as long as they respect the <code class="highlighter-rouge">std::mutex</code> and <code class="highlighter-rouge">std::condition_variable</code> interface. I wanted to be to play around and alter the default behavior.</li>
+  <li>I wanted to be able to track memory allocations. My initial assumption was that optimizing memory allocations will play a significant part in the process of streamlining the queue. Therefore I built my own allocator, which simply wraps <code class="highlighter-rouge">malloc</code> and <code class="highlighter-rouge">free</code>. More on this later.</li>
+  <li>I wanted a very straight-forward interface, encapsulating all the behavior.</li>
+</ul>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">blocking_queue</span> <span class="p">{</span>
+<span class="k">private</span><span class="p">:</span>
+	<span class="n">std</span><span class="p">::</span><span class="n">deque</span><span class="p">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">my_allocator</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;&gt;</span> <span class="n">_deque</span><span class="p">;</span>
+	<span class="n">mtx_type</span> <span class="n">mtx</span><span class="p">;</span>
+	<span class="n">cond_variable_type</span> <span class="n">cv</span><span class="p">;</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+	<span class="nf">blocking_queue</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+	<span class="nf">blocking_queue</span><span class="p">(</span><span class="n">blocking_queue</span><span class="p">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="p">:</span> <span class="nf">_deque</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">other</span><span class="p">.</span><span class="n">_deque</span><span class="p">))</span> <span class="p">{</span> <span class="p">}</span>
+	<span class="nf">blocking_queue</span><span class="p">(</span><span class="k">const</span> <span class="n">blocking_queue</span><span class="p">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
+
+	<span class="n">T</span> <span class="k">get</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="k">lock</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+		<span class="k">while</span> <span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">size</span><span class="p">()</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+			<span class="n">cv</span><span class="p">.</span><span class="nf">wait</span><span class="p">(</span><span class="k">lock</span><span class="p">);</span>
+
+		<span class="n">T</span> <span class="n">t</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">front</span><span class="p">());</span> <span class="n">_deque</span><span class="p">.</span><span class="nf">pop_front</span><span class="p">();</span>
+		<span class="k">return</span> <span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">put</span><span class="p">(</span><span class="n">T</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="k">lock</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+		<span class="n">_deque</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+		<span class="n">cv</span><span class="p">.</span><span class="nf">notify_one</span><span class="p">();</span>
+	<span class="p">}</span>
+	<span class="k">void</span> <span class="nf">put</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="k">lock</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+		<span class="n">_deque</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+		<span class="n">cv</span><span class="p">.</span><span class="nf">notify_one</span><span class="p">();</span>
+	<span class="p">}</span>
+  
+  	<span class="kt">bool</span> <span class="nf">try_get</span><span class="p">(</span><span class="kt">char</span> <span class="n">uninitialized</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)])</span> <span class="p">{</span>
+		<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="k">lock</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">size</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">new</span> <span class="p">(</span><span class="n">uninitialized</span><span class="p">)</span> <span class="nf">T</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">front</span><span class="p">()));</span>
+			<span class="n">_deque</span><span class="p">.</span><span class="nf">pop_front</span><span class="p">();</span>
+			<span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="kt">bool</span> <span class="nf">try_get</span><span class="p">(</span><span class="n">T</span><span class="p">&amp;</span> <span class="k">out</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="k">lock</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">size</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">out</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">_deque</span><span class="p">.</span><span class="nf">front</span><span class="p">());</span>
+			<span class="n">_deque</span><span class="p">.</span><span class="nf">pop_front</span><span class="p">();</span>
+			<span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+	<span class="p">}</span>
+  
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>Design considerations:</p>
+
+<ul>
+  <li>I specifically omited a method <code class="highlighter-rouge">size()</code> to return the numer of elements in the queue. Being in a multithreaded context, this method would not make much sense.</li>
+  <li>Replacement for the method <code class="highlighter-rouge">size()</code> is the <code class="highlighter-rouge">try_get()</code> which will lock the queue and atomically return an element if one exists. This design will have further implications down the stream, when I will use the queue in a multi-queue configuration and I will be forced to use external locking to obtain the minimum contention. The other option would have been an implementation that follows the pattern <code class="highlighter-rouge">try_lock</code> then <code class="highlighter-rouge">if(size() &gt; 0) return element;</code> but in this case there would have been no hint on the actual size of the queue. So being in doubt on the best design, I kept locking external in the multi-queue and preserved the method as it is.</li>
+  <li>I added two <code class="highlighter-rouge">try_get</code>s. One of them accepts a stack allocated block of memory as input parameter to hint to the caller to avoid default-constructing the receiving object of type <code class="highlighter-rouge">T</code>. The method will invoke the move constructor itself on that memory.</li>
+</ul>
+
+<h3 id="testing">Testing</h3>
+
+<ol>
+  <li>Very basic tests, just to make sure data isn’t lost on transfer between the callers and the queue.</li>
+</ol>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_basic_bq</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="n">typedef</span> <span class="n">blocking_queue</span><span class="p">&lt;</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">TestType</span><span class="p">&gt;,</span> <span class="n">std</span><span class="p">::</span><span class="n">mutex</span><span class="p">,</span> <span class="n">std</span><span class="p">::</span><span class="n">condition_variable</span><span class="p">&gt;</span> <span class="n">MutexBlockingQueue</span><span class="p">;</span>
+
+	<span class="p">{</span>
+		<span class="n">MutexBlockingQueue</span> <span class="n">bq</span><span class="p">;</span>
+		<span class="n">auto</span> <span class="n">p</span> <span class="p">=</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">TestType</span><span class="p">&gt;();</span>
+		<span class="n">p</span><span class="p">-&gt;</span><span class="nf">not_null</span><span class="p">();</span>
+
+		<span class="n">bq</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+		<span class="n">p</span><span class="p">-&gt;</span><span class="nf">not_null</span><span class="p">();</span>
+
+		<span class="n">p</span> <span class="p">=</span> <span class="n">bq</span><span class="p">.</span><span class="k">get</span><span class="p">();</span>
+		<span class="n">p</span><span class="p">-&gt;</span><span class="nf">not_null</span><span class="p">();</span>
+	<span class="p">}</span>
+
+	<span class="p">{</span>
+		<span class="n">MutexBlockingQueue</span> <span class="n">b</span><span class="p">;</span>
+		<span class="n">b</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="n">make_unique</span><span class="p">&lt;</span><span class="n">TestType</span><span class="p">&gt;());</span>
+		<span class="n">MutexBlockingQueue</span> <span class="n">bq</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<ol>
+  <li>Multithreading tests:</li>
+</ol>
+
+<p>Aim is to combine in a simple manner various parameters. Here is an example of a possible <code class="highlighter-rouge">main</code> function:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+
+	<span class="nf">test_basic_bq</span><span class="p">();</span>
+
+	<span class="n">test_mt_bq</span><span class="p">&lt;</span><span class="n">blocking_queue</span><span class="p">,</span> <span class="n">TestType</span><span class="p">&gt;(</span><span class="m">0</span><span class="p">);</span>
+	<span class="n">test_mt_bq</span><span class="p">&lt;</span><span class="n">blocking_queue</span><span class="p">,</span> <span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">TestType</span><span class="p">&gt;&gt;(</span><span class="m">0</span><span class="p">);</span>
+	<span class="n">test_mt_bq</span><span class="p">&lt;</span><span class="n">blocking_queue</span><span class="p">,</span> <span class="n">TestType</span><span class="p">,</span> <span class="n">std</span><span class="p">::</span><span class="n">mutex</span><span class="p">,</span> <span class="n">std</span><span class="p">::</span><span class="n">condition_variable</span><span class="p">&gt;(</span><span class="m">0</span><span class="p">);</span>
+
+	<span class="n">test_mt_bq</span><span class="p">&lt;</span><span class="n">multi_blocking_queue</span><span class="p">,</span> <span class="n">TestType</span><span class="p">&gt;();</span>
+
+	<span class="k">return</span> <span class="m">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>I am instatiating the <code class="highlighter-rouge">test_mt_bq</code> with various parameters:</p>
+
+<ol>
+  <li>Simple blocking queue (the one I spoke about before) with <code class="highlighter-rouge">TestType</code> - default it uses windows critical sections as synchronization mechanism (see below)</li>
+  <li>Simple blocking queue with <code class="highlighter-rouge">unique_ptr&lt;TestType&gt;</code></li>
+  <li>Simple blocking queue with <code class="highlighter-rouge">std::mutex</code> and <code class="highlighter-rouge">std::condition_variable</code></li>
+  <li>Multi-queue blocking queue with default synchronization (windows critical sections) and <code class="highlighter-rouge">TestType</code></li>
+</ol>
+
+<p>Below is the test function:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span><span class="err">...&gt;</span> <span class="nc">class</span> <span class="n">QueueType</span><span class="p">,</span> 
+			<span class="n">typename</span> <span class="n">TT</span><span class="p">,</span> 
+			<span class="n">typename</span> <span class="n">mtx_type</span> <span class="p">=</span> <span class="n">critical_section_win</span><span class="p">,</span> 
+			<span class="n">typename</span> <span class="n">cond_variable_type</span> <span class="p">=</span> <span class="n">condition_variable_win</span><span class="p">,</span> 
+			<span class="n">typename</span> <span class="n">TT_ctor</span> <span class="p">=</span> <span class="n">default_ctor</span><span class="p">&lt;</span><span class="n">TT</span><span class="p">&gt;&gt;</span> 
+<span class="k">void</span> <span class="nf">test_mt_bq</span><span class="p">(</span><span class="kt">int</span> <span class="n">LOOP_CNT</span> <span class="p">=</span> <span class="m">10000000</span><span class="p">,</span> 
+                <span class="kt">int</span> <span class="n">MAX_THREADS</span> <span class="p">=</span> <span class="n">std</span><span class="p">::</span><span class="n">thread</span><span class="p">::</span><span class="nf">hardware_concurrency</span><span class="p">())</span> <span class="p">{</span>
+
+	<span class="n">std</span><span class="p">::</span><span class="n">vector</span><span class="p">&lt;</span><span class="n">std</span><span class="p">::</span><span class="n">thread</span><span class="p">&gt;</span> <span class="n">threads</span><span class="p">;</span>
+
+	<span class="n">QueueType</span><span class="p">&lt;</span><span class="n">TT</span><span class="p">,</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> <span class="n">queue</span><span class="p">;</span>
+
+	<span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">elems</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+	<span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">running_threads</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">ix</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">ix</span> <span class="p">&lt;</span> <span class="n">MAX_THREADS</span><span class="p">;</span> <span class="n">ix</span><span class="p">++)</span> <span class="p">{</span>
+
+		<span class="n">running_threads</span><span class="p">++;</span>
+
+		<span class="n">threads</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="nf">thread</span><span class="p">([&amp;]()</span> <span class="p">{</span>
+			<span class="n">auto</span> <span class="n">my_rand</span> <span class="p">=</span> <span class="n">std</span><span class="p">::</span><span class="nf">bind</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="n">uniform_int_distribution</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;(</span><span class="m">0</span><span class="p">,</span> <span class="n">RAND_MAX</span><span class="p">),</span> 
+									<span class="nf">default_random_engine</span><span class="p">(</span><span class="n">ix</span><span class="p">));</span>
+
+			<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">LOOP_CNT</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> <span class="p">{</span>
+
+				<span class="k">if</span> <span class="p">(</span><span class="nf">my_rand</span><span class="p">()</span> <span class="p">%</span> <span class="m">2</span><span class="p">)</span> <span class="p">{</span>
+					<span class="n">queue</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nf">TT_ctor</span><span class="p">()());</span>
+					<span class="n">elems</span><span class="p">++;</span>
+				<span class="p">}</span>
+				<span class="k">else</span> <span class="p">{</span>
+					<span class="n">elems</span><span class="p">--;</span>
+					<span class="n">queue</span><span class="p">.</span><span class="k">get</span><span class="p">();</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+
+			<span class="n">running_threads</span><span class="p">--;</span>
+
+		<span class="p">}));</span>
+	<span class="p">}</span>
+
+	<span class="c1">// watchdog
+</span>	<span class="n">running_threads</span><span class="p">++;</span>
+	<span class="n">threads</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="nf">thread</span><span class="p">([&amp;]()</span> <span class="p">{</span>
+
+		<span class="k">while</span> <span class="p">(</span><span class="n">running_threads</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">1</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">while</span> <span class="p">(</span><span class="n">elems</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&lt;=</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+				<span class="n">queue</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nf">TT_ctor</span><span class="p">()());</span>
+				<span class="n">elems</span><span class="p">++;</span>
+			<span class="p">}</span>
+			
+			<span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
+		<span class="p">}</span>
+
+		<span class="n">running_threads</span><span class="p">--;</span>
+
+	<span class="p">}));</span>
+
+	<span class="n">auto</span> <span class="n">last_consumer</span> <span class="p">=</span> <span class="n">std</span><span class="p">::</span><span class="nf">thread</span><span class="p">([&amp;</span><span class="n">running_threads</span><span class="p">,</span> <span class="p">&amp;</span><span class="n">elems</span><span class="p">,</span> <span class="p">&amp;</span><span class="n">queue</span><span class="p">]()</span> <span class="p">{</span>
+
+		<span class="k">while</span> <span class="p">(</span><span class="n">running_threads</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">0</span> <span class="p">||</span> <span class="n">elems</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">while</span> <span class="p">(</span><span class="n">elems</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+				<span class="n">queue</span><span class="p">.</span><span class="k">get</span><span class="p">();</span>
+				<span class="n">elems</span><span class="p">--;</span>
+			<span class="p">}</span>
+			<span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+
+	<span class="n">std</span><span class="p">::</span><span class="nf">for_each</span><span class="p">(</span><span class="n">threads</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">threads</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[](</span><span class="n">auto</span> <span class="p">&amp;</span><span class="n">th</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">th</span><span class="p">.</span><span class="k">join</span><span class="p">();</span>
+	<span class="p">});</span>
+
+	<span class="c1">// just make sure there is at least one element to consume, so the thread above does not block.
+</span>
+	<span class="n">elems</span><span class="p">++;</span>
+	<span class="n">queue</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nf">TT_ctor</span><span class="p">()());</span>
+	<span class="n">last_consumer</span><span class="p">.</span><span class="k">join</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This functio has several parts:</p>
+<ul>
+  <li>It creates <code class="highlighter-rouge">MAX_THREADS</code> which randomly produce and consume events from the queue</li>
+  <li>It creates a watchdog thread to make sure the <code class="highlighter-rouge">MAX_THREADS</code> do not all starve and lock</li>
+  <li>It creates a consumer thread just to make sure the queue does not grow too much.</li>
+</ul>
+
+<p>Initially I have started without this consumer thread and I realized that, at the function exit, there are around 3000 unconsumed elements in the queue when considering 1000000 loops in each of the <code class="highlighter-rouge">MAX_THREADS</code> (monitored in the <code class="highlighter-rouge">elems</code> variable)</p>
+
+<h3 id="results-from-the-simple-queue-testing">Results from the simple queue testing:</h3>
+
+<ol>
+  <li>Around 80% of the time it spends in the <code class="highlighter-rouge">mutex::lock</code> function, in kernel. Optimizing the amount of locking brings by far the biggest performance improvements (I used Visual Studio performance analysis tools).</li>
+  <li>The <code class="highlighter-rouge">std::mutex</code> does, by default, more spinning than the defaults in Windows <code class="highlighter-rouge">CRITICAL_SECTION</code>. When using the <code class="highlighter-rouge">std::mutex</code>, the CPU goes to 100% and the system becomes almost unresponsive. When using the Windows <code class="highlighter-rouge">CRITICAL_SECTION</code>, with the default spin count, the CPU stays at around 70% (configuration: 4 cores, MAX_THREADS = 4, no <code class="highlighter-rouge">last_consumer</code> thread).</li>
+  <li>For 1000000 loops, the amount of memory allocations is about 2500. The <code class="highlighter-rouge">std::deque</code> is very memory stable and reuses very nicely the memory already allocated on repeated <code class="highlighter-rouge">pop_front</code>, <code class="highlighter-rouge">push_back</code>.</li>
+</ol>
+
+<p>Here is the Windows <code class="highlighter-rouge">CRITIAL_SECTION</code> and <code class="highlighter-rouge">CONDITION_VARIABLE</code> implementation of the synchronization interface:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">critical_section_win</span> <span class="p">{</span>
+<span class="k">private</span><span class="p">:</span>
+	<span class="n">CRITICAL_SECTION</span> <span class="n">cs</span><span class="p">;</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="n">friend</span> <span class="k">class</span> <span class="nc">condition_variable_win</span><span class="p">;</span>
+	<span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">lk_cnt</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+	<span class="nf">critical_section_win</span><span class="p">()</span> <span class="p">{</span>
+		<span class="c1">// ::InitializeCriticalSectionAndSpinCount(&amp;cs, 0); 
+</span>		<span class="p">::</span><span class="nf">InitializeCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span> <span class="c1">// leave the spin count as it is; test the defaults
+</span>	<span class="p">}</span>
+
+	<span class="p">~</span><span class="nf">critical_section_win</span><span class="p">()</span> <span class="p">{</span>
+		<span class="p">::</span><span class="nf">DeleteCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="nf">critical_section_win</span><span class="p">(</span><span class="k">const</span> <span class="n">critical_section_win</span><span class="p">&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
+	<span class="nf">critical_section_win</span><span class="p">(</span><span class="n">critical_section_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move
+</span>
+	<span class="kt">bool</span> <span class="nf">try_lock</span><span class="p">()</span> <span class="p">{</span>
+
+		<span class="kt">int</span> <span class="n">k</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+		<span class="k">if</span> <span class="p">(!</span><span class="n">lk_cnt</span><span class="p">.</span><span class="nf">compare_exchange_strong</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">1</span><span class="p">)</span> <span class="p">)</span>
+			<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+
+		<span class="k">if</span> <span class="p">(!</span><span class="nf">TryEnterCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">))</span> <span class="p">{</span>
+			<span class="n">lk_cnt</span><span class="p">--;</span>
+			<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">lk_cnt</span><span class="p">++;</span>
+		<span class="nf">EnterCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">unlock</span><span class="p">()</span> <span class="p">{</span>		
+		<span class="nf">LeaveCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span>
+		<span class="n">lk_cnt</span><span class="p">--;</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">condition_variable_win</span> <span class="p">{</span>
+<span class="k">private</span><span class="p">:</span>
+
+	<span class="n">CONDITION_VARIABLE</span> <span class="n">cv</span><span class="p">;</span>
+<span class="k">public</span><span class="p">:</span>
+
+	<span class="nf">condition_variable_win</span><span class="p">()</span> <span class="p">{</span>
+		<span class="nf">InitializeConditionVariable</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="nf">condition_variable_win</span><span class="p">(</span><span class="k">const</span> <span class="n">condition_variable_win</span><span class="p">&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
+	<span class="nf">condition_variable_win</span><span class="p">(</span><span class="n">condition_variable_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move
+</span>
+	<span class="p">~</span><span class="nf">condition_variable_win</span><span class="p">()</span> <span class="p">{</span>
+		<span class="c1">// TODO: defensive programming - test for locked threads
+</span>	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">notify_all</span><span class="p">()</span> <span class="p">{</span>
+		<span class="nf">WakeAllConditionVariable</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">notify_one</span><span class="p">()</span> <span class="p">{</span>
+		<span class="nf">WakeConditionVariable</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">wait</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">critical_section_win</span><span class="p">&gt;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nf">SleepConditionVariableCS</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">,</span> <span class="p">&amp;</span><span class="n">csw</span><span class="p">.</span><span class="nf">mutex</span><span class="p">()-&gt;</span><span class="n">cs</span><span class="p">,</span> <span class="n">INFINITE</span><span class="p">);</span>
+	<span class="p">}</span>
+
+	<span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span> <span class="nc">P</span><span class="p">&gt;</span> 
+	<span class="n">cv_status</span> <span class="nf">wait_for</span><span class="p">(</span><span class="k">const</span> <span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">critical_section_win</span><span class="p">&gt;&amp;</span> <span class="n">csw</span><span class="p">,</span> 
+						<span class="k">const</span> <span class="n">chrono</span><span class="p">::</span><span class="n">duration</span><span class="p">&lt;</span><span class="n">R</span><span class="p">,</span> <span class="n">P</span><span class="p">&gt;&amp;</span> <span class="n">duration</span><span class="p">)</span> <span class="p">{</span>
+
+		<span class="n">DWORD</span> <span class="n">ms</span> <span class="p">=</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">DWORD</span><span class="p">&gt;(</span>
+			<span class="n">chrono</span><span class="p">::</span><span class="n">duration_cast</span><span class="p">&lt;</span><span class="n">chrono</span><span class="p">::</span><span class="n">milliseconds</span><span class="p">&gt;(</span><span class="n">duration</span><span class="p">).</span><span class="nf">count</span><span class="p">());</span>
+
+		<span class="k">if</span> <span class="p">(!</span><span class="nf">SleepConditionVariableCS</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">,</span> <span class="p">&amp;</span><span class="n">csw</span><span class="p">.</span><span class="nf">mutex</span><span class="p">()-&gt;</span><span class="n">cs</span><span class="p">,</span> <span class="n">ms</span><span class="p">))</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">cv_status</span><span class="p">::</span><span class="n">timeout</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="k">return</span> <span class="n">cv_status</span><span class="p">::</span><span class="n">no_timeout</span><span class="p">;</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<h3 id="multi-queue-blocking-queue">Multi-queue blocking queue:</h3>
+
+<p>So the main optimization has to do with locking. The simplest way to achieve it is to have a multi-queue implemented as a collection of several other queues and <code class="highlighter-rouge">try_lock</code> each of them one by one, until the ownership is obtained. In case the ownership cannot be acquired, simply move to the next. With 4 queues and a spin count of 2 (try locking twice all the queues before forcibly locking one of them), the total amount of time spent in synchronization in external code becomes trivial. <code class="highlighter-rouge">mutex::lock</code> completely loses its predominant status in the list of CPU spent-time and is replaced by other functions like accessing the internal <code class="highlighter-rouge">std::deque</code> or inserting a new element in it (<code class="highlighter-rouge">get</code>, <code class="highlighter-rouge">put</code>).</p>
+
+<p>Here is the code:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> 
+<span class="k">class</span> <span class="nc">multi_blocking_queue</span> <span class="p">{</span>
+<span class="k">private</span><span class="p">:</span>
+
+	<span class="k">static</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">QUEUES</span> <span class="p">=</span> <span class="m">4</span><span class="p">;</span> 
+	<span class="k">static</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">SPIN_COUNT</span> <span class="p">=</span> <span class="m">2</span><span class="p">;</span>
+
+	<span class="n">mtx_type</span>				<span class="n">mtx</span><span class="p">[</span><span class="n">QUEUES</span><span class="p">];</span>
+	<span class="n">mtx_type</span>				<span class="n">mtx_block</span><span class="p">;</span>
+	<span class="n">cond_variable_type</span>		<span class="n">cv</span><span class="p">;</span>
+	<span class="n">blocking_queue</span><span class="p">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">no_lock_mtx</span><span class="p">,</span> <span class="n">no_lock_condition_var</span><span class="p">&gt;</span> <span class="n">_queues</span><span class="p">[</span><span class="n">QUEUES</span><span class="p">];</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+	<span class="nf">multi_blocking_queue</span><span class="p">()</span> <span class="p">{}</span>
+
+	<span class="c1">// round robin for better filling of queues - 
+</span>	<span class="c1">// do not allow elements to remain for too long in one queue	
+</span>	<span class="kt">int</span> <span class="nf">get_next_queue</span><span class="p">()</span> <span class="p">{</span>		
+		<span class="k">static</span> <span class="n">thread_local</span> <span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+		<span class="k">return</span> <span class="n">i</span> <span class="p">=</span> <span class="p">((</span><span class="n">i</span><span class="p">++)</span> <span class="p">%</span> <span class="n">QUEUES</span><span class="p">);</span> 
+	<span class="p">}</span>
+
+	<span class="kt">bool</span> <span class="nf">try_get_all_queues</span><span class="p">(</span><span class="kt">char</span> <span class="n">unallocated</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)])</span> <span class="p">{</span>
+
+		<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">QUEUES</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> <span class="p">{</span>
+
+			<span class="kt">int</span> <span class="n">q</span> <span class="p">=</span> <span class="nf">get_next_queue</span><span class="p">();</span>
+
+			<span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="nf">lk</span><span class="p">(</span><span class="n">mtx</span><span class="p">[</span><span class="n">q</span><span class="p">],</span> <span class="n">std</span><span class="p">::</span><span class="n">defer_lock</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">lk</span><span class="p">.</span><span class="nf">try_lock</span><span class="p">()</span> <span class="p">&amp;&amp;</span> <span class="n">_queues</span><span class="p">[</span><span class="n">q</span><span class="p">].</span><span class="nf">try_get</span><span class="p">(</span><span class="n">unallocated</span><span class="p">))</span>
+				<span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">T</span> <span class="k">get</span><span class="p">()</span> <span class="p">{</span>
+
+		<span class="kt">char</span> <span class="n">stack_alloc</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)];</span>
+		<span class="c1">// do not call constructor here.
+</span>		<span class="n">T</span><span class="p">*</span> <span class="n">ret</span> <span class="p">=</span> <span class="n">reinterpret_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="n">stack_alloc</span><span class="p">);</span> 
+
+		<span class="k">while</span> <span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">sp</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">sp</span> <span class="p">&lt;</span> <span class="n">SPIN_COUNT</span><span class="p">;</span> <span class="n">sp</span><span class="p">++)</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nf">try_get_all_queues</span><span class="p">(</span><span class="n">stack_alloc</span><span class="p">))</span>
+					<span class="k">return</span> <span class="nf">move</span><span class="p">(*</span><span class="n">ret</span><span class="p">);</span>
+						
+			<span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="nf">lk</span><span class="p">(</span><span class="n">mtx_block</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nf">try_get_all_queues</span><span class="p">(</span><span class="n">stack_alloc</span><span class="p">))</span>
+				<span class="k">return</span> <span class="nf">move</span><span class="p">(*</span><span class="n">ret</span><span class="p">);</span>
+
+			<span class="n">cv</span><span class="p">.</span><span class="nf">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="kt">bool</span> <span class="nf">try_put_all_queues</span><span class="p">(</span><span class="n">T</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+
+		<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">QUEUES</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> <span class="p">{</span>
+
+			<span class="kt">int</span> <span class="n">q</span> <span class="p">=</span> <span class="nf">get_next_queue</span><span class="p">();</span>
+
+			<span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="nf">lk</span><span class="p">(</span><span class="n">mtx</span><span class="p">[</span><span class="n">q</span><span class="p">],</span> <span class="n">std</span><span class="p">::</span><span class="n">defer_lock</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">lk</span><span class="p">.</span><span class="nf">try_lock</span><span class="p">())</span> <span class="p">{</span>
+				<span class="n">_queues</span><span class="p">[</span><span class="n">q</span><span class="p">].</span><span class="nf">put</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+				<span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+
+		<span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">put</span><span class="p">(</span><span class="n">T</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nf">__put</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+		<span class="n">cv</span><span class="p">.</span><span class="nf">notify_one</span><span class="p">();</span>
+	<span class="p">}</span>
+
+	<span class="k">void</span> <span class="nf">__put</span><span class="p">(</span><span class="n">T</span><span class="p">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+
+		<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">sp</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">sp</span> <span class="p">&lt;</span> <span class="n">SPIN_COUNT</span><span class="p">;</span> <span class="n">sp</span><span class="p">++)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nf">try_put_all_queues</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">)))</span>
+				<span class="k">return</span><span class="p">;</span>
+		<span class="p">}</span>
+	
+		<span class="p">{</span>
+			<span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">mtx_type</span><span class="p">&gt;</span> <span class="nf">lk_block</span><span class="p">(</span><span class="n">mtx_block</span><span class="p">);</span>
+			<span class="k">while</span> <span class="p">(!</span><span class="nf">try_put_all_queues</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">t</span><span class="p">)));</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>Notes on the implementation:</p>
+
+<ul>
+  <li>To keep the <code class="highlighter-rouge">try_lock</code> semantic as described for the <code class="highlighter-rouge">blocking_queue</code>, I had to trick the underlying <code class="highlighter-rouge">blocking_queues</code> into no locking. For this specific purpose I have created two clases:</li>
+</ul>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">no_lock_mtx</span> <span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{}</span>
+	<span class="k">void</span> <span class="nf">unlock</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">no_lock_condition_var</span> <span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+	<span class="k">void</span> <span class="nf">notify_all</span><span class="p">()</span> <span class="p">{}</span>
+	<span class="k">void</span> <span class="nf">notify_one</span><span class="p">()</span> <span class="p">{}</span>
+	<span class="k">void</span> <span class="nf">wait</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">critical_section_win</span><span class="p">&gt;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+<p>and passed them as synchronization primitives to the underlying <code class="highlighter-rouge">blocking_queues</code>. As mentioned before, this was a design choice, to keep <code class="highlighter-rouge">try_get</code> method return <code class="highlighter-rouge">false</code> only if the size of the underlying <code class="highlighter-rouge">std::deque</code> is 0.</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">get_next_queue</code> is used to loop through the list of blocking_queues instead of simply starting each time from 0. This is to ballance the queues and not let elements lost too long in queues with numbers 1-&gt;4. In most of the cases locking is possible on queue no. 0, thus the rest of the queues are used less often, resulting in an unbalanced response: some elements will be postponed very much on <code class="highlighter-rouge">get</code> if the implementation does not use the queues in a round-robin fashion.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">try_lock</code> from <code class="highlighter-rouge">CONDITION_VARIABLE</code> uses a very simple atomic flag to quickly return if the ownership is taken. The flag is just a hint which is good enough and is not worth CPU cycles to remove the race condition between the checking of the flag and the <code class="highlighter-rouge">TryEnterCriticalSection</code> call.</p>
+  </li>
+</ul>
+
+<h3 id="conclusions">Conclusions:</h3>
+
+<ol>
+  <li>A multi queue gives a huge performance improvement by reducing thread contention to trivial.</li>
+  <li>In some conditions, using the Windows CRITICAL_SECTION over std::thread might improve system responsiveness at the expense of slightly longer execution times.</li>
+  <li>Performance monitoring tools from Visual Studio 2015 and 2017 are really nice. :)</li>
+  <li><code class="highlighter-rouge">std::deque</code> does an awesome job at reducing the number of memory allocation calls, even in cases of high dynamism (lots of pushes and lots of pops)</li>
+  <li>The code might seem long, but getting to it was a process of continuous small steps, iterative, improvements, followed by testing and continuous refactoring.</li>
+  <li>My initial assumptions were partly wrong. I was expecting memory allocation to be a much higher performance problem than it was.</li>
+  <li>Thread contention and locking, if not performed properly, can dramatically affect performance. However, I would advise incremental development: first a system that works correctly, then incrementally find ways to reduce locking while keeping the system running without crashes caused by race conditions, invalid data or deadlocks.</li>
+</ol>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
