@@ -597,13 +597,15 @@ We also notice a much better usage of the CPU, which stays at almost 100%.</p>
 
 <p>A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the <code class="highlighter-rouge">multi_blocking_queue</code> finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the <code class="highlighter-rouge">blocking_queue</code> takes more than 1 minute and 35 seconds to finish.</p>
 
-<p><em>Multi queue in debug</em>
-<img src="https://alexandrugris.github.io/assets/queue_3.png" alt="multi-queue - debug" /></p>
+<p><img src="https://alexandrugris.github.io/assets/queue_3.png" alt="multi-queue - debug" /></p>
+
+<p><em>Multi queue in debug</em></p>
 
 <p>In the <code class="highlighter-rouge">get</code> method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.</p>
 
-<p><em>Single queue in debug, with std::mutex</em>
-<img src="https://alexandrugris.github.io/assets/queue_4.png" alt="multi-queue - debug" /></p>
+<p><img src="https://alexandrugris.github.io/assets/queue_4.png" alt="multi-queue - debug" /></p>
+
+<p><em>Single queue in debug, with std::mutex</em></p>
 
 <p>Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the <code class="highlighter-rouge">std::mutex</code> implementation does  more spinning before reaching to the kernel than the <code class="highlighter-rouge">CRITICAL_SECTION</code> implementation with the default spin count.</p>
 

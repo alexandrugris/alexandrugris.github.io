@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-21T21:52:15+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-21T21:55:41+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">C++ Play - Multithreading (Queues)</title><link href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html" rel="alternate" type="text/html" title="C++ Play - Multithreading (Queues)" /><published>2017-02-20T12:15:16+02:00</published><updated>2017-02-20T12:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">&lt;p&gt;In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
 I am going to measure the cost of locking and thread contention and provide some ideas to improve performance. 
 I am going to build the tests incrementally, refining the solution as I progress through the code, 
@@ -531,13 +531,15 @@ We also notice a much better usage of the CPU, which stays at almost 100%.&lt;/p
 
 &lt;p&gt;A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the &lt;code class=&quot;highlighter-rouge&quot;&gt;multi_blocking_queue&lt;/code&gt; finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the &lt;code class=&quot;highlighter-rouge&quot;&gt;blocking_queue&lt;/code&gt; takes more than 1 minute and 35 seconds to finish.&lt;/p&gt;
 
-&lt;p&gt;&lt;em&gt;Multi queue in debug&lt;/em&gt;
-&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_3.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_3.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Multi queue in debug&lt;/em&gt;&lt;/p&gt;
 
 &lt;p&gt;In the &lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.&lt;/p&gt;
 
-&lt;p&gt;&lt;em&gt;Single queue in debug, with std::mutex&lt;/em&gt;
-&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_4.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_4.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Single queue in debug, with std::mutex&lt;/em&gt;&lt;/p&gt;
 
 &lt;p&gt;Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the &lt;code class=&quot;highlighter-rouge&quot;&gt;std::mutex&lt;/code&gt; implementation does  more spinning before reaching to the kernel than the &lt;code class=&quot;highlighter-rouge&quot;&gt;CRITICAL_SECTION&lt;/code&gt; implementation with the default spin count.&lt;/p&gt;
 
