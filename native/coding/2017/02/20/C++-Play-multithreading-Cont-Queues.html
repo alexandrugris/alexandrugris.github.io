@@ -578,9 +578,40 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <h3 id="conclusions">Conclusions:</h3>
 
+<p>In the following pictures I am only looking at the <code class="highlighter-rouge">get</code> function. Please note that the <code class="highlighter-rouge">put</code> has very similar characteristics.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/queue_1.png" alt="blocking_queue - release" /></p>
+
+<p><em>Blocking queue with CRITICAL_SECTION synchronization in release mode</em></p>
+
+<p>33.73% of CPU time (<code class="highlighter-rouge">get</code> function) spent in external code. Only 4% spent in own code, which includes the pushing / popping from the queue. 
+Together with a similar percentage in the <code class="highlighter-rouge">put</code> function, adds up to about 70% of the time our process in running it spends in code external to our app (mostly synchronization, to be seen below in the debug capture). 
+Also noticeable is that CPUs are used to about 70% of their capacity - here we run <code class="highlighter-rouge">CRITICAL_SECTION</code> syncrhronization, not the <code class="highlighter-rouge">std::mutex</code>.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/queue_2.png" alt="multi-queue - release" /></p>
+
+<p><em>Multi queue with CRITICAL_SECTION synchronization in release mode</em></p>
+
+<p>Looking at the same <code class="highlighter-rouge">get</code> function, only about 12% spent is spent in external code with 21% spent in own code. However, unlike the blocking queue, this 21% also includes active waiting while finding the queue to read to. A clearer breakdown in the debug trace.
+We also notice a much better usage of the CPU, which stays at almost 100%.</p>
+
+<p>A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the <code class="highlighter-rouge">multi_blocking_queue</code> finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the <code class="highlighter-rouge">blocking_queue</code> takes more than 1 minute and 35 seconds to finish.</p>
+
+<p><em>Multi queue in debug</em>
+<img src="https://alexandrugris.github.io/assets/queue_3.png" alt="multi-queue - debug" /></p>
+
+<p>In the <code class="highlighter-rouge">get</code> method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.</p>
+
+<p><em>Single queue in debug, with std::mutex</em>
+<img src="https://alexandrugris.github.io/assets/queue_4.png" alt="multi-queue - debug" /></p>
+
+<p>Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the <code class="highlighter-rouge">std::mutex</code> implementation does  more spinning before reaching to the kernel than the <code class="highlighter-rouge">CRITICAL_SECTION</code> implementation with the default spin count.</p>
+
+<p><em>In short:</em></p>
+
 <ol>
-  <li>A multi queue gives a huge performance improvement by reducing thread contention to trivial.</li>
-  <li>In some conditions, using the Windows CRITICAL_SECTION over std::thread might improve system responsiveness at the expense of slightly longer execution times.</li>
+  <li>A multi queue gives a significant performance improvement by reducing thread contention.</li>
+  <li>In some conditions, using the Windows <code class="highlighter-rouge">CRITICAL_SECTION</code> over <code class="highlighter-rouge">std::thread might</code> improve system responsiveness at the expense of slightly longer execution times.</li>
   <li>Performance monitoring tools from Visual Studio 2015 and 2017 are really nice. :)</li>
   <li><code class="highlighter-rouge">std::deque</code> does an awesome job at reducing the number of memory allocation calls, even in cases of high dynamism (lots of pushes and lots of pops)</li>
   <li>The code might seem long, but getting to it was a process of continuous small steps, iterative, improvements, followed by testing and continuous refactoring.</li>

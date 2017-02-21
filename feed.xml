@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-20T21:54:20+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-21T21:52:15+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">C++ Play - Multithreading (Queues)</title><link href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html" rel="alternate" type="text/html" title="C++ Play - Multithreading (Queues)" /><published>2017-02-20T12:15:16+02:00</published><updated>2017-02-20T12:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">&lt;p&gt;In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
 I am going to measure the cost of locking and thread contention and provide some ideas to improve performance. 
 I am going to build the tests incrementally, refining the solution as I progress through the code, 
@@ -512,9 +512,40 @@ but I will also skip some steps to keep the post meaningfully short.&lt;/p&gt;
 
 &lt;h3 id=&quot;conclusions&quot;&gt;Conclusions:&lt;/h3&gt;
 
+&lt;p&gt;In the following pictures I am only looking at the &lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; function. Please note that the &lt;code class=&quot;highlighter-rouge&quot;&gt;put&lt;/code&gt; has very similar characteristics.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_1.png&quot; alt=&quot;blocking_queue - release&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Blocking queue with CRITICAL_SECTION synchronization in release mode&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;33.73% of CPU time (&lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; function) spent in external code. Only 4% spent in own code, which includes the pushing / popping from the queue. 
+Together with a similar percentage in the &lt;code class=&quot;highlighter-rouge&quot;&gt;put&lt;/code&gt; function, adds up to about 70% of the time our process in running it spends in code external to our app (mostly synchronization, to be seen below in the debug capture). 
+Also noticeable is that CPUs are used to about 70% of their capacity - here we run &lt;code class=&quot;highlighter-rouge&quot;&gt;CRITICAL_SECTION&lt;/code&gt; syncrhronization, not the &lt;code class=&quot;highlighter-rouge&quot;&gt;std::mutex&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_2.png&quot; alt=&quot;multi-queue - release&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Multi queue with CRITICAL_SECTION synchronization in release mode&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Looking at the same &lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; function, only about 12% spent is spent in external code with 21% spent in own code. However, unlike the blocking queue, this 21% also includes active waiting while finding the queue to read to. A clearer breakdown in the debug trace.
+We also notice a much better usage of the CPU, which stays at almost 100%.&lt;/p&gt;
+
+&lt;p&gt;A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the &lt;code class=&quot;highlighter-rouge&quot;&gt;multi_blocking_queue&lt;/code&gt; finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the &lt;code class=&quot;highlighter-rouge&quot;&gt;blocking_queue&lt;/code&gt; takes more than 1 minute and 35 seconds to finish.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Multi queue in debug&lt;/em&gt;
+&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_3.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In the &lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Single queue in debug, with std::mutex&lt;/em&gt;
+&lt;img src=&quot;https://alexandrugris.github.io/assets/queue_4.png&quot; alt=&quot;multi-queue - debug&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the &lt;code class=&quot;highlighter-rouge&quot;&gt;std::mutex&lt;/code&gt; implementation does  more spinning before reaching to the kernel than the &lt;code class=&quot;highlighter-rouge&quot;&gt;CRITICAL_SECTION&lt;/code&gt; implementation with the default spin count.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;In short:&lt;/em&gt;&lt;/p&gt;
+
 &lt;ol&gt;
-  &lt;li&gt;A multi queue gives a huge performance improvement by reducing thread contention to trivial.&lt;/li&gt;
-  &lt;li&gt;In some conditions, using the Windows CRITICAL_SECTION over std::thread might improve system responsiveness at the expense of slightly longer execution times.&lt;/li&gt;
+  &lt;li&gt;A multi queue gives a significant performance improvement by reducing thread contention.&lt;/li&gt;
+  &lt;li&gt;In some conditions, using the Windows &lt;code class=&quot;highlighter-rouge&quot;&gt;CRITICAL_SECTION&lt;/code&gt; over &lt;code class=&quot;highlighter-rouge&quot;&gt;std::thread might&lt;/code&gt; improve system responsiveness at the expense of slightly longer execution times.&lt;/li&gt;
   &lt;li&gt;Performance monitoring tools from Visual Studio 2015 and 2017 are really nice. :)&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;std::deque&lt;/code&gt; does an awesome job at reducing the number of memory allocation calls, even in cases of high dynamism (lots of pushes and lots of pops)&lt;/li&gt;
   &lt;li&gt;The code might seem long, but getting to it was a process of continuous small steps, iterative, improvements, followed by testing and continuous refactoring.&lt;/li&gt;
