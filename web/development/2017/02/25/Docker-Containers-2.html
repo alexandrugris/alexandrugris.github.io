@@ -139,16 +139,14 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
   <li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</li>
 </ul>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined
+<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run -it --env "USERNAME=agris" --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
     debian bash -c "echo sshd: ALL &gt;&gt; /etc/hosts.allow 
         &amp;&amp; apt-get update 
         &amp;&amp; apt-get install -y openssh-server g++ gdb gdbserver 
-        &amp;&amp; mkdir /home/agris 
-        &amp;&amp; useradd -d /home/agris agris 
-        &amp;&amp; passwd agris 
+        &amp;&amp; mkdir /home/$USERNAME &amp;&amp; useradd -d /home/$USERNAME $USERNAME 
+        &amp;&amp; passwd $USERNAME 
         &amp;&amp; /etc/init.d/ssh restart 
-        &amp;&amp; chown -hR agris /home/agris 
-        &amp;&amp; bash"
+        &amp;&amp; chown -hR $USERNAME /home/$USERNAME &amp;&amp; bash"
 </code></pre>
 </div>
 
@@ -182,7 +180,7 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_7.png" alt="Visual Studio Project Config" /></p>
 
-<p>The container is run with the <code class="highlighter-rouge">--rm</code> flag above. You may want to remove it not to install everything everytime the command is run.</p>
+<p>The container is run with the <code class="highlighter-rouge">--rm</code> flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.</p>
 
   </div>
 

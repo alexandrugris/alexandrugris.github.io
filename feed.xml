@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T11:09:27+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T12:07:10+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
 I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.&lt;/p&gt;
 
@@ -73,16 +73,14 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
   &lt;li&gt;Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; - gdb will not be able to connect to the executable otherwise.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it --env &quot;USERNAME=agris&quot; --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
     debian bash -c &quot;echo sshd: ALL &amp;gt;&amp;gt; /etc/hosts.allow 
         &amp;amp;&amp;amp; apt-get update 
         &amp;amp;&amp;amp; apt-get install -y openssh-server g++ gdb gdbserver 
-        &amp;amp;&amp;amp; mkdir /home/agris 
-        &amp;amp;&amp;amp; useradd -d /home/agris agris 
-        &amp;amp;&amp;amp; passwd agris 
+        &amp;amp;&amp;amp; mkdir /home/$USERNAME &amp;amp;&amp;amp; useradd -d /home/$USERNAME $USERNAME 
+        &amp;amp;&amp;amp; passwd $USERNAME 
         &amp;amp;&amp;amp; /etc/init.d/ssh restart 
-        &amp;amp;&amp;amp; chown -hR agris /home/agris 
-        &amp;amp;&amp;amp; bash&quot;
+        &amp;amp;&amp;amp; chown -hR $USERNAME /home/$USERNAME &amp;amp;&amp;amp; bash&quot;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
@@ -116,7 +114,7 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_7.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;The container is run with the &lt;code class=&quot;highlighter-rouge&quot;&gt;--rm&lt;/code&gt; flag above. You may want to remove it not to install everything everytime the command is run.&lt;/p&gt;</content><summary type="html">This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
+&lt;p&gt;The container is run with the &lt;code class=&quot;highlighter-rouge&quot;&gt;--rm&lt;/code&gt; flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.&lt;/p&gt;</content><summary type="html">This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
 I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.</summary></entry><entry><title type="html">C++ Play - Multithreading (Queues)</title><link href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html" rel="alternate" type="text/html" title="C++ Play - Multithreading (Queues)" /><published>2017-02-20T12:15:16+02:00</published><updated>2017-02-20T12:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">&lt;p&gt;In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
 I am going to measure the cost of locking and thread contention and provide some ideas to improve performance. 
 I am going to build the tests incrementally, refining the solution as I progress through the code, 
