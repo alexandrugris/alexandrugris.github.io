@@ -1,5 +1,111 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-21T21:59:56+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">C++ Play - Multithreading (Queues)</title><link href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html" rel="alternate" type="text/html" title="C++ Play - Multithreading (Queues)" /><published>2017-02-20T12:15:16+02:00</published><updated>2017-02-20T12:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">&lt;p&gt;In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T09:53:59+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
+I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.&lt;/p&gt;
+
+&lt;p&gt;Here is the first part: &lt;a href=&quot;/web/development/2017/02/12/Docker-Containers.html&quot;&gt;Docker And Containers&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;using-host-files-in-a-docker-containers&quot;&gt;Using host files in a docker containers&lt;/h3&gt;
+
+&lt;p&gt;First thing, we need to enable drives to be visible within the container. For this, we use the Settings dialog from Docker For Windows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_1.png&quot; alt=&quot;Settings Dialog Mount FileSystem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Attention: port 445 must be opened in Windows Firewall.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_2.png&quot; alt=&quot;Firewall warning&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;To share the drive, allow connections between the Windows host machine and the virtual machine in Windows Firewall or your third party firewall software. You do not need to open port 445 on any other network. 
+By default, allow connections to 10.0.75.1 port 445 (the Windows host) from 10.0.75.2 (the virtual machine).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;em&gt;Attention:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;By default, the Docker network is considered in the Public Networks profile. 
+For my desktop PC at home, I have simply enabled firewall rules for the public networks (default is to block all inbound connections). This setting might be dangerous on a laptop.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_3.png&quot; alt=&quot;Network rules&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Another option is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;gpedit.msc&lt;/code&gt; and change network profile for &lt;em&gt;Unidentifiable Networks&lt;/em&gt;. :)&lt;/p&gt;
+
+&lt;p&gt;Now that we have enabled access to host folders, let’s run the following command:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run --rm -v d:\OneDrive\Pictures:/my_pictures alpine sh -c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_4.png&quot; alt=&quot;Running a command on a volume in docker&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Let’s disect it:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run --rm&lt;/code&gt; tells docker to remove the image after the command is run. The image is not persisted.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-v d:\OneDrive\Pictures:/my_pictures&lt;/code&gt; tells docker to mount the &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\OneDrive\Pictures&lt;/code&gt; from the host to the &lt;code class=&quot;highlighter-rouge&quot;&gt;/my_pictures&lt;/code&gt; folder in the container.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;alpine sh -c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;&lt;/code&gt; from the &lt;code class=&quot;highlighter-rouge&quot;&gt;alpine&lt;/code&gt; image run the &lt;code class=&quot;highlighter-rouge&quot;&gt;sh&lt;/code&gt; command with the &lt;code class=&quot;highlighter-rouge&quot;&gt;-c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;&lt;/code&gt; parameters. It means change directory to &lt;code class=&quot;highlighter-rouge&quot;&gt;/my_pictures&lt;/code&gt; and then, if successful, run the &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -l&lt;/code&gt; command.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;For a list of parameters of the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; command, here they are: &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/run/&quot;&gt;Docker Run&lt;/a&gt;. Another parameter very useful is the &lt;code class=&quot;highlighter-rouge&quot;&gt;--env&lt;/code&gt; to sent environment variables in the container.&lt;/p&gt;
+
+&lt;h3 id=&quot;example-no-1-delete-all-mongo-named-containers&quot;&gt;Example no. 1: delete all mongo-named containers:&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a 
+    &amp;gt; d:\to_delete.txt 
+    &amp;amp;&amp;amp; docker run --rm -v d:\to_delete.txt:/my_data/to_delete.txt 
+    alpine sh -c &quot;grep mongo /my_data/to_delete.txt | awk '{print $1}'&quot; 
+    &amp;gt; d:\to_delete_2.txt 
+    &amp;amp;&amp;amp; for /F %I in (d:\to_delete_2.txt) DO docker rm %I
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Explanation: the command uses two files &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\to_delete.txt&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\to_delete_2.txt&lt;/code&gt; as IPC between Windows and the command ran in the Linux container.&lt;/p&gt;
+
+&lt;h3 id=&quot;-example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker&quot;&gt;&lt;a name=&quot;vclinuxdocker&quot;&gt;&lt;/a&gt; Example no. 2: developing Linux applications with Visual C++ for Linux and Docker&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined
+    debian bash -c &quot;echo sshd: ALL &amp;gt;&amp;gt; /etc/hosts.allow 
+        &amp;amp;&amp;amp; apt-get update 
+        &amp;amp;&amp;amp; apt-get install -y openssh-server g++ gdb gdbserver 
+        &amp;amp;&amp;amp; mkdir /home/agris 
+        &amp;amp;&amp;amp; useradd -d /home/agris agris 
+        &amp;amp;&amp;amp; passwd agris 
+        &amp;amp;&amp;amp; /etc/init.d/ssh restart 
+        &amp;amp;&amp;amp; chown -hR agris /home/agris 
+        &amp;amp;&amp;amp; bash&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Type Linux password when prompted.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Attention to the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; - gdb will not be able to connect to the executable otherwise.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Create a Visual C++ for Linux project. Set connection to localhost on port 2222 (forwarded 22, the default sshd port, from the container)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_5.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Set the debugger type to gdb.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_6.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Happy building and debugging. :)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_7.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The container is run with the –rm flag above. You may want to remove it and save the container not to install everything everytime the command s run.&lt;/p&gt;</content><summary type="html">This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
+I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.</summary></entry><entry><title type="html">C++ Play - Multithreading (Queues)</title><link href="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html" rel="alternate" type="text/html" title="C++ Play - Multithreading (Queues)" /><published>2017-02-20T12:15:16+02:00</published><updated>2017-02-20T12:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">&lt;p&gt;In this post I am going to build a multithreaded queue to exemplify various issues regarding synchronization. 
 I am going to measure the cost of locking and thread contention and provide some ideas to improve performance. 
 I am going to build the tests incrementally, refining the solution as I progress through the code, 
 but I will also skip some steps to keep the post meaningfully short.&lt;/p&gt;
