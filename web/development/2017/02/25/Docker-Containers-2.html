@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Docker And Containers Part 2</title>
-  <meta name="description" content="This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various tec...">
+  <meta name="description" content="This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers and continue with the more complex exampl...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">
@@ -65,8 +65,8 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
-I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.</p>
+    <p>This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers 
+and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.</p>
 
 <p>Here is the first part: <a href="/web/development/2017/02/12/Docker-Containers.html">Docker And Containers</a></p>
 
@@ -114,7 +114,8 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 <h3 id="example-no-1-delete-all-mongo-named-containers">Example no. 1: delete all “mongo”-named containers:</h3>
 
-<p>The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container.</p>
+<p>The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container. 
+It is clearly not efficient at all as it is much simpler to simply use batch <code class="highlighter-rouge">for</code> and <code class="highlighter-rouge">if</code> in Windows, but it is just an example to show that it actually works.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>docker ps -a 
     &gt; d:\to_delete.txt 
@@ -181,6 +182,75 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 <p><img src="https://alexandrugris.github.io/assets/docker_2_7.png" alt="Visual Studio Project Config" /></p>
 
 <p>The container is run with the <code class="highlighter-rouge">--rm</code> flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.</p>
+
+<h3 id="creating-an-image-to-host-all-the-tools-needed-for-building-and-debugging-with-vc-for-linux">Creating an image to host all the tools needed for building and debugging with VC++ for Linux</h3>
+
+<ul>
+  <li>Create the docker file (Dockerfile):</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>FROM debian:latest
+
+ARG USERNAME=agris
+ARG PASSWD=1234
+
+ENV USERNAME $USERNAME
+ENV PASSWD $PASSWD
+
+RUN echo sshd: ALL &gt;&gt; /etc/hosts.allow
+
+RUN apt-get update
+
+RUN apt-get install -y apt-utils
+
+RUN apt-get install -y openssh-server openssl g++ gdb gdbserver
+
+RUN mkdir /home/$USERNAME \
+        &amp;&amp; useradd -d /home/$USERNAME $USERNAME -s /bin/bash -p `openssl passwd -1 -salt iuuA8932 $PASSWD` \
+        &amp;&amp; /etc/init.d/ssh restart \
+        &amp;&amp; chown -hR $USERNAME /home/$USERNAME
+        
+CMD /etc/init.d/ssh start &amp;&amp; bash
+</code></pre>
+</div>
+
+<ul>
+  <li>Build the image with the <code class="highlighter-rouge">gcc_debug_debian:latest</code> tag:</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker build -t gcc_debug_debian:latest .
+</code></pre>
+</div>
+
+<ul>
+  <li>Clean up a little bit</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;for /f "tokens=1, 3" %I in ('docker images') do if "%I"=="&lt;none&gt;" (docker rmi -f %J)
+</code></pre>
+</div>
+
+<ul>
+  <li>Run the container and map the port 22 to 2222 on the host:</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined gcc_debug_debian
+</code></pre>
+</div>
+
+<ul>
+  <li>Try SSH by running ssh command in another container to test the SSH connection (192.168.1.6 is the local IP of my computer):</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run -it --rm gcc_debug_debian /usr/bin/ssh -l agris -p 2222 192.168.1.6
+</code></pre>
+</div>
+
+<ul>
+  <li>Clean / Rebuild and then Start Remote Debugging in Visual C++. If the build step works but debugging fails, please make sure you have not forgotten the <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> flag.</li>
+</ul>
+
+<p>This is it for running and debugging C++ applications running in a Linux docker container. Happy Hacking! :)</p>
 
   </div>
 
