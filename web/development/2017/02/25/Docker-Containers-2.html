@@ -76,7 +76,7 @@ I want to be able to spin quickly complex setups and, at the same time, keep my 
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_1.png" alt="Settings Dialog Mount FileSystem" /></p>
 
-<p>Attention: port 445 must be opened in Windows Firewall.</p>
+<p>Port 445 must be opened in the Windows Firewall.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_2.png" alt="Firewall warning" /></p>
 
@@ -112,7 +112,9 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 <p>For a list of parameters of the <code class="highlighter-rouge">docker run</code> command, here they are: <a href="https://docs.docker.com/engine/reference/commandline/run/">Docker Run</a>. Another parameter very useful is the <code class="highlighter-rouge">--env</code> to sent environment variables in the container.</p>
 
-<h3 id="example-no-1-delete-all-mongo-named-containers">Example no. 1: delete all mongo-named containers:</h3>
+<h3 id="example-no-1-delete-all-mongo-named-containers">Example no. 1: delete all “mongo”-named containers:</h3>
+
+<p>The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>docker ps -a 
     &gt; d:\to_delete.txt 
@@ -127,14 +129,14 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 <h3 id="-example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker"><a name="vclinuxdocker"></a> Example no. 2: developing Linux applications with Visual C++ for Linux and Docker</h3>
 
-<p>Visual C++ for Linux is great and it works right outside the box when connected to a Virtual Box VM (in my picture below the VM is running a Debian).</p>
+<p>Visual C++ for Linux is great and  works right outside the box when connected to a Virtual Box VM (in the picture below the VM is running a Debian).</p>
 
 <p><img src="https://alexandrugris.github.io/assets/vsdebian.jpg" alt="VM VC for Linux" /></p>
 
-<p>However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher weight alternative - use docker for the same task.</p>
+<p>However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher alternative - use a Docker container for running and debugging the app.</p>
 
 <ol>
-  <li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console.</li>
+  <li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</li>
 </ol>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined
@@ -151,9 +153,6 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 </div>
 
 <ol>
-  <li>
-    <p>Attention to the flag <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</p>
-  </li>
   <li>
     <p>Type Linux password when prompted.</p>
   </li>

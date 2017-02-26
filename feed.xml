@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T10:45:38+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T11:07:14+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. 
 I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible.&lt;/p&gt;
 
@@ -10,7 +10,7 @@ I want to be able to spin quickly complex setups and, at the same time, keep my 
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_1.png&quot; alt=&quot;Settings Dialog Mount FileSystem&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Attention: port 445 must be opened in Windows Firewall.&lt;/p&gt;
+&lt;p&gt;Port 445 must be opened in the Windows Firewall.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_2.png&quot; alt=&quot;Firewall warning&quot; /&gt;&lt;/p&gt;
 
@@ -46,7 +46,9 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 &lt;p&gt;For a list of parameters of the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; command, here they are: &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/run/&quot;&gt;Docker Run&lt;/a&gt;. Another parameter very useful is the &lt;code class=&quot;highlighter-rouge&quot;&gt;--env&lt;/code&gt; to sent environment variables in the container.&lt;/p&gt;
 
-&lt;h3 id=&quot;example-no-1-delete-all-mongo-named-containers&quot;&gt;Example no. 1: delete all mongo-named containers:&lt;/h3&gt;
+&lt;h3 id=&quot;example-no-1-delete-all-mongo-named-containers&quot;&gt;Example no. 1: delete all “mongo”-named containers:&lt;/h3&gt;
+
+&lt;p&gt;The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container.&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a 
     &amp;gt; d:\to_delete.txt 
@@ -61,14 +63,14 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 &lt;h3 id=&quot;-example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker&quot;&gt;&lt;a name=&quot;vclinuxdocker&quot;&gt;&lt;/a&gt; Example no. 2: developing Linux applications with Visual C++ for Linux and Docker&lt;/h3&gt;
 
-&lt;p&gt;Visual C++ for Linux is great and it works right outside the box when connected to a Virtual Box VM (in my picture below the VM is running a Debian).&lt;/p&gt;
+&lt;p&gt;Visual C++ for Linux is great and  works right outside the box when connected to a Virtual Box VM (in the picture below the VM is running a Debian).&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/vsdebian.jpg&quot; alt=&quot;VM VC for Linux&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher weight alternative - use docker for the same task.&lt;/p&gt;
+&lt;p&gt;However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher alternative - use a Docker container for running and debugging the app.&lt;/p&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console.&lt;/li&gt;
+  &lt;li&gt;Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; - gdb will not be able to connect to the executable otherwise.&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined
@@ -85,9 +87,6 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 &lt;/div&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;Attention to the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; - gdb will not be able to connect to the executable otherwise.&lt;/p&gt;
-  &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;Type Linux password when prompted.&lt;/p&gt;
   &lt;/li&gt;
