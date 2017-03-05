@@ -1,5 +1,237 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-02-26T21:32:12+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers 
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-03-05T14:20:02+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Docker And Containers Part 3</title><link href="https://alexandrugris.github.io/web/development/2017/03/05/Docker-Containers-3.html" rel="alternate" type="text/html" title="Docker And Containers Part 3" /><published>2017-03-05T10:12:16+02:00</published><updated>2017-03-05T10:12:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/03/05/Docker-Containers%20-%203</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/03/05/Docker-Containers-3.html">&lt;p&gt;This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container and connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases). The last part will be dedicated to Docker Compose.&lt;/p&gt;
+
+&lt;h3 id=&quot;cleaning-up-the-system&quot;&gt;Cleaning up the system:&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker system prune 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;WARNING! This will remove:&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;all stopped containers&lt;/li&gt;
+    &lt;li&gt;all volumes not used by at least one container&lt;/li&gt;
+    &lt;li&gt;all images without at least one container associated to them
+Are you sure you want to continue? [y/N] y&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;running-sql-server-express-in-docker&quot;&gt;Running SQL Server Express in Docker&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker pull microsoft/mssql-server-windows-express
+c:&amp;gt;docker run -d --name SQLServer_AGris 
+    --env sa_password=&quot;QAZxsw1234&quot; 
+    --env ACCEPT_EULA=y microsoft/mssql-server-windows-express
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Because starting the server can take a long time, it is recommended in another window to do:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker logs --follow SQLServer_AGris
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Other useful flags:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-v c:\temp:c:\temp&lt;/code&gt; - to mount a folder in the container&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-e attach_dbs=&quot;[{'dbName':'SampleDb','dbFiles':['C:\\temp\\sampledb.mdf','C:\\temp\\sampledb_log. ldf']}]&quot; &lt;/code&gt; - to attach an existing database&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Then get the IP Address (I have installed the Unix tools in Windows):&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker inspect SQLServer_AGris | grep IPAddress | awk &quot;/[0-9]/ { print $2 }&quot; | sed &quot;s/\&quot;,*//g&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;And connect using the SQL Server Management Studio:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_1.png&quot; alt=&quot;SQL Server Management Studio&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;play-with-volumes---persistent-data-between-containers-start--stop--remove&quot;&gt;Play with volumes - persistent data between containers start / stop / remove&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-v my_home:/home/agris
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;will create a persistent volume called &lt;code class=&quot;highlighter-rouge&quot;&gt;my_home&lt;/code&gt; which will be mounted in &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/agris&lt;/code&gt; in the container. Everytime a container is started with &lt;code class=&quot;highlighter-rouge&quot;&gt;-v my_home:...&lt;/code&gt; the same volume will be mounted.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker volumes ls
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;will display both the named volumes and the unnamed ones.&lt;/p&gt;
+
+&lt;p&gt;For &lt;code class=&quot;highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt;, there is the &lt;code class=&quot;highlighter-rouge&quot;&gt;VOLUME&lt;/code&gt;command which creates such a volume for persistent data across container restarts and destruction and is also a hit for us for where the container stores important data. 
+For example, in the mysql Dockerfile we find &lt;code class=&quot;highlighter-rouge&quot;&gt;VOLUME /var/lib/mysql&lt;/code&gt;. Example with mysql:&lt;/p&gt;
+
+&lt;p&gt;Start myslq with volume mounted:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run --rm --name my_sql_agris -p 3306:3306 -e MYSQL_ROOT_PASSWORD=QAZxsw123 -d -v agris_data:/var/lib/mysql mysql
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Check logs to see that everything is fine:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker logs my_sql_agris
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;List the volumes:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker volume ls
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Start the mysql client to create a database:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker exec -it my_sql_agris mysql --user=root --password=QAZxsw123
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Stop the server container:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker stop my_sql_agris
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Run again the server and the mysql client to verify the database still exists. In this case it was called “test”.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_2.png&quot; alt=&quot;Database Test still Exists&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;docker-compose&quot;&gt;Docker Compose&lt;/h3&gt;
+
+&lt;p&gt;First thing, some cleanup:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a -q | xargs docker rm -f
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;docker-compose.yml general structure:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
+
+services:
+    mysql_agris:
+        image: mysql
+        ports:
+            - 3306:3306
+        environment:
+            - MYSQL_ROOT_PASSWORD=QAZxsw123
+        volumes:
+            - agris_data:/var/lib/mysql
+
+volumes:
+    agris_data:
+        external: true
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Run&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker-compose up
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Connect to the instance:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it mysql mysql --user=root --password=QAZxsw123 --host=172.22.96.1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Note: &lt;code class=&quot;highlighter-rouge&quot;&gt;--host=172.22.96.1&lt;/code&gt; comes from running &lt;code class=&quot;highlighter-rouge&quot;&gt;ipconfig&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_3.png&quot; alt=&quot;ipconfig&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And the result is:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_4.png&quot; alt=&quot;Database Test still Exists&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Please note that, because I continue to mount the same volume named &lt;code class=&quot;highlighter-rouge&quot;&gt;agris_data&lt;/code&gt;, the database &lt;code class=&quot;highlighter-rouge&quot;&gt;test&lt;/code&gt; I have created earlier is still there. 
+However, if you deleted the volume, you will get the following error from &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose up&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;ERROR: Volume agris_data declared as external, but could not be found. 
+Please create the volume manually using &lt;code class=&quot;highlighter-rouge&quot;&gt;docker volume create --name=agris_data&lt;/code&gt; and try again.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;so:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker volume create --name=agris_data
+c:&amp;gt;docker-compose up -d
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;networks&quot;&gt;Networks:&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker network ls
+c:&amp;gt;docker network inspect cppplaylinux_default
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_5.png&quot; alt=&quot;docker network inspect&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And we see:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;we have a new network created by &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose&lt;/code&gt;, in this case &lt;code class=&quot;highlighter-rouge&quot;&gt;cppplaylinux_default&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;we have one host  connected to this network, in this case &lt;code class=&quot;highlighter-rouge&quot;&gt;cppplaylinux_mysql_agris_1&lt;/code&gt;, which is precisely the container created by the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose&lt;/code&gt; and visible through &lt;code class=&quot;highlighter-rouge&quot;&gt;docker ps -a&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Beside using &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose&lt;/code&gt; to create networks of containers, &lt;code class=&quot;highlighter-rouge&quot;&gt;docker network&lt;/code&gt; command offers the options to:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;create networks&lt;/li&gt;
+  &lt;li&gt;delete networks&lt;/li&gt;
+  &lt;li&gt;inspect networks&lt;/li&gt;
+  &lt;li&gt;list networks&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Then you can use the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run --network&lt;/code&gt; to attach a new container to an existing network.&lt;/p&gt;
+
+&lt;p&gt;All user-defined networks have a embedded DNS server. Thus, assuming we add another container to the network, from that container we can simply do &lt;code class=&quot;highlighter-rouge&quot;&gt;ping mysql_agris&lt;/code&gt; and it will work.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it --rm --name ash --network cppplaylinux_default alpine-ssh sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_3_6.png&quot; alt=&quot;ping&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In the end:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker-compose down
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;to tear everything down.&lt;/p&gt;
+
+&lt;p&gt;If we want to keep the network, just do:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker-compose rm
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Speaking of docker-compose, it can be integrated directly with a Dockerfile instead of an existing image. So, instead of doing &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build -t img_name .&lt;/code&gt; we can simply add to the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose.yml&lt;/code&gt; the following:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
+
+services:
+    web_layer:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - 8080:80            
+        environment:
+            - db_conn_str=...
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;A useful parameter is &lt;code class=&quot;highlighter-rouge&quot;&gt;depends_on:&lt;/code&gt; which instructs docker to only start the container after the dependecies are statisfied. &lt;a href=&quot;https://docs.docker.com/compose/compose-file/#dependson&quot;&gt;docker&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Happy Hacking! :)&lt;/p&gt;</content><summary type="html">This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container and connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases). The last part will be dedicated to Docker Compose.</summary></entry><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers 
 and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.&lt;/p&gt;
 
 &lt;p&gt;Here is the first part: &lt;a href=&quot;/web/development/2017/02/12/Docker-Containers.html&quot;&gt;Docker And Containers&lt;/a&gt;&lt;/p&gt;
