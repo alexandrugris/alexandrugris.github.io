@@ -263,6 +263,89 @@ Fits transformer to X and y with optional parameters fit_params and returns a tr
 </div>
 <p><img src="https://alexandrugris.github.io/assets/ml_1_5.png" alt="ML Feature Scaling" /></p>
 
+<h3 id="some-sample-implementation">Some sample implementation:</h3>
+
+<p>In the snippets above, we use algorithms from various python libraries. Here are some sample implementations of how these algorithms.</p>
+
+<p>A basic function to generate data with random NaNs</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="k">def</span> <span class="nf">generate_data</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="nb">min</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">gaps_percent</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>    
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">max</span> <span class="o">-</span> <span class="nb">min</span><span class="p">)</span> <span class="o">+</span> <span class="nb">min</span>
+    <span class="n">cnt_nan</span> <span class="o">=</span> <span class="nb">int</span> <span class="p">(</span><span class="n">gaps_percent</span> <span class="o">*</span> <span class="n">length</span><span class="p">)</span>
+    
+    <span class="n">ilen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt_nan</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ilen</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="n">idx</span><span class="p">])):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">idx</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span> <span class="o">%</span> <span class="n">ilen</span><span class="p">)</span>     <span class="c"># so we minimize clusters</span>
+        <span class="n">ret</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+             
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="n">arr</span> <span class="o">=</span> <span class="n">generate_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+
+</code></pre>
+</div>
+
+<p>Cleaning up the data - the algorithm which replaces NaN with a value (either median or mean)</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">fill_nan_with_value</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">mask</span> <span class="o">^</span> <span class="bp">True</span><span class="p">]);</span>
+    <span class="k">return</span> <span class="n">ret</span> 
+
+<span class="mf">0.5</span><span class="p">,</span> <span class="n">gaps_percent</span><span class="p">)</span>
+
+<span class="n">arr_filled</span> <span class="o">=</span> <span class="n">fill_nan_with_value</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Data scaling:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="s">"""Standardize features by removing the mean and scaling to unit variance
+For instance many elements used in the objective function of a learning algorithm 
+(such as the RBF kernel of Support Vector Machines or the L1 and L2 regularizers 
+of linear models) assume that all features are centered around 0 and have 
+variance in the same order. If a feature has a variance that is orders of 
+magnitude larger that others, it might dominate the objective function and 
+make the estimator unable to learn from other features correctly as expected.
+"""</span>
+<span class="k">def</span> <span class="nf">scale_std_dev</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">):</span>
+    <span class="n">mean_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">);</span>
+    <span class="n">stddev_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">mean_arr</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">mean_arr</span><span class="p">)</span> <span class="o">/</span> <span class="n">stddev_arr</span>
+
+<span class="k">def</span> <span class="nf">scale_normalize</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">min</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">min</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">))</span>
+    
+<span class="n">array_scaled_std_dev</span> <span class="o">=</span> <span class="n">scale_std_dev</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span>
+<span class="n">array_scaled_normal</span> <span class="o">=</span> <span class="n">scale_normalize</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Generate linear data with noise and plot it</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="s">"""
+Format ax + b + error
+"""</span>
+<span class="k">def</span> <span class="nf">generate_noisy_linear_data</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">a_coef</span><span class="p">,</span> <span class="n">b_coef</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="n">a_coef</span> <span class="o">+</span> <span class="n">generate_data</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="o">-</span><span class="n">error</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">error</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_coef</span>
+
+<span class="n">line_with_noise</span> <span class="o">=</span> <span class="n">generate_noisy_linear_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="p">;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">line_with_noise</span><span class="p">,</span> <span class="s">'ro'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_1_6.png" alt="Spyder" /></p>
+
+
   </div>
 
   
