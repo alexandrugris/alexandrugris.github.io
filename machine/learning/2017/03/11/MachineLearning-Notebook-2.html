@@ -65,9 +65,11 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution.</p>
+    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. I will compute the gini index and entropy, coefficients used to measure how much a distribution differs from the uniform distribution. <a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a> is referred also as categorical variance. It was initially introduced to “represent the income or wealth distribution of a nation’s residents, and is the most commonly used measure of inequality.” [Wikipedia]</p>
 
-<h3 id="lets-consider-two-distributions">Let’s consider two distributions:</h3>
+<h3 id="generating-random-numbers-according-to-a-given-distribution">Generating random numbers according to a given distribution</h3>
+
+<p>Let’s consider two distributions I will play arond with in this article:</p>
 
 <ul>
   <li>
@@ -78,9 +80,7 @@
   </li>
 </ul>
 
-<p><strong>The code:</strong></p>
-
-<p><strong><em>Plot the <a href="https://en.wikipedia.org/wiki/Probability_density_function">Probability Density Function</a> and <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">Cumulative Distribution Function</a> of a normally distributed random variable:</em></strong></p>
+<p>Let’s plot the <a href="https://en.wikipedia.org/wiki/Probability_density_function">Probability Density Function</a> and <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">Cumulative Distribution Function</a> of a normally (Gaussian) distributed random variable:</p>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
@@ -119,7 +119,7 @@
 
 <p>In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the <code class="highlighter-rouge">pdf</code> function above. I kept the <code class="highlighter-rouge">pdf</code>, <code class="highlighter-rouge">cdf</code>, mean and <code class="highlighter-rouge">sigma</code> functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).</p>
 
-<p><strong><em>Compute a random variable distributed according to a specific probability density function.</em></strong></p>
+<p>Now, let’s compute a random variable distributed according to a specific probability density function.</p>
 
 <p>Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. <code class="highlighter-rouge">func</code> - the function, <code class="highlighter-rouge">pdf_func</code> - probability density of func and <code class="highlighter-rouge">cdf_func</code> the cumulative distribution - please note that <code class="highlighter-rouge">cdf(func)</code> and <code class="highlighter-rouge">cdf(pdf(func))</code> produce similar results because <code class="highlighter-rouge">cdf</code> has normalization embedded.</p>
 
@@ -173,11 +173,37 @@
 </div>
 <p><img src="https://alexandrugris.github.io/assets/ml_2_3.png" alt="PDF, CDF" /></p>
 
-<p>The <code class="highlighter-rouge">rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
+<p>The <code class="highlighter-rouge">rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between 0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_4.png" alt="Inverse CDF" /></p>
 
 <p>As one can notice, x axis is between (0,1) and y axis between (0, 1000), where 1000 is the size of the random number array. In plain English, it basically reads: “for any number received as parameter between 0 and 0.8, I will output a very small number. For any number higher than 0.8, I will output a larger number.”. As my input is uniformly distributed between (0,1), The probability of outputting a smaller number is much higher than outputting a larger number. How much larger? It is precisely based on the CDF received as input.</p>
+
+<h3 id="entropy-and-gini-index">Entropy and Gini index</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Entropy</a></p>
+
+<p>Entropy measures the amount of information in signals being transferred over a communication channel. A rare signal bares more information than a more frequent one and since the signals are considered to be independent of each other, they can be summed up to estimate the total amount of information. Because of these, we can choose <code class="highlighter-rouge">log(1/p) = log(p^-1) = -log(p)</code> for scoring the level of information in a signal which appears with probability <code class="highlighter-rouge">p</code>. We define entropy to be the averaged level of information in categories of a categorical feature.</p>
+
+<p>Thus, considering a categorical feature with p1..pn probabilities of occurence:</p>
+
+<p><code class="highlighter-rouge">Entropy = H = Sum(-pi log(pi))</code> and it is smaller than <code class="highlighter-rouge">log(n)</code> where n is the number of categories. H for a uniform distribution is <code class="highlighter-rouge">log(n)</code> and it is the maximum entropy.</p>
+
+<p>According to <a href="">Wikipedia</a>https://en.wikipedia.org/wiki/Entropy_(information_theory):</p>
+
+<blockquote>
+  <p>Entropy is a measure of unpredictability of the state, or equivalently, of its average information content. To get an intuitive understanding of these terms, consider the example of a political poll. Usually, such polls happen because the outcome of the &gt;poll is not already known. In other words, the outcome of the poll is relatively unpredictable, and actually performing the poll and learning the results gives some new information; these are just different ways of saying that the a priori entropy of the &gt;poll results is large. Now, consider the case that the same poll is performed a second time shortly after the first poll. Since the result of the first poll is already known, the outcome of the second poll can be predicted well and the results should not &gt;contain much new information; in this case the a priori entropy of the second poll result is small relative to that of the first.</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>H of uniform distribution - m elements =&gt;
+probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log(m)
+</code></pre>
+</div>
+
+<p><a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a></p>
+
+<p>Gini index is defined as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency). E.g., consider a category with frequency p = 20%, the average error is p*(1-p) = 20% * 80% = 16%. Gmax = (m-1) / m and is obtained for a uniform distribution. G = sum( pi * (1 - pi) ).</p>
+
 
   </div>
 
