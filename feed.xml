@@ -1,5 +1,117 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-03-12T20:45:15+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">My Machine Learning Notebook - Part 1 (Data Preprocessing)</title><link href="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-1.html" rel="alternate" type="text/html" title="My Machine Learning Notebook - Part 1 (Data Preprocessing)" /><published>2017-03-11T14:15:16+02:00</published><updated>2017-03-11T14:15:16+02:00</updated><id>https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook%20-%201</id><content type="html" xml:base="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-1.html">&lt;p&gt;This is the first part of my Machine Learning notebook. As I am totally new to ML, the content follows the Udemy course “Machine Learning A-Z™: Hands-On Python &amp;amp; R”. As in the course, I’ll be using Spyder and RStudio.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-03-18T17:39:33+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Statistics, continued</title><link href="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-2.html" rel="alternate" type="text/html" title="Statistics, continued" /><published>2017-03-11T14:15:16+02:00</published><updated>2017-03-11T14:15:16+02:00</updated><id>https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-2</id><content type="html" xml:base="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-2.html">&lt;p&gt;This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution.&lt;/p&gt;
+
+&lt;h3 id=&quot;lets-consider-two-distributions&quot;&gt;Let’s consider two distributions:&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Power law&lt;/strong&gt; - sometimes referred as Pareto. Common in social systems or systems with strong network effects - wealth distribution, group size, productivity, website views. It models preferential attachment. Power law &lt;a href=&quot;https://en.wikipedia.org/wiki/Probability_density_function&quot;&gt;density function&lt;/a&gt; is &lt;code class=&quot;highlighter-rouge&quot;&gt;p(a) ~= a / x^lambda&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;lambda&lt;/code&gt; reflects the steepness of the fall. I am using &lt;code class=&quot;highlighter-rouge&quot;&gt;~=&lt;/code&gt; because the integral on the (-infinity, +infinity) interval should be 1, thus the power law as expressed above is not really a density function. &lt;a href=&quot;https://en.wikipedia.org/wiki/Power_law&quot;&gt;Power Law, Wikipedia&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Gaussian&lt;/strong&gt; - common in physical systems, common in measurements or small random effect. &lt;code class=&quot;highlighter-rouge&quot;&gt;N(a, sigma) = C * e^[-(x-a)^2 / 2 * sigma^2]&lt;/code&gt;, where &lt;code class=&quot;highlighter-rouge&quot;&gt;C&lt;/code&gt; is a constant, &lt;code class=&quot;highlighter-rouge&quot;&gt;a&lt;/code&gt; is the average and &lt;code class=&quot;highlighter-rouge&quot;&gt;sigma^2&lt;/code&gt; the variance. 88% of the values fall between a+-sigma, 99.7% between a+-3*sigma. Z-scoring (&lt;code class=&quot;highlighter-rouge&quot;&gt;y=(x-a)/sigma&lt;/code&gt;) brings the values to the N(0,1) standard form - useful as input for machine learning algorithms.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;The code:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Plot the &lt;a href=&quot;https://en.wikipedia.org/wiki/Probability_density_function&quot;&gt;Probability Density Function&lt;/a&gt; and &lt;a href=&quot;https://en.wikipedia.org/wiki/Cumulative_distribution_function&quot;&gt;Cumulative Distribution Function&lt;/a&gt; of a normally distributed random variable:&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;matplotlib.pyplot&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;plt&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;linspace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;gaussian&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sigma&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sigma&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;pdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_step&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x_step&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;empty_like&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;sigma&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gaussian&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gaussian&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Result:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/ml_2_1.png&quot; alt=&quot;PDF, CDF&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the &lt;code class=&quot;highlighter-rouge&quot;&gt;pdf&lt;/code&gt; function above. I kept the &lt;code class=&quot;highlighter-rouge&quot;&gt;pdf&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;cdf&lt;/code&gt;, mean and &lt;code class=&quot;highlighter-rouge&quot;&gt;sigma&lt;/code&gt; functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Compute a random variable distributed according to a specific probability density function.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. &lt;code class=&quot;highlighter-rouge&quot;&gt;func&lt;/code&gt; - the function, &lt;code class=&quot;highlighter-rouge&quot;&gt;pdf_func&lt;/code&gt; - probability density of func and &lt;code class=&quot;highlighter-rouge&quot;&gt;cdf_func&lt;/code&gt; the cumulative distribution - please note that &lt;code class=&quot;highlighter-rouge&quot;&gt;cdf(func)&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;cdf(pdf(func))&lt;/code&gt; produce similar results because &lt;code class=&quot;highlighter-rouge&quot;&gt;cdf&lt;/code&gt; has normalization embedded.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy.random&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rnd&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;linspace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.8&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;pdf_func&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;cdf_func&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pdf_func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x_axis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/ml_2_2.png&quot; alt=&quot;PDF, CDF&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;rand_cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;inv_cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;prev_cdf_idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;next_val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;float&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;float&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            
+            &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prev_cdf_idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;next_val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;prev_cdf_idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prev_cdf_idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+                
+            &lt;span class=&quot;c&quot;&gt;# a more accurate version would consider a linear interpolation&lt;/span&gt;
+            &lt;span class=&quot;c&quot;&gt;# between prev_cdf_idx - 1 and prev_cdf_idx&lt;/span&gt;
+            &lt;span class=&quot;c&quot;&gt;# for now, simple code is more important&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prev_cdf_idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+        
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# a constant&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;cdf_inv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inv_cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cdf_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_inv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dtype&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;integer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;rand_0_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rnd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;rand_distributed_arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rand_cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rand_0_1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cdf_func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rand_distributed_arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/ml_2_3.png&quot; alt=&quot;PDF, CDF&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;rand_cdf&lt;/code&gt; takes as parameters two arrays - a uniform randomly distributed array with values between0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/ml_2_4.png&quot; alt=&quot;Inverse CDF&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As one can notice, x axis is between (0,1) and y axis between (0, 1000), where 1000 is the size of the random number array. In plain English, it basically reads: “for any number received as parameter between 0 and 0.8, I will output a very small number. For any number higher than 0.8, I will output a larger number.”. As my input is uniformly distributed between (0,1), The probability of outputting a smaller number is much higher than outputting a larger number. How much larger? It is precisely based on the CDF received as input.&lt;/p&gt;</content><summary type="html">This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution.</summary></entry><entry><title type="html">My Machine Learning Notebook - Part 1 (Data Preprocessing)</title><link href="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-1.html" rel="alternate" type="text/html" title="My Machine Learning Notebook - Part 1 (Data Preprocessing)" /><published>2017-03-11T14:15:16+02:00</published><updated>2017-03-11T14:15:16+02:00</updated><id>https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook%20-%201</id><content type="html" xml:base="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-1.html">&lt;p&gt;This is the first part of my Machine Learning notebook. As I am totally new to ML, the content follows the Udemy course “Machine Learning A-Z™: Hands-On Python &amp;amp; R”. As in the course, I’ll be using Spyder and RStudio.&lt;/p&gt;
 
 &lt;p&gt;For this article, let’s consider the following dataset:&lt;/p&gt;
 
@@ -197,9 +309,9 @@ Fits transformer to X and y with optional parameters fit_params and returns a tr
 &lt;/div&gt;
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/ml_1_5.png&quot; alt=&quot;ML Feature Scaling&quot; /&gt;&lt;/p&gt;
 
-&lt;h3 id=&quot;some-sample-implementation&quot;&gt;Some sample implementation:&lt;/h3&gt;
+&lt;h3 id=&quot;some-implementations&quot;&gt;Some implementations:&lt;/h3&gt;
 
-&lt;p&gt;In the snippets above, we use algorithms from various python libraries. Here are some sample implementations of these algorithms.&lt;/p&gt;
+&lt;p&gt;In the snippets above, we use algorithms from various python libraries. Here are some implementations of these algorithms.&lt;/p&gt;
 
 &lt;p&gt;A basic function to generate data with random NaNs&lt;/p&gt;
 
@@ -239,7 +351,7 @@ Fits transformer to X and y with optional parameters fit_params and returns a tr
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;Data scaling:&lt;/p&gt;
+&lt;p&gt;Data scaling - Z-scoring and normalization:&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;Standardize features by removing the mean and scaling to unit variance
 For instance many elements used in the objective function of a learning algorithm 
@@ -248,6 +360,9 @@ of linear models) assume that all features are centered around 0 and have
 variance in the same order. If a feature has a variance that is orders of 
 magnitude larger that others, it might dominate the objective function and 
 make the estimator unable to learn from other features correctly as expected.
+
+- Also known as Z-Scoring
+
 &quot;&quot;&quot;&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;scale_std_dev&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr_filled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;mean_arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr_filled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
@@ -2800,498 +2915,4 @@ throwing move constructor is, in which case the strong exception guarantee is wa
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;</content><summary type="html">In the previous blog post I covered a lot of ground: variadic templates, improvements to classes, improvements to standard library, smart pointers and lambdas. 
 We also briefly touched move semantics as well as decltype and declval. In this part I am going to continue with move, delegated constructors, user defined literals and static_assert. In the next article 
-I will write about local storage for threads while briefly touching thread support in the new standard library.</summary></entry><entry><title type="html">C++ Play - my own short guide to C++11/14</title><link href="https://alexandrugris.github.io/native/coding/2017/01/28/C++-Play.html" rel="alternate" type="text/html" title="C++ Play - my own short guide to C++11/14" /><published>2017-01-28T16:15:16+02:00</published><updated>2017-01-28T16:15:16+02:00</updated><id>https://alexandrugris.github.io/native/coding/2017/01/28/C++-Play</id><content type="html" xml:base="https://alexandrugris.github.io/native/coding/2017/01/28/C++-Play.html">&lt;p&gt;C++ has evolved dramatically in the past years. It is virtually a new language, a huge improvement over the C++ I used to practice in the 2000s.
-Much more expressive templates, richer libraries, more emphasis on compile-time safety and performance improvements. Far from the C with classes in the early 2000s and far from the convoluted template constructs which appeared later to
-improve compile-time issue detection and type safety. To refresh my memory and also get up to speed with the new trends, I have spent a couple of hours digging through the docs, doing some tutorials. Here are my notes.&lt;/p&gt;
-
-&lt;h2 id=&quot;improvements-to-classes---inline-initializers-for-class-members&quot;&gt;Improvements to classes - inline initializers for class members:&lt;/h2&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// new in C++
-&lt;/span&gt;	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test_str&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h2 id=&quot;smart-pointers-in-the-standard-library&quot;&gt;Smart pointers in the standard library&lt;/h2&gt;
-
-&lt;p&gt;In the 2000s you really had three choices for memory management in the C++ world:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Manual (new / delete) with clear rules for owership in the “style-guide” of the project.&lt;/li&gt;
-  &lt;li&gt;The Boost library’s &lt;code class=&quot;highlighter-rouge&quot;&gt;shared_ptr&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;weak_ptr&lt;/code&gt; for shared ownership or &lt;code class=&quot;highlighter-rouge&quot;&gt;std::auto_ptr&lt;/code&gt;, the only smart pointer from the STD library, now deprecated.&lt;/li&gt;
-  &lt;li&gt;Custom-built smart pointers, autolists or any other custom constructs.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Now smart pointers are included in the standard library and they are the preferred way of writing C++ code.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;memory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// ...
-&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// ...
-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-	&lt;span class=&quot;nf&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/*...*/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_shared_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// the recommended way to initialize a smart pointer because the ref-counter is
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// allocated in the same call with the memory for Test
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// =&amp;gt; less memory fragmentation and better locality
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pTest&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;make_shared&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;weak_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pwTest&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pTest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Another smart pointer construct is the &lt;code class=&quot;highlighter-rouge&quot;&gt;unique_ptr&amp;lt; &amp;gt;&lt;/code&gt;, which replaces the now deprecated &lt;code class=&quot;highlighter-rouge&quot;&gt;auto_ptr&lt;/code&gt; .
-I think it is worth considering using it whenever possible instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;boost::shared_ptr&amp;lt;&amp;gt;&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;boost::weak_ptr&amp;lt;&amp;gt;&lt;/code&gt;.
-I think it sends a stronger signal about ownership intent when used in new code.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;source_unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// t is received by value. In this case, this function
-// can only be called using std::move  on the pointer
-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_sink&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_func_ref_unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// destructor will be called here
-&lt;/span&gt;							 &lt;span class=&quot;c1&quot;&gt;// for the object sent by parameter
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_smart_pointers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pt&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;source_unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-	&lt;span class=&quot;nf&quot;&gt;test_func_ref_unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;nf&quot;&gt;test_sink&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;move&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// pt is now empty!
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;unique_ptr&amp;lt;&amp;gt;&lt;/code&gt; cannot be sent by value - it will result in a compilation error. 
-If the receiving function accepts the &lt;code class=&quot;highlighter-rouge&quot;&gt;unique_ptr&amp;lt;&amp;gt;&lt;/code&gt; by value as parameter,
-it can only be passed using the &lt;code class=&quot;highlighter-rouge&quot;&gt;std::move&lt;/code&gt; function, which will nullify the pointer in the calling function. 
-This is called the &lt;em&gt;sink pattern&lt;/em&gt; and it is exemplified in the &lt;code class=&quot;highlighter-rouge&quot;&gt;test_sync&lt;/code&gt; function above. 
-The copy constructor for &lt;code class=&quot;highlighter-rouge&quot;&gt;unique_ptr&amp;lt;&amp;gt;&lt;/code&gt; is explicitly deleted (later on this).&lt;/p&gt;
-
-&lt;h2 id=&quot;improvements-to-collections&quot;&gt;Improvements to collections&lt;/h2&gt;
-
-&lt;p&gt;C++11 brings us unordered associative containers, a fixed size array class and a singly-linked list (std::forwad_list): &lt;a href=&quot;http://www.cplusplus.com/reference/stl/&quot;&gt;http://www.cplusplus.com/reference/stl/&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Because of the new language features (move semantics, std::initializer_list and variadic templates), collections have become much more useful and expressive 
-For instance, now you can actually consider storing a full instance in a collection instead of just a pointer,
-without worrying about endless copies and reallocations. This improves data locality and cache friendliness (provided that you have the appropriate move operations in place). 
-For instance, old pattern in which we push pointers to &lt;code class=&quot;highlighter-rouge&quot;&gt;std::vector&amp;lt;FullType*&amp;gt;&lt;/code&gt; is now similar in iteration speed with &lt;code class=&quot;highlighter-rouge&quot;&gt;std::lists&amp;lt;FullType&amp;gt;::emplace_back&lt;/code&gt;. See below.&lt;/p&gt;
-
-&lt;p&gt;Here are some small examples:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_collections&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v_Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// uses move semantics to fully change the ownership of the pointer to the collection.
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// provided that we had a full type with move constructor / move assignment,
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// on vector reallocation only the move operations would have been called.
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;v_Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;push_back&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;());&lt;/span&gt; 
-
-	&lt;span class=&quot;c1&quot;&gt;// initializer list for vector and list
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v_Int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;nf&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// new member function, based on variadic templates argument. 
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// No copy constructor, no move. 
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// Just construct the object at the end of the collection, invoking the right parameters
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// Better locality as the two pointers to back and forward from the list are stored next to the 
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// allocated memory for the Test object in this case.
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;emplace_back&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Test test test&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_collections_priority_queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// deque does not do copies on increase; a little bit slower random access though
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;priority_queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deque&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
-
-	&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;emplace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;emplace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;emplace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;C&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Popping out elements...&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c_str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;tst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;lambdas&quot;&gt;Lambdas&lt;/h3&gt;
-
-&lt;p&gt;I think it is pretty obvious why lambdas were introduced. Before lamdas, you were bind either to pointer to functions or to functor objects, 
-which were implemended “far” from the point of interest. This made the std-algorithms harder to use, due to code verbosity and scrolling back and forth in the source code. 
-All in all, lambdas are mostly syntactic sugar, but a very useful one.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Returning a lambda from a function and storing a lambda in a variable&lt;/em&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getPIFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PI&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3.1415&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// because PI is declared as static, it does not need to be captured explicitly;
-&lt;/span&gt;		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;//....
-&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PI_func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getPIFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;typeid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PI_func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;: &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PI_func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// output: class std::function&amp;lt;double __cdecl(void)&amp;gt;: 3.1415
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Using lambdas in std::algorithms - passing them as arguments&lt;/em&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;nf&quot;&gt;for_each&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cubes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// back_inserter - very useful function
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;back_inserter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cubes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nf&quot;&gt;for_each&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cubes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cubes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;  &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Improvements to lambdas starting with C++14&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;These include type deduction for lambda parameters - no need to send them explicitly, &lt;code class=&quot;highlighter-rouge&quot;&gt;auto&lt;/code&gt; is enough and also 
-initialization for capture parameters - useful when, for instance, you want to &lt;code class=&quot;highlighter-rouge&quot;&gt;move&lt;/code&gt; an object when captured to lambda instead of just simply copy it by value, or apply any type of other transformation.&lt;/p&gt;
-
-&lt;p&gt;The code below uses another cool feature from C++ 11, the variadic templates. The template &lt;code class=&quot;highlighter-rouge&quot;&gt;invoke&lt;/code&gt; simply invokes the functor it receives with the list of parameters it receives, 
-all in a typesafe matter. This pattern can be applied when you want a template to store a function and then invoke it later, with different parameters.&lt;/p&gt;
-
-&lt;p&gt;Same for lambdas, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an &lt;code class=&quot;highlighter-rouge&quot;&gt;int&lt;/code&gt; and p2 is a &lt;code class=&quot;highlighter-rouge&quot;&gt;const char*&lt;/code&gt;. 
-Note though, this check is performed at compile time, so it is not at all a form of dynamic invocation.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;invoke&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;...&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-	&lt;span class=&quot;nf&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_lambdas_cxx14&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// auto parameters for lambda, initialization for capture parameters (c++14)
-&lt;/span&gt;	&lt;span class=&quot;nf&quot;&gt;invoke&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;move&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt; 
-
-		&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c_str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot; &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot; &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// should be null because it was moved in the lambda initialization
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Value of ptr:&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
-
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;A little bit of extra explanation.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;[x = x + 1]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;This code prints &lt;code class=&quot;highlighter-rouge&quot;&gt;2&lt;/code&gt; followed by &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;. The reason is that &lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; in the lambda is a different variable than &lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; in the outer function. 
-The code above is identical to the following (also running code, although &lt;code class=&quot;highlighter-rouge&quot;&gt;__x&lt;/code&gt; is not specifically declared anywhere)&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;[__x = x + 1]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Lambdas can also be recursive&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;But in this case, they need to be explicily captured like in the code below. Please note the capture by reference. 
-If an attempt is made to send the lambda by value the code compiles but you get a runtime error - the lambda has been declared but not defined yet.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_recursive_lambdas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// a redundant implementation but serves the purpose :)
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fibonacci&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fibonacci&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-			&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-			&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fibonacci&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fibonacci&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// range for; prefered to use int&amp;amp; in order to reference elements in v
-&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// range for is a new C++ 11 construct
-&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-		&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fibonacci&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;; &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;this&lt;/code&gt; can also be captured, like in the snipped below:&lt;/em&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CaptureThis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CaptureThis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;c1&quot;&gt;// &quot;this&quot; must be in the capture list for the following to work
-&lt;/span&gt;	&lt;span class=&quot;nf&quot;&gt;PrintSmth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;](&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-
-	&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// works
-&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// works
-&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// works
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// works
-&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot; &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot; &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c_str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Changing values and mutable lambdas&lt;/em&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numbers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prev&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;nf&quot;&gt;for_each&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numbers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numbers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prev&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutable&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-		&lt;span class=&quot;c1&quot;&gt;// value is sent by reference, so I can modify it in place
-&lt;/span&gt;		&lt;span class=&quot;c1&quot;&gt;// I send prev by value =&amp;gt; prev does not modify in the upper scope BUT!
-&lt;/span&gt;		&lt;span class=&quot;c1&quot;&gt;// because I define the function as mutable, 
-&lt;/span&gt;		&lt;span class=&quot;c1&quot;&gt;// I can modify it in the scope of the lambda (in the generated class)
-&lt;/span&gt;		&lt;span class=&quot;n&quot;&gt;prev&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prev&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-	&lt;span class=&quot;nf&quot;&gt;for_each&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numbers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numbers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The output of this program is:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1
-3
-6
-10
-15
-21
-28
-36
-45
-55
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Because the lambda was postfixed with the &lt;code class=&quot;highlighter-rouge&quot;&gt;mutable&lt;/code&gt; keyword, it allows me to modify the captured values. 
-However, since the capture was not done by reference, it is not modified in the outer scope. If we were to write in pseudo-c++,
-the generated lambdas are similar with the following classes:&lt;/p&gt;
-
-&lt;p&gt;By-value capture without the &lt;code class=&quot;highlighter-rouge&quot;&gt;mutable&lt;/code&gt; postfix:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Lambda{
-	const Type t;
-	operator() {
-		// t cannot change
-	}
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;By-value with the &lt;code class=&quot;highlighter-rouge&quot;&gt;mutable&lt;/code&gt; postfix:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Lambda{
-	Type t;
-	operator () {
-		// t can change
-	}
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the example above, since we declared the input parameter for the lambda as a reference (&lt;code class=&quot;highlighter-rouge&quot;&gt;int&amp;amp;&lt;/code&gt;), it gives me direct write access to the &lt;code class=&quot;highlighter-rouge&quot;&gt;vector&lt;/code&gt; content.&lt;/p&gt;
-
-&lt;h3 id=&quot;decltype-and-declval&quot;&gt;Decltype and Declval&lt;/h3&gt;
-
-&lt;p&gt;Two usage scenarios:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;We need a way to compute at compile-time the return type of a template function.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// starting with c++14 compiler can autodeduce return type
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; 
-&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;multiply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T4&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;cm&quot;&gt;/*-&amp;gt; decltype (t1 * t2 * t3 * t4) */&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-
-	&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t3&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;typeid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;//...
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5.4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;z&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3.1f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;multiply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;We have a private constructor, but we still need the type of the class:&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; 
-	&lt;span class=&quot;nf&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;//...
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// declval can only be used where it will not be evaluated, 
-//but only checked for type - like in decltype
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;typeid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;decltype&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;declval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;())).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;variadic-templates-templates-with-a-variable-number-of-arguments&quot;&gt;Variadic templates (templates with a variable number of arguments)&lt;/h3&gt;
-
-&lt;p&gt;I think this is one of the coolest features of C++11, as it allows very clean usage of libaries. In an example above, we saw the &lt;code class=&quot;highlighter-rouge&quot;&gt;emplace_back&lt;/code&gt; method of std::collections 
-which permits the caller to send the constructor parameters directly to the method, and the method inside does the allocation of the object. Here is a more complex example, 
-which shows how to:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Create a template function with a variable number of parameters&lt;/li&gt;
-  &lt;li&gt;Call another function for each parameter&lt;/li&gt;
-  &lt;li&gt;Recursively extract each parameter and use it in a strongly typed manner&lt;/li&gt;
-  &lt;li&gt;Use the library in a very natural way.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Let’s assume we want to write a library class which outputs CSV to a stream. We want to use it in a straight forward manner, like in the snippet below:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createCSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_variadic_templates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	
-	&lt;span class=&quot;c1&quot;&gt;// let's simply use a template function to deduce the type of cout
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;csvPrinter&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createCSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
-
-	&lt;span class=&quot;c1&quot;&gt;// we are outputting a row or parameters of different types
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;csvPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;print_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;32.5f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;csvPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;print_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;32.5f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;csvPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;print_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;32.5f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;csvPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;print_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;32.5f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;CSVPrinter&lt;/code&gt; class is clearly a template of type &lt;code class=&quot;highlighter-rouge&quot;&gt;Stream&lt;/code&gt; which includes a method, &lt;code class=&quot;highlighter-rouge&quot;&gt;print_row&lt;/code&gt; which receives a variable number of parameters of different types.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CSVPrinter&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row_count&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nullptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;c1&quot;&gt;// called for each parameter
-&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;validate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
-		&lt;span class=&quot;c1&quot;&gt;//cout &amp;lt;&amp;lt; typeid(T).name() &amp;lt;&amp;lt; endl;
-&lt;/span&gt;		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FirstColumn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;  
-	&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_row_internal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FirstColumn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reminder_columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;nf&quot;&gt;print_row_internal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reminder_columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...);&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LastColumn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; 
-	&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_row_internal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LastColumn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-
-	&lt;span class=&quot;nf&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
-
-	&lt;span class=&quot;nf&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row_count&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;p&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CSVPrinter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;typename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; 
-	&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row_count&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;		
-		&lt;span class=&quot;n&quot;&gt;row_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++;&lt;/span&gt;
-
-		&lt;span class=&quot;c1&quot;&gt;// function validate is called for each parameter in cols
-&lt;/span&gt;		&lt;span class=&quot;nf&quot;&gt;print_row_internal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;validate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)...);&lt;/span&gt; 
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Let’s look at the &lt;code class=&quot;highlighter-rouge&quot;&gt;print_row&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;It calls &lt;code class=&quot;highlighter-rouge&quot;&gt;print_row_internal&lt;/code&gt; with &lt;code class=&quot;highlighter-rouge&quot;&gt;validate(cols)...&lt;/code&gt;. This syntax allows calling the &lt;code class=&quot;highlighter-rouge&quot;&gt;validate&lt;/code&gt; function for each &lt;code class=&quot;highlighter-rouge&quot;&gt;col&lt;/code&gt; prior to calling &lt;code class=&quot;highlighter-rouge&quot;&gt;print_row_internal&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;print_row_internal&lt;/code&gt; has two specializations. One for a single parameter, which closes the recursive loop, and one with one specialized (extracted) parameter and the rest of the &lt;code class=&quot;highlighter-rouge&quot;&gt;colls&lt;/code&gt; as bulk. 
-This recursive definition allows processing each parameter in a type-safe manner, one by one.&lt;/li&gt;
-&lt;/ol&gt;</content><summary type="html">C++ has evolved dramatically in the past years. It is virtually a new language, a huge improvement over the C++ I used to practice in the 2000s.
-Much more expressive templates, richer libraries, more emphasis on compile-time safety and performance improvements. Far from the C with classes in the early 2000s and far from the convoluted template constructs which appeared later to
-improve compile-time issue detection and type safety. To refresh my memory and also get up to speed with the new trends, I have spent a couple of hours digging through the docs, doing some tutorials. Here are my notes.</summary></entry></feed>
+I will write about local storage for threads while briefly touching thread support in the new standard library.</summary></entry></feed>
