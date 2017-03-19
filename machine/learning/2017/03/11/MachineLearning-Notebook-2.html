@@ -310,6 +310,60 @@ Gini: 0.0 ; Max Gini: 0.8
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_6.png" alt="Gini Index" /></p>
 
+<p>Mean, median, entropy index (H) and Gini index (G) are different aggregate indices (summaries) for a distribution. Because our sample size may not be large enough, they are subject to measurement erros. Therefore, if we need to improve our knowledge of the data, we can compute their distribution as well, usually Gaussian. We would obtain then the mean and stddev of mean, or of entropy index, for instance. Two outstanding methods are bootstrapping and K-fold crossvalidation.</p>
+
+<h3 id="bootstrapping">Bootstrapping</h3>
+
+<p>Bootstrapping is a resampling method which works like this:</p>
+
+<ol>
+  <li>Consider M random trials and an entity set with N entities</li>
+  <li>Randomly extract and put back N entities from the entity set =&gt; on average only <code class="highlighter-rouge">(e-1) / e = 63.2%</code> will be selected in a trial. (p of an entity not to be drawn = 1 - 1/N, we have N trials =&gt; p of not drawn for N trials is (1 - 1/N)^N -&gt; 1/e = 36% of all entities)</li>
+  <li>Compute the desired index for the trial</li>
+  <li>Summarize for all trials the indices into the mean / stddev form; plot a histogram.</li>
+</ol>
+
+<p>Here is the code for computing mean variation through bootstrapping. We will consider a power-law distribution for start, with 20 extractions.</p>
+
+<p>Initialization:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">x_axis</span>          <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">powerlaw</span>        <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_axis</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.2</span>
+<span class="n">rand_0_1</span>        <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="c"># 20 extractions</span>
+<span class="n">rand_powerlaw_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">powerlaw</span><span class="p">))</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span> <span class="c"># just check the distribution is power-law-ish</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_2_7.png" alt="First distribution" /></p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># prepare space for mean for 500 trials</span>
+<span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">means</span><span class="o">.</span><span class="n">size</span><span class="p">):</span> <span class="c">#500 trials</span>
+    <span class="n">bootstrapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+        <span class="n">bootstrapped</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rand_powerlaw_arr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">)]</span>
+        
+    <span class="n">means</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bootstrapped</span><span class="p">)</span>
+    
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"Mean of distribution: {:.4f}, Mean boostrapped: {:.4f}, Stddev mean bootstrapped {:.4f} "</span>
+      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">means</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">means</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<p>And the output:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_2_8.png" alt="First distribution" /></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Mean of distribution: 0.1402, Mean boostrapped: 0.1408, Stddev mean bootstrapped 0.0346 
+</code></pre>
+</div>
+
+<p>Intrestingly enough, as the initial sample is quite narrow (20 extractions), the mean and std-dev of mean varies significantly between successive runs of the algorithm.</p>
 
   </div>
 
