@@ -65,7 +65,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. I will compute the Gini index (G) and the entropy (H) coefficients, which are used to measure how much a distribution differs from the uniform distribution.</p>
+    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. I will compute the Gini index (G) and the entropy (H) coefficients, which are used to measure how much a distribution differs from the uniform distribution. Towards the end, I will touch the topic of validation with two methods: bootstrapping and k-fold cross validation.</p>
 
 <h3 id="generating-random-numbers-according-to-a-given-distribution">Generating random numbers according to a given distribution</h3>
 
@@ -310,7 +310,7 @@ Gini: 0.0 ; Max Gini: 0.8
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_6.png" alt="Gini Index" /></p>
 
-<p>Mean, median, entropy index (H) and Gini index (G) are different aggregate indices (summaries) for a distribution. Because our sample size may not be large enough, they are subject to measurement errors. Therefore, if we need to improve our knowledge of the data, we can compute their distribution as well - which is Gaussian. If we take the mean as the parameter we want to investigate, we obtain the mean of the mean and the stddev of mean. But any other index can be considered. Two outstanding methods are bootstrapping and K-fold crossvalidation.</p>
+<p>Mean, median, entropy index (H) and Gini index (G) are different aggregate indices (summaries) for a distribution. Because our sample size is not large enough, they are subject to measurement errors. If we want to understand a little bit better how much error our computed index on the sample data hides, we can compute its distribution (its mean and its stddev). For instance, if we take the mean as the parameter we want to investigate, we obtain the mean of the mean and the stddev of mean. But any other index can be considered. Two outstanding methods are bootstrapping and K-fold cross validation.</p>
 
 <h3 id="bootstrapping">Bootstrapping</h3>
 
@@ -364,6 +364,27 @@ Gini: 0.0 ; Max Gini: 0.8
 </div>
 
 <p>Intrestingly enough, as the initial sample is quite narrow (20 extractions), the mean and std-dev of mean vary significantly between successive runs of the algorithm.</p>
+
+<h3 id="k-fold-cross-validation">K-fold cross validation</h3>
+
+<p>Another set of validation techniques use the splitting of the initial array into two parts of pre-specified sizes: train set and test set, so the results obtained on the train set are compared with the data from the test set.</p>
+
+<p>K-fold cross validation works as follows:</p>
+
+<ol>
+  <li>Split the set in K parts of equal sizes</li>
+  <li>For each part k, 0 &lt;= k &lt; K, use Part_k as the test set and the rest of the parts as the train set.</li>
+  <li>The average score of all test sets constitutes a K-fold cross validation estimate of the method quality.</li>
+</ol>
+
+<p>E.g. - mean.</p>
+
+<ol>
+  <li>We split the set in K parts.</li>
+  <li>For each part k: we take the rest of K-1 parts and we compute the mean. We compute the mean on the k part and we substract (mean(k-1) - mean_k)^2</li>
+  <li>We average all the mean_k obtained before and we also compute the stddev sigma=sqrt(1/K * Sum(squares from step 2))</li>
+</ol>
+
 
   </div>
 
