@@ -65,7 +65,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. I will compute the gini index and entropy, coefficients used to measure how much a distribution differs from the uniform distribution. <a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a> is referred also as categorical variance. It was initially introduced to “represent the income or wealth distribution of a nation’s residents, and is the most commonly used measure of inequality.” [Wikipedia]</p>
+    <p>This post tackles basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. I will compute the Gini index (G) and the entropy (H) coefficients, which are used to measure how much a distribution differs from the uniform distribution.</p>
 
 <h3 id="generating-random-numbers-according-to-a-given-distribution">Generating random numbers according to a given distribution</h3>
 
@@ -147,22 +147,21 @@
         <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="mi">1</span>
     
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
-            <span class="n">next_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+            <span class="n">next_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
             
             <span class="k">while</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">prev_cdf_idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">next_val</span><span class="p">:</span>
                 <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">+</span> <span class="mi">1</span>
                 
             <span class="c"># a more accurate version would consider a linear interpolation</span>
             <span class="c"># between prev_cdf_idx - 1 and prev_cdf_idx</span>
-            <span class="c"># for now, simple code is more important</span>
             <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">-</span> <span class="mi">1</span>
         
-        <span class="k">return</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="o">.</span><span class="n">size</span>
     
-    <span class="n">scale</span> <span class="o">=</span> <span class="mi">10000</span> <span class="c"># a constant</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mi">10000</span>
     
     <span class="n">cdf_inv</span> <span class="o">=</span> <span class="n">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cdf_inv</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">cdf_inv</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">scale</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)]</span> 
 
 <span class="n">rand_0_1</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
 <span class="n">rand_distributed_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf_func</span><span class="p">)</span>
@@ -189,7 +188,7 @@
 
 <p><code class="highlighter-rouge">Entropy = H = Sum(-pi log(pi))</code> and it is smaller than <code class="highlighter-rouge">log(n)</code> where n is the number of categories. H for a uniform distribution is <code class="highlighter-rouge">log(n)</code> and it is the maximum entropy.</p>
 
-<p>According to <a href="">Wikipedia</a>https://en.wikipedia.org/wiki/Entropy_(information_theory):</p>
+<p>According to <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Wikipedia</a>:</p>
 
 <blockquote>
   <p>Entropy is a measure of unpredictability of the state, or equivalently, of its average information content. To get an intuitive understanding of these terms, consider the example of a political poll. Usually, such polls happen because the outcome of the &gt;poll is not already known. In other words, the outcome of the poll is relatively unpredictable, and actually performing the poll and learning the results gives some new information; these are just different ways of saying that the a priori entropy of the &gt;poll results is large. Now, consider the case that the same poll is performed a second time shortly after the first poll. Since the result of the first poll is already known, the outcome of the second poll can be predicted well and the results should not &gt;contain much new information; in this case the a priori entropy of the second poll result is small relative to that of the first.</p>
@@ -200,9 +199,116 @@ probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log
 </code></pre>
 </div>
 
+<p>The formulas above translate to the following python code:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_values</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">histogram</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="c"># so we don't have 1/0</span>
+    
+    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">prb</span> <span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Example 1:</p>
+
+<p>Compute entropy for a completely skewed distribution of 5 items, [1, 0, 0, 0, 0]</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<p>With output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Entropy: 0.0058899223994331295 ; Max Entropy: 2.321928094887362
+</code></pre>
+</div>
+
+<p>Example 2:</p>
+
+<p>Compute entropy for a gaussian distrbuted random variable split into 5 categories.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">rand_gaussian_arr</span><span class="p">,</span> <span class="mi">5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<p>With output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Entropy: 1.8286832347936723 ; Max Entropy: 2.321928094887362
+</code></pre>
+</div>
+
+<p>Example 3:</p>
+
+<p>Plot the chart for the evolution of the entropy index for a set of probabilities [p, 1-p]</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span>
+<span class="n">e_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_axis</span><span class="p">:</span>    
+    <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> 
+    <span class="n">probs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">e</span><span class="p">[</span><span class="n">e_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="n">e_idx</span><span class="p">])</span>
+    
+    <span class="n">e_idx</span> <span class="o">=</span> <span class="n">e_idx</span> <span class="o">+</span> <span class="mi">1</span>
+    
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>With the output:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_2_5.png" alt="Entropy" /></p>
+
 <p><a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a></p>
 
-<p>Gini index is defined as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency). E.g., consider a category with frequency p = 20%, the average error is p*(1-p) = 20% * 80% = 16%. Gmax = (m-1) / m and is obtained for a uniform distribution. G = sum( pi * (1 - pi) ).</p>
+<p>Gini index is referred also as categorical variance. It was initially introduced to “represent the income or wealth distribution of a nation’s residents, and is the most commonly used measure of inequality.” [Wikipedia]. We define it as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency).</p>
+
+<p>E.g., consider a category with frequency <code class="highlighter-rouge">p = 20%</code>, the average error is <code class="highlighter-rouge">p*(1-p) = 20% * 80% = 16%</code>. <code class="highlighter-rouge">Gmax = (m-1) / m</code> and is obtained for a uniform distribution. <code class="highlighter-rouge">G = sum( p_i * (1 - p_i)</code> ).</p>
+
+<p>Same as before:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">gini_idx</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">prb</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">gini_idx_max</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">histogram</span><span class="o">.</span><span class="n">size</span>
+</code></pre>
+</div>
+
+<p>For Gaussian (5 elements):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>histogram = np.histogram(rand_gaussian_arr, 5)[0]
+print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
+
+Gini: 0.674266 ; Max Gini: 0.8
+</code></pre>
+</div>
+
+<p>For skewed distribution:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>histogram = np.array([1, 0, 0, 0, 0], dtype=np.float)
+print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
+Gini: 0.0 ; Max Gini: 0.8
+</code></pre>
+</div>
+
+<p>Evolution of Gini index (G) for a set of probabilities (p, 1-p):</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_2_6.png" alt="Gini Index" /></p>
 
 
   </div>
