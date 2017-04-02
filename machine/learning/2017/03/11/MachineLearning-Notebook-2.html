@@ -6,8 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Statistics, continued</title>
-  <meta name="description" content="In this post I tackle basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random number...">
+  <title>My Machine Learning Notebook - Part 2 (Regression)</title>
+  <meta name="description" content="This is the second part of my Machine Learning notebook, following the Udemy course “Machine Learning A-Z™: Hands-On Python &amp;amp; R”.">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/machine/learning/2017/03/11/MachineLearning-Notebook-2.html">
@@ -60,331 +60,367 @@
         <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">Statistics, continued</h1>
+    <h1 class="post-title" itemprop="name headline">My Machine Learning Notebook - Part 2 (Regression)</h1>
     <p class="post-meta"><time datetime="2017-03-11T14:15:16+02:00" itemprop="datePublished">Mar 11, 2017</time></p>
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>In this post I tackle basic algorithms for computing probability density functions and cumulative distribution functions, as well as generating random numbers according to a distribution. Afterwards, I will compute the Gini index (G) and the entropy (H) coefficients, which are used to measure how much a distribution differs from the uniform distribution. Towards the end, I will touch the topic of validation with two methods: bootstrapping and k-fold cross validation.</p>
+    <p>This is the second part of my Machine Learning notebook, following the Udemy course “Machine Learning A-Z™: Hands-On Python &amp; R”.</p>
 
-<h3 id="generating-random-numbers-according-to-a-given-distribution">Generating random numbers according to a given distribution</h3>
+<h3 id="simple-linear-regression-with-plot">Simple Linear Regression With Plot</h3>
 
-<p>Let’s consider two distributions I will play arond with in this article:</p>
+<ul>
+  <li>Pink dots - training set X</li>
+  <li>Blue line - regression line on the train set</li>
+  <li>Red dots - values to predict (test set)</li>
+  <li>Green dots - predicted values for the test set (situated on the blue line)</li>
+  <li>Assumption is <code class="highlighter-rouge">y = ax + b</code>. We have sets of <code class="highlighter-rouge">y</code>s and <code class="highlighter-rouge">x</code>s, what value for <code class="highlighter-rouge">a</code> and <code class="highlighter-rouge">b</code> minimize the error of <code class="highlighter-rouge">sum ((yi-(axi + b))^2)</code>. <code class="highlighter-rouge">b</code> is called also the intercept and <code class="highlighter-rouge">a</code> is the slope.</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">".</span><span class="se">\\</span><span class="s">Data</span><span class="se">\\</span><span class="s">Salary_Data.csv"</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c"># scatter plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"pink"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"red"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"lightgreen"</span><span class="p">)</span>
+
+<span class="c"># line plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">"blue"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">"Salary vs Experience"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">"Years"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">"Salary"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_3_1.png" alt="Results" /></p>
+
+<p>The implementation of simple linear regression using the ordinary least squares method is straight forward:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">def</span>  <span class="nf">ols_train_predict</span><span class="p">(</span><span class="n">_X_train</span><span class="p">,</span> <span class="n">_Y_train</span><span class="p">,</span> <span class="n">_X_test</span><span class="p">):</span>
+    <span class="s">"""
+    f = sum( (Y - (aX+b)) ** 2) == minimum &lt;=&gt;
+    df / da = 0 and df / db = 0 
+    """</span>
+    
+    <span class="c"># secure the same dimensions</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">_X_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">Y_train</span> <span class="o">=</span> <span class="n">_Y_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">_X_test</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">xi_2_sum</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">X_train</span> <span class="o">*</span> <span class="n">X_train</span><span class="p">)</span>
+    <span class="n">xi_sum</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+    <span class="n">xi_yi_sum</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">X_train</span> <span class="o">*</span> <span class="n">Y_train</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">yi_sum</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">Y_train</span><span class="p">)</span>
+
+    <span class="c"># we now have to solve the following equations:</span>
+    <span class="c"># a * xi_2_sum + b * xi_sum - xi_yi_sum = 0</span>
+    <span class="c"># a * xi_sum + b * N  - yi_sum = 0</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">xi_yi_sum</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">xi_sum</span> <span class="o">*</span> <span class="n">yi_sum</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">xi_2_sum</span> <span class="o">-</span> <span class="n">xi_sum</span> <span class="o">*</span> <span class="n">xi_sum</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">yi_sum</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">xi_sum</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+
+    <span class="k">return</span> <span class="n">X_test</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="n">Y</span> <span class="o">=</span> <span class="n">ols_train_predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">)</span>
+
+<span class="c"># line plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>The basic idea for all least squares methods is that the function <code class="highlighter-rouge">S=sum((yi-f(xi, B))^2)</code> is minimized where <code class="highlighter-rouge">B</code> is a vector of variables we need to identify. In the particular case of linear regression, <code class="highlighter-rouge">B = [a, b]</code> and <code class="highlighter-rouge">f(xi, B) = axi + b</code>. Minimized means the conditions <code class="highlighter-rouge">dS / dB[i] = 0</code>. In the case above, we have a system of two equations with two unknowns, <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/da = 0</code> and <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/db = 0</code>.</p>
+
+<p>Results:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_3_5.png" alt="Dataset" /></p>
+
+<p>Note:</p>
+
+<p>I kept the function above simple, but it is not numerically friendly. Numbers <code class="highlighter-rouge">xi_2_sum</code>, <code class="highlighter-rouge">xi_yi_sum</code>, etc. might get very high. Therefore some rearangement of the computation should be performed for production code.</p>
+
+<h3 id="multiple-linear-regression">Multiple linear regression</h3>
+
+<p>Formula: <code class="highlighter-rouge">y = b + a1 * x1 + a2 * x2 + a3 * x3 + ...</code></p>
+
+<p>Assumptions that need to be checked first:</p>
+
+<ul>
+  <li>Linearity</li>
+  <li>Homoscedasticity (<a href="https://en.wikipedia.org/wiki/Homoscedasticity">all random variables in the sequence or vector have the same finite variance</a>)</li>
+  <li>Multivariate normality of error distribution - <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution">https://en.wikipedia.org/wiki/Multivariate_normal_distribution</a></li>
+  <li>Independence of errors</li>
+  <li>Lack of multicolinearity - <a href="https://en.wikipedia.org/wiki/Multicollinearity">is a phenomenon in which two or more predictor variables in a multiple regression model are highly correlated, meaning that one can be linearly predicted from the others with a substantial degree of accuracy</a></li>
+</ul>
+
+<p>For categorial variables, we need to transform them in dummy binary variables, but not include all of them in the regression model - dummy variable trap. The idea is that if we include all the categories in the multiple regression we break the rule of lack of multicolinearity. Afterall, if a value does not belong to a category, it will belong to another. The rule is “always omit one dummy variable”.</p>
+
+<p>Methods for building a multiple regression model:</p>
 
 <ul>
   <li>
-    <p><strong>Power law</strong> - sometimes referred as Pareto. Common in social systems or systems with strong network effects - wealth distribution, group size, productivity, website views. It models preferential attachment. Power law <a href="https://en.wikipedia.org/wiki/Probability_density_function">density function</a> is <code class="highlighter-rouge">p(a) ~= a / x^lambda</code> where <code class="highlighter-rouge">lambda</code> reflects the steepness of the fall. I am using <code class="highlighter-rouge">~=</code> because the integral on the (-infinity, +infinity) interval should be 1, thus the power law as expressed above is not really a density function. <a href="https://en.wikipedia.org/wiki/Power_law">Power Law, Wikipedia</a></p>
+    <p><em>All variables in</em> - not really recommended because of the noise some variables might bring to the prediction. Some variables might simply be bad predictors and they would only pollute the model space. Useful if you have prior knowledge of the problem domain and you know that these variables matter.</p>
   </li>
   <li>
-    <p><strong>Gaussian</strong> - common in physical systems, common in measurements or small random effect. <code class="highlighter-rouge">N(a, sigma) = C * e^[-(x-a)^2 / 2 * sigma^2]</code>, where <code class="highlighter-rouge">C</code> is a constant, <code class="highlighter-rouge">a</code> is the average and <code class="highlighter-rouge">sigma^2</code> the variance. 88% of the values fall between a+-sigma, 99.7% between a+-3*sigma. Z-scoring (<code class="highlighter-rouge">y=(x-a)/sigma</code>) brings the values to the N(0,1) standard form - useful as input for machine learning algorithms.</p>
+    <p><em>Backward elimination</em> - Steps:</p>
   </li>
 </ul>
 
-<p>Let’s plot the <a href="https://en.wikipedia.org/wiki/Probability_density_function">Probability Density Function</a> and <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">Cumulative Distribution Function</a> of a normally (Gaussian) distributed random variable:</p>
+<ol>
+  <li>Select a significance level to stay in the model (SL = 0.05, for instance),</li>
+  <li>Fit the model with all possible predictors (all variables in),</li>
+  <li>Consider the predictor with the highest <a href="https://en.wikipedia.org/wiki/P-value">P-value</a>.</li>
+  <li>If P &gt; SL, go to next step. Otherwise finish. Step 5. Fit the model without this predictor and go to Step 3.</li>
+</ol>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<p>In the end we have a model in which all variables have their P-value less than our chosen significance level.</p>
 
-<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<ul>
+  <li><em>Forward selection</em> - Steps:</li>
+</ul>
 
-<span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+<ol>
+  <li>Select a significance level to enter the model. E.g. SL = 0.05. 2.</li>
+  <li>Fit all simple regression models y ~ xi. Select the one with the lowest P-value</li>
+  <li>Construct all possible models with this variable AND with another predictor added to this one.</li>
+  <li>Select the predictor with the lowest P-value. If P-value &lt; SL, go to 3. Else finish and keep the previous model.</li>
+</ol>
 
-<span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="n">x_step</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">y</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">x_step</span><span class="p">)</span>
+<ul>
+  <li><em>Bidirectional elimination (stepwise regression)</em> - Steps:</li>
+</ul>
 
-<span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="n">cdf_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-    <span class="n">cdf_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
-        <span class="n">cdf_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        
-    <span class="k">return</span> <span class="n">cdf_arr</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">cdf_arr</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-    
-<span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<ol>
+  <li>Select a significance level to enter and a significance level to say.</li>
+  <li>Perform next step from forward selection.</li>
+  <li>Perform all steps from backward elimiation.</li>
+</ol>
 
-<span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<ul>
+  <li><em>Score comparison</em></li>
+</ul>
 
+<ol>
+  <li>Build several models</li>
+  <li>Select the one that fits best a specific criterion</li>
+</ol>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
-</code></pre>
-</div>
+<p>Until no more variables can enter or stay - this is the model.</p>
 
-<p><strong>Result:</strong></p>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_1.png" alt="PDF, CDF" /></p>
-
-<p>In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the <code class="highlighter-rouge">pdf</code> function above. I kept the <code class="highlighter-rouge">pdf</code>, <code class="highlighter-rouge">cdf</code>, mean and <code class="highlighter-rouge">sigma</code> functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).</p>
-
-<p>Now, let’s compute a random variable distributed according to a specific probability density function.</p>
-
-<p>Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. <code class="highlighter-rouge">func</code> - the function, <code class="highlighter-rouge">pdf_func</code> - probability density of func and <code class="highlighter-rouge">cdf_func</code> the cumulative distribution - please note that <code class="highlighter-rouge">cdf(func)</code> and <code class="highlighter-rouge">cdf(pdf(func))</code> produce similar results because <code class="highlighter-rouge">cdf</code> has normalization embedded.</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy.random</span> <span class="kn">as</span> <span class="nn">rnd</span>
-
-<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-<span class="n">func</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_axis</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.8</span>
-
-<span class="n">pdf_func</span> <span class="o">=</span> <span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">func</span><span class="p">)</span>
-<span class="n">cdf_func</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf_func</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
-</code></pre>
-</div>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_2.png" alt="PDF, CDF" /></p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code>
-<span class="k">def</span> <span class="nf">rand_cdf</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">cdf_arr</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
-        <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="mi">1</span>
-    
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
-            <span class="n">next_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
-            
-            <span class="k">while</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">prev_cdf_idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">next_val</span><span class="p">:</span>
-                <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">+</span> <span class="mi">1</span>
-                
-            <span class="c"># a more accurate version would consider a linear interpolation</span>
-            <span class="c"># between prev_cdf_idx - 1 and prev_cdf_idx</span>
-            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">-</span> <span class="mi">1</span>
-        
-        <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="o">.</span><span class="n">size</span>
-    
-    <span class="n">scale</span> <span class="o">=</span> <span class="mi">10000</span>
-    
-    <span class="n">cdf_inv</span> <span class="o">=</span> <span class="n">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cdf_inv</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">scale</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)]</span> 
-
-<span class="n">rand_0_1</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
-<span class="n">rand_distributed_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf_func</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_distributed_arr</span><span class="p">)</span>
-
-</code></pre>
-</div>
-<p><img src="https://alexandrugris.github.io/assets/ml_2_3.png" alt="PDF, CDF" /></p>
-
-<p>The <code class="highlighter-rouge">rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between 0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_4.png" alt="Inverse CDF" /></p>
-
-<p>As one can notice, x axis is between (0,1) and y axis between (0, 1000), where 1000 is the size of the random number array. In plain English, it basically reads: “for any number received as parameter between 0 and 0.8, I will output a very small number. For any number higher than 0.8, I will output a larger number.”. As my input is uniformly distributed between (0,1), The probability of outputting a smaller number is much higher than outputting a larger number. How much larger? It is precisely based on the CDF received as input.</p>
-
-<h3 id="entropy-and-gini-index">Entropy and Gini index</h3>
-
-<p><a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Entropy</a></p>
-
-<p>Entropy measures the amount of information in signals being transferred over a communication channel. A rare signal bares more information than a more frequent one and since the signals are considered to be independent of each other, they can be summed up to estimate the total amount of information. Because of these, we can choose <code class="highlighter-rouge">log(1/p) = log(p^-1) = -log(p)</code> for scoring the level of information in a signal which appears with probability <code class="highlighter-rouge">p</code>. We define entropy to be the averaged level of information in categories of a categorical feature.</p>
-
-<p>Thus, considering a categorical feature with p1..pn probabilities of occurence:</p>
-
-<p><code class="highlighter-rouge">Entropy = H = Sum(-pi log(pi))</code> and it is smaller than <code class="highlighter-rouge">log(n)</code> where n is the number of categories. H for a uniform distribution is <code class="highlighter-rouge">log(n)</code> and it is the maximum entropy.</p>
-
-<p>According to <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Wikipedia</a>:</p>
+<p><em>P-value (Wikipedia):</em></p>
 
 <blockquote>
-  <p>Entropy is a measure of unpredictability of the state, or equivalently, of its average information content. To get an intuitive understanding of these terms, consider the example of a political poll. Usually, such polls happen because the outcome of the &gt;poll is not already known. In other words, the outcome of the poll is relatively unpredictable, and actually performing the poll and learning the results gives some new information; these are just different ways of saying that the a priori entropy of the &gt;poll results is large. Now, consider the case that the same poll is performed a second time shortly after the first poll. Since the result of the first poll is already known, the outcome of the second poll can be predicted well and the results should not &gt;contain much new information; in this case the a priori entropy of the second poll result is small relative to that of the first.</p>
+  <p>In statistical hypothesis testing, the p-value is the probability for a given statistical model that, when the null hypothesis is true, the statistical summary (such as the sample mean difference between two compared groups) would be the same as or more extreme than the actual observed results.
+The p-value is defined informally as the probability of obtaining a result equal to or “more extreme” than what was actually observed, when the null hypothesis is true.</p>
 </blockquote>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>H of uniform distribution - m elements =&gt;
-probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log(m)
+<p><em>Null hypothesis (Wikipedia)</em></p>
+
+<blockquote>
+  <p>The term “null hypothesis” is a general statement or default position that there is no relationship between two measured phenomena, or no association among groups. Rejecting or disproving the null hypothesis—and thus concluding that there are grounds for believing that there is a relationship between two phenomena (e.g. that a potential treatment has a measurable effect)—is a central task in the modern practice of science; the field of statistics gives precise criteria for rejecting a null hypothesis.
+The null hypothesis is generally assumed to be true until evidence indicates otherwise.</p>
+</blockquote>
+
+<p>TODO in a future post: how to compute the P-value</p>
+
+<h3 id="multiple-linear-regression---the-code">Multiple linear regression - the code</h3>
+
+<p>The dataset:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_3_2.png" alt="Dataset" /></p>
+
+<p>Preparing the data:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c"># load data</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">".</span><span class="se">\\</span><span class="s">Data</span><span class="se">\\</span><span class="s">50_Startups.csv"</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+ <span class="c"># encode categorical data to numbers</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">LabelEncoder</span>
+
+<span class="c"># transforms categorical data from strings to numbers (our State column)</span>
+<span class="n">X</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">LabelEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c"># since we don't want in our model to have order between categories,</span>
+<span class="c"># we need to create dummy variables, one column per each category</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">OneHotEncoder</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">categorical_features</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+<span class="c"># Remove the dummy variable trap - we remove the first colum, which is equivalent to "California"</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+
+<span class="c"># split data into training and test</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>The formulas above translate to the following python code:</p>
+<p>And the output:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_values</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<p><img src="https://alexandrugris.github.io/assets/ml_3_3.png" alt="Dataset" /></p>
+
+<p>For the actual regression:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><em>** Backward Elimination **</em></p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">statsmodels.formula.api</span> <span class="kn">as</span> <span class="nn">sm</span>
+<span class="c"># add a 1 column to X. our formula for linear regression is </span>
+<span class="c"># y = b0 + b1 * x1 + b2 * x2 ... &lt;=&gt; y = b0 * x0 + b1 * x1 + ... where x0 == [1, ..]</span>
+<span class="c"># we add the column in the beginning so it is easier to interpret the result</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_3_4.png" alt="New X" /></p>
+
+<p>To remember: the lower the P-value, the more statistically relevant the independent variable is going to be in our regression model.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># the optimum matrix of features that contains the </span>
+<span class="c"># optimum set of variables to predict the outcome - setatistically significant</span>
+<span class="c"># initially add all columns, all rows</span>
+<span class="n">X_opt</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+<span class="c"># use the ordinary least squares algorithm</span>
+<span class="n">regressor_ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">endog</span> <span class="o">=</span> <span class="n">y</span><span class="p">,</span> <span class="n">exog</span> <span class="o">=</span> <span class="n">X_opt</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">regressor_ols</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p>We get the following table, with the P-values in the P&gt;t column. <code class="highlighter-rouge">const, x1, ... x5</code> are the coefficients <code class="highlighter-rouge">b0, b1, .. b5</code> specified above.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>|         |       coef|    std err|          t|        P&gt;t|      [95.0% Conf. Int.]|
+|----------------------------------------------------------------------------------|
+|const    |  5.013e+04|   6884.820|      7.281|      0.000|      3.62e+04   6.4e+04|
+|x1       |   198.7888|   3371.007|      0.059|      0.953|     -6595.030  6992.607|
+|x2       |   -41.8870|   3256.039|     -0.013|      0.990|     -6604.003  6520.229|
+|x3       |     0.8060|      0.046|     17.369|      0.000|         0.712     0.900|
+|x4       |    -0.0270|      0.052|     -0.517|      0.608|        -0.132     0.078|
+|x5       |     0.0270|      0.017|      1.574|      0.123|        -0.008     0.062|
+</code></pre>
+</div>
+
+<p>According to algorithm, we remove x2 and redo the ordinary least square fit.</p>
+
+<p>In the end, if we continue to run the backwards elimination algorithm, we notice that the only variable that significantly influences the profit is the R&amp;D Spent. :)</p>
+
+<p>Without library support, we compute the multiple regression line according to the following.</p>
+
+<p>We consider the line <code class="highlighter-rouge">Y = b0 + b1 * x1 + b2 * x2 + ...</code>.</p>
+
+<p><em>Theorem:</em> The regression line has the following form: <code class="highlighter-rouge">Y - y_mean = sum(bj * (xj - xj_mean))</code>, where <code class="highlighter-rouge">bj</code> solve the following system of equations: <code class="highlighter-rouge">cov(y, xj) = sum(bm * cov(xm, xj))</code> <a href="http://www.real-statistics.com/multiple-regression/least-squares-method-multiple-regression/">here</a></p>
+
+<p>We are going to to precisely this. The [covariation] between two vectors is expressed through the following function. However, we are not going to use it but rather use directly numpy’s matrices for faster computation.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">####################################</span>
+<span class="c">### multiple regression</span>
+<span class="c"># y = b0 + x1 * b1 + x2 * b2 + x3 * b3 ...</span>
+<span class="c"># line has the form</span>
+<span class="c"># (y - y_mean) = sum(b(x - x_mean))</span>
+
+<span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"x and y should have the same size"</span><span class="p">)</span>
+
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">cov_matrix</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">_x</span><span class="p">):</span>
     
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">histogram</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="c"># so we don't have 1/0</span>
+    <span class="k">if</span> <span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Shapes do not match"</span><span class="p">)</span>
+
+    <span class="c"># make sure we use matrix multiplication, not array multiplication</span>
+    <span class="n">_xm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">_ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">((</span><span class="n">_x</span> <span class="o">-</span> <span class="n">_xm</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="n">_y</span> <span class="o">-</span> <span class="n">_ym</span><span class="p">))</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">compute_b0_bn</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">):</span>
     
-    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">prb</span> <span class="p">))</span>
-
-<span class="k">def</span> <span class="nf">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>Example 1:</p>
-
-<p>Compute entropy for a completely skewed distribution of 5 items, [1, 0, 0, 0, 0]</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span>
-<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
-</code></pre>
-</div>
-
-<p>With output:</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>Entropy: 0.0058899223994331295 ; Max Entropy: 2.321928094887362
-</code></pre>
-</div>
-
-<p>Example 2:</p>
-
-<p>Compute entropy for a gaussian distrbuted random variable split into 5 categories.</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">rand_gaussian_arr</span><span class="p">,</span> <span class="mi">5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
-</code></pre>
-</div>
-
-<p>With output:</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>Entropy: 1.8286832347936723 ; Max Entropy: 2.321928094887362
-</code></pre>
-</div>
-
-<p>Example 3:</p>
-
-<p>Plot the chart for the evolution of the entropy index for a set of probabilities [p, 1-p]</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-<span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span>
-<span class="n">e_idx</span> <span class="o">=</span> <span class="mi">0</span>
-
-<span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_axis</span><span class="p">:</span>    
-    <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> 
-    <span class="n">probs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">e</span><span class="p">[</span><span class="n">e_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
-    
-    <span class="k">print</span> <span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="n">e_idx</span><span class="p">])</span>
-    
-    <span class="n">e_idx</span> <span class="o">=</span> <span class="n">e_idx</span> <span class="o">+</span> <span class="mi">1</span>
-    
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>With the output:</p>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_5.png" alt="Entropy" /></p>
-
-<p><a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a></p>
-
-<p>Gini index is referred also as categorical variance. It was initially introduced to “represent the income or wealth distribution of a nation’s residents, and is the most commonly used measure of inequality.” [Wikipedia]. We define it as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency).</p>
-
-<p>E.g., consider a category with frequency <code class="highlighter-rouge">p = 20%</code>, the average error is <code class="highlighter-rouge">p*(1-p) = 20% * 80% = 16%</code>. <code class="highlighter-rouge">Gmax = (m-1) / m</code> and is obtained for a uniform distribution. <code class="highlighter-rouge">G = sum( p_i * (1 - p_i)</code> ).</p>
-
-<p>Same as before:</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">gini_idx</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
-    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">prb</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">gini_idx_max</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">histogram</span><span class="o">.</span><span class="n">size</span>
-</code></pre>
-</div>
-
-<p>For Gaussian (5 elements):</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>histogram = np.histogram(rand_gaussian_arr, 5)[0]
-print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
-
-Gini: 0.674266 ; Max Gini: 0.8
-</code></pre>
-</div>
-
-<p>For skewed distribution:</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>histogram = np.array([1, 0, 0, 0, 0], dtype=np.float)
-print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
-Gini: 0.0 ; Max Gini: 0.8
-</code></pre>
-</div>
-
-<p>Evolution of Gini index (G) for a set of probabilities (p, 1-p):</p>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_6.png" alt="Gini Index" /></p>
-
-<p>Mean, median, entropy index (H) and Gini index (G) are different aggregate indices (summaries) for a distribution. Because our sample size is not large enough, they are subject to measurement errors. If we want to understand a little bit better how much error our computed index on the sample data hides, we can compute its distribution (its mean and its stddev). For instance, if we take the mean as the parameter we want to investigate, we obtain the mean of the mean and the stddev of mean. But any other index can be considered. Two outstanding methods are bootstrapping and K-fold cross validation.</p>
-
-<h3 id="bootstrapping">Bootstrapping</h3>
-
-<p>Bootstrapping is a resampling method which works like this:</p>
-
-<ol>
-  <li>Consider M random trials and an entity set with N entities</li>
-  <li>Randomly extract and put back N entities from the entity set =&gt; on average only <code class="highlighter-rouge">(e-1) / e = 63.2%</code> will be selected in a trial. (p of an entity not to be drawn = 1 - 1/N, we have N trials =&gt; p of not drawn for N trials is (1 - 1/N)^N -&gt; 1/e = 36% of all entities)</li>
-  <li>Compute the desired index for the trial</li>
-  <li>Summarize for all trials the indices into the mean / stddev form; plot a histogram.</li>
-</ol>
-
-<p>Here is the code for computing mean variation through bootstrapping. We will consider a power-law distribution for start, with 20 extractions.</p>
-
-<p>Initialization:</p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">x_axis</span>          <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-<span class="n">powerlaw</span>        <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_axis</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.2</span>
-<span class="n">rand_0_1</span>        <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="c"># 20 extractions</span>
-<span class="n">rand_powerlaw_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">powerlaw</span><span class="p">))</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span> <span class="c"># just check the distribution is power-law-ish</span>
-</code></pre>
-</div>
-
-<p><img src="https://alexandrugris.github.io/assets/ml_2_7.png" alt="First distribution" /></p>
-
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># prepare space for mean for 500 trials</span>
-<span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">means</span><span class="o">.</span><span class="n">size</span><span class="p">):</span> <span class="c">#500 trials</span>
-    <span class="n">bootstrapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
-        <span class="n">bootstrapped</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rand_powerlaw_arr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">ym</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span> <span class="p">(</span><span class="s">"ym should be a vector with shape [n, 1]"</span><span class="p">)</span>
         
-    <span class="n">means</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bootstrapped</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Xm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ym</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span> <span class="p">(</span><span class="s">"Xm should have the same amount of lines as ym"</span><span class="p">)</span>
     
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
+    <span class="n">C_y_x</span> <span class="o">=</span> <span class="n">cov_matrix</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
+    <span class="n">C_x_x</span> <span class="o">=</span> <span class="n">cov_matrix</span><span class="p">(</span><span class="n">Xm</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s">"Mean of distribution: {:.4f}, Mean boostrapped: {:.4f}, Stddev mean bootstrapped {:.4f} "</span>
-      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">means</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">means</span><span class="p">)))</span>
+    <span class="n">b1_bn</span>  <span class="o">=</span> <span class="n">C_x_x</span><span class="o">.</span><span class="n">I</span> <span class="o">*</span> <span class="n">C_y_x</span>
+    
+    <span class="n">x_mean</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Xm</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">y_mean</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ym</span><span class="p">)</span>
+    
+    <span class="n">b0</span> <span class="o">=</span> <span class="o">-</span><span class="n">x_mean</span> <span class="o">*</span> <span class="n">b1_bn</span> <span class="o">+</span> <span class="n">y_mean</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">(</span><span class="n">b0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1_bn</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+
+<span class="n">Xm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="n">ret</span> <span class="o">=</span> <span class="n">compute_b0_bn</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>And the output - shows the distribution of the mean is Gaussian:</p>
+<p>In order to test my function I have compared it with the library results. They are identical.</p>
 
-<p><img src="https://alexandrugris.github.io/assets/ml_2_8.png" alt="First distribution" /></p>
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Mean of distribution: 0.1402, Mean boostrapped: 0.1408, Stddev mean bootstrapped 0.0346 
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">coef</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">coef_</span>
+<span class="n">intercept</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">intercept_</span>
 </code></pre>
 </div>
 
-<p>Intrestingly enough, as the initial sample is quite narrow (20 extractions), the mean and std-dev of mean vary significantly between successive runs of the algorithm.</p>
-
-<h3 id="k-fold-cross-validation">K-fold cross validation</h3>
-
-<p>Another set of validation techniques use the splitting of the initial array into two parts of pre-specified sizes: train set and test set, so the results obtained on the train set are compared with the data from the test set.</p>
-
-<p>K-fold cross validation works as follows:</p>
-
-<ol>
-  <li>Split the set in K parts of equal sizes</li>
-  <li>For each part k, 0 &lt;= k &lt; K, use Part_k as the test set and the rest of the parts as the train set.</li>
-  <li>The average score of all test sets constitutes a K-fold cross validation estimate of the method quality.</li>
-</ol>
-
-<p>E.g. - mean.</p>
-
-<ol>
-  <li>We split the set in K parts.</li>
-  <li>For each part k: we take the rest of K-1 parts and we compute the mean. We compute the mean on the k part and we substract (mean(k-1) - mean_k)^2</li>
-  <li>We average all the mean_k obtained before and we also compute the stddev sigma=sqrt(1/K * Sum(squares from step 2))</li>
-</ol>
-
+<p><img src="https://alexandrugris.github.io/assets/ml_3_6.png" alt="Identical results between library and own function" /></p>
 
   </div>
 
