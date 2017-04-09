@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Simple and Multiple Linear Regression</title>
-  <meta name="description" content="This is the second part of my Machine Learning notebook, following the Udemy course “Machine Learning A-Z™: Hands-On Python &amp;amp; R”.">
+  <meta name="description" content="This is the second part of my Machine Learning notebook. It talks about simple and multiple linear regression, as well as polynomial regression as a special ...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/machine/learning/2017/03/25/MachineLearning-Notebook-2.html">
@@ -65,7 +65,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This is the second part of my Machine Learning notebook, following the Udemy course “Machine Learning A-Z™: Hands-On Python &amp; R”.</p>
+    <p>This is the second part of my Machine Learning notebook. It talks about simple and multiple linear regression, as well as polynomial regression as a special case of multiple linear regression. It provides several methods for doing regression, both with library functions as well as implementing the algorithms from scratch.</p>
 
 <h3 id="simple-linear-regression-with-plot">Simple Linear Regression With Plot</h3>
 
@@ -114,7 +114,7 @@
 
 <p><img src="https://alexandrugris.github.io/assets/ml_3_1.png" alt="Results" /></p>
 
-<p>The implementation of simple linear regression using the ordinary least squares method is straight forward:</p>
+<p>The implementation of a simple linear regressor using the ordinary least squares method is straight forward:</p>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
@@ -152,7 +152,7 @@
 </code></pre>
 </div>
 
-<p>The basic idea for all least squares methods is that the function <code class="highlighter-rouge">S=sum((yi-f(xi, B))^2)</code> is minimized where <code class="highlighter-rouge">B</code> is a vector of variables we need to identify. In the particular case of linear regression, <code class="highlighter-rouge">B = [a, b]</code> and <code class="highlighter-rouge">f(xi, B) = axi + b</code>. Minimized means the conditions <code class="highlighter-rouge">dS / dB[i] = 0</code>. In the case above, we have a system of two equations with two unknowns, <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/da = 0</code> and <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/db = 0</code>.</p>
+<p>The basic idea for all least squares methods is that the function <code class="highlighter-rouge">S=sum((yi-f(xi, B))^2)</code> should be minimized, where <code class="highlighter-rouge">B</code> is a vector of variables we need to identify. In the particular case of linear regression, <code class="highlighter-rouge">B = [a, b]</code> and <code class="highlighter-rouge">f(xi, B) = axi + b</code>. Minimized means the conditions <code class="highlighter-rouge">dS / dB[i] = 0</code>. In the case above, we have a system of two equations with two unknowns, <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/da = 0</code> and <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/db = 0</code>.</p>
 
 <p>Results:</p>
 
@@ -375,7 +375,7 @@ The null hypothesis is generally assumed to be true until evidence indicates oth
 
 <p>In the end, if we continue to run the backwards elimination algorithm, we notice that the only variable that significantly influences the profit is the R&amp;D Spent. :)</p>
 
-<p>Without library support, we compute the multiple regression line according to the following.</p>
+<h3 id="multiple-linear-regression-from-scratch">Multiple Linear Regression From Scratch</h3>
 
 <p>We consider the line <code class="highlighter-rouge">Y = b0 + b1 * x1 + b2 * x2 + ...</code>.</p>
 
@@ -406,7 +406,7 @@ The null hypothesis is generally assumed to be true until evidence indicates oth
 </code></pre>
 </div>
 
-<p>However, we are not going to use it but rather use directly numpy’s matrices for faster computation.</p>
+<p>However, we are not going to use it, but rather use directly numpy’s matrices for faster computation.</p>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">cov_matrix</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">_x</span><span class="p">):</span>
     
@@ -459,6 +459,12 @@ The null hypothesis is generally assumed to be true until evidence indicates oth
 </div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_3_6.png" alt="Identical results between library and own function" /></p>
+
+<h3 id="polynomial-regression">Polynomial regression</h3>
+
+<h3 id="linearization-models">Linearization models</h3>
+
+<p>In case of non-linear functions (power law, exponential decay), the standard way to do the regression is to apply a logarithm and then compute the coefficients according to linear model. E.g. <code class="highlighter-rouge">y = a*x^b -&gt; log(y) = log(a) + b * log(x)</code>, a linear ecuation. However, computing the regression coefficients this way is prone to large errors due to the fundamentally non-linear underlying relationship. A solution which yields much better results is to consider the function as it is and then find its regression coefficients using an optimization method like, for instance, a nature inspired optimization - see post about nature inspired optimizations.</p>
 
   </div>
 
