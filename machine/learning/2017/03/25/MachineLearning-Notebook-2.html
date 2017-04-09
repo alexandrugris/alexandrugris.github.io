@@ -264,21 +264,7 @@
   <li>Select the one that fits best a specific criterion</li>
 </ol>
 
-<p><em>P-value (Wikipedia):</em></p>
-
-<blockquote>
-  <p>In statistical hypothesis testing, the p-value is the probability for a given statistical model that, when the null hypothesis is true, the statistical summary (such as the sample mean difference between two compared groups) would be the same as or more extreme than the actual observed results.
-The p-value is defined informally as the probability of obtaining a result equal to or “more extreme” than what was actually observed, when the null hypothesis is true.</p>
-</blockquote>
-
-<p><em>Null hypothesis (Wikipedia)</em></p>
-
-<blockquote>
-  <p>The term “null hypothesis” is a general statement or default position that there is no relationship between two measured phenomena, or no association among groups. Rejecting or disproving the null hypothesis—and thus concluding that there are grounds for believing that there is a relationship between two phenomena (e.g. that a potential treatment has a measurable effect)—is a central task in the modern practice of science; the field of statistics gives precise criteria for rejecting a null hypothesis.
-The null hypothesis is generally assumed to be true until evidence indicates otherwise.</p>
-</blockquote>
-
-<p>TODO in a future post: how to compute the P-value</p>
+<p>TODO in a future post: how to numerically compute the <a href="http://www.wikihow.com/Calculate-P-Value">P-value</a></p>
 
 <h3 id="multiple-linear-regression---the-code">Multiple linear regression - the code</h3>
 
@@ -467,6 +453,25 @@ The null hypothesis is generally assumed to be true until evidence indicates oth
 <h3 id="linearization-models">Linearization models</h3>
 
 <p>In case of non-linear functions (power law, exponential decay), the standard way to do the regression is to apply a logarithm and then compute the coefficients according to the newly obtained linear model. E.g. <code class="highlighter-rouge">y = a*x^b -&gt; log(y) = log(a) + b * log(x)</code>, a linear ecuation. However, computing the regression coefficients this way is prone to large errors due to the fundamentally non-linear underlying relationship. A solution which yields much better results is to consider the function as it originally is and then find its regression coefficients using an optimization method like, for instance, a nature inspired optimization - see post about nature inspired optimizations.</p>
+
+<h3 id="ridge-regression">Ridge regression</h3>
+
+<p>To keep the model simple (few, small coefficients), for multiple regression we can opt to minimize the following function:</p>
+
+<p><code class="highlighter-rouge">sum( (yi - (b0 + b1x1 + b2x2 + .. + bnxn)) ^ 2 + C(b0^2 + b1^2 + ... + bn^2) )</code></p>
+
+<p>The idea with <code class="highlighter-rouge">C</code> and is based on the analogy between a simple model and a model with small coefficients. <code class="highlighter-rouge">C</code> is called regularization term. The first (the sum) term keeps the model close to the truth (training data) while second term instructs the model to keep the coefficients small. <code class="highlighter-rouge">C</code> is a number and can be computed through nested cross validation. Ridge regression helps us not overfit the model.</p>
+
+<h3 id="support-vector-machines">Support vector machines</h3>
+
+<p>Similar to ridge regression, the difference comes from the first term. Instead of using the sum of error squares, 
+it uses a function <code class="highlighter-rouge">g(y - f(x)) = 0 if |y-f(x)| &lt; epsilon and  y-f(x) otherwise</code></p>
+
+<p>Below you can see the difference in error function between ridge regression and svm regression (screenshots from a MVA class on Machine Learning)</p>
+
+<p><img src="https://alexandrugris.github.io/assets/ml_3_7.png" alt="Ridge Regression" />
+<img src="https://alexandrugris.github.io/assets/ml_3_8.png" alt="SVM Regression" /></p>
+
 
   </div>
 
