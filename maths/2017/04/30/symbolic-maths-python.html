@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Symbolic Maths in Python</title>
+  <meta name="description" content="Doing symbolic computations is a crucial component of any mathematics-oriented package. It gives the ability to solve complex expressions, work with sets and...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/maths/2017/04/30/symbolic-maths-python.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Symbolic Maths in Python</h1>
+    <p class="post-meta"><time datetime="2017-04-30T14:15:16+03:00" itemprop="datePublished">Apr 30, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Doing symbolic computations is a crucial component of any mathematics-oriented package. It gives the ability to solve complex expressions, work with sets and probabilities, perform integrals or derivatives, plot charts based on user input, which further offer the possibility to implement generic numeric algorithms.</p>
+
+<h3 id="basic-usage">Basic usage</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">symbols</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">'X'</span><span class="p">)</span>
+<span class="n">expression</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">X</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="k">print</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+
+<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">'a, b, c'</span><span class="p">)</span>
+<span class="n">expression</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">c</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">a</span>
+<span class="k">print</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>with the output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>2*X + 1
+2*a*b + 2*a*c
+</code></pre>
+</div>
+
+<p>We alredy see simplification for basic expresssion.</p>
+
+<h3 id="factorization-and-expansion">Factorization and expansion</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">### factorization and expansion</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x, y'</span><span class="p">)</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+<span class="n">expr</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>with the expected output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(x - y)*(x + y)
+x**2 - y**2
+</code></pre>
+</div>
+
+<h3 id="pretty-printing">Pretty printing</h3>
+
+<p><a href="http://docs.sympy.org/latest/tutorial/printing.html">A link here</a></p>
+
+<p>And the code:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">init_printing</span><span class="p">()</span> <span class="c"># or init_session(). init_session does much more</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s">'x'</span><span class="p">)</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<p>with the output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>⌠           
+⎮     ___   
+⎮    ╱ 1    
+⎮   ╱  ─  dx
+⎮ ╲╱   x    
+⌡      
+</code></pre>
+</div>
+
+<h3 id="computing-the-numeric-result-of-a-symbolic-expression">Computing the numeric result of a symbolic expression</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_session</span>
+<span class="n">init_session</span><span class="p">()</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
+</code></pre>
+</div>
+
+<p>with the output of <code class="highlighter-rouge">9</code></p>
+
+<p>We can also use expression substitution, like this:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
+<span class="n">simplify</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">}))</span>
+</code></pre>
+</div>
+
+<p>The first line outputs <code class="highlighter-rouge">y**2 + 2*y*(y - 1) + (y - 1)**2</code> while the second line simplifies the expression to <code class="highlighter-rouge">4*y**2 - 4*y + 1</code></p>
+
+<h3 id="reading-expressions-from-user-input">Reading expressions from user input</h3>
+
+<p>Let’s write a simple program which computes the expanded product of two expressions:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_session</span>
+<span class="n">init_session</span><span class="p">()</span>
+
+<span class="n">expr1</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Input first expression"</span><span class="p">)</span>
+<span class="n">expr2</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Input second expression"</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">expr1</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr1</span><span class="p">)</span>
+    <span class="n">expr2</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr2</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">expr1</span> <span class="o">*</span> <span class="n">expr2</span><span class="p">))</span>
+    
+<span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"Invalid input"</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>with the following input / output:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Input first expression x*2 + y
+Input second expression x*3 + y
+6*x**2 + 5*x*y + y**2
+</code></pre>
+</div>
+
+<h3 id="solving-equations-inequalities-and-systems-of-equations">Solving equations, inequalities and systems of equations</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">solve</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
+
+<span class="c">### solving a quadratic equation:</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">7</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+
+<span class="c"># solving fpr one variable in terms of the other </span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">z</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+<span class="c"># computing the results for a pair of y=2 and z=7 (same expression as above)</span>
+<span class="p">[</span><span class="n">ret</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">y</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="mi">7</span><span class="p">})</span> <span class="k">for</span> <span class="n">ret</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<p>with the following output if ran from the ipython console</p>
+
+<p><img src="https://alexandrugris.github.io/assets/smp_1.png" alt="ipython output" /></p>
+
+<p>The <code class="highlighter-rouge">solve</code> function is not limited only to polynomials. For example, <code class="highlighter-rouge">solve(sin(x)/x)</code> will correctly output the value <code class="highlighter-rouge">[pi]</code> - <a href="http://docs.sympy.org/dev/modules/solvers/solvers.html">docs</a></p>
+
+<p>Another example for solving more complex equations:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+
+<span class="c"># symbolic solving</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
+<span class="n">eq</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<p>And the output is <code class="highlighter-rouge">[asin(y*z) + pi, -asin(y*z)]</code>. If we want to obtain a numeric result, we can do <code class="highlighter-rouge">ret = sp.solve(eq, x)</code> and then <code class="highlighter-rouge">[r.subs({y:0.4, z:-0.3}) for r in ret]</code>.</p>
+
+<p>For a system of equations, it works like this:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">solve</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">'x y'</span><span class="p">)</span>
+
+<span class="c"># System of linear equations</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">e2</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">3</span>
+<span class="n">solve</span><span class="p">((</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">))</span>
+
+<span class="c"># System of non-linear equations</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="n">e2</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">solve</span><span class="p">((</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<p>Solving single variable inequalities is a little bit more complex as we need to clasify them according to the solver involved:</p>
+
+<ol>
+  <li>Polynomial inequality: expression is a polynomial (can use <code class="highlighter-rouge">expr.is_polynomial()</code>)</li>
+  <li>Rational inequality: expression is a rational function of two polynomials (e.g. <code class="highlighter-rouge">(x ** 2 + 4) / (x + 2)</code>; can use <code class="highlighter-rouge">expr.is_rational_function()</code> to deternime if the case)</li>
+  <li>Univariate solver: one variable, nonlinear (e.g. involving functions like <code class="highlighter-rouge">sin</code> or <code class="highlighter-rouge">cos</code>)</li>
+</ol>
+
+<p>Link to tutorial <a href="http://docs.sympy.org/dev/modules/solvers/inequalities.html">here</a></p>
+
+<h3 id="plotting">Plotting</h3>
+
+<p>Sympy supports simplified plotting out of the box. This is a handy addition for when we don’t want to use matplotlib directly.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot</span> 
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span> 
+<span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">'x'</span><span class="p">)</span> 
+<span class="n">p</span> <span class="o">=</span> <span class="n">plot</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> 
+<span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">line_color</span> <span class="o">=</span> <span class="s">'b'</span>
+<span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">line_color</span> <span class="o">=</span> <span class="s">'r'</span> 
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/smp_2.png" alt="Plotting" /></p>
+
+<h3 id="sets">Sets</h3>
+
+<p>Beside <code class="highlighter-rouge">FiniteSet</code> which I exemplify below, <code class="highlighter-rouge">sympy</code> also includes support for infinite sets and intervals.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+
+<span class="n">s1</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">s2</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">s3</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c"># Union and intersection</span>
+<span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span>
+<span class="n">s1</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span>
+
+<span class="c"># powerset: The powerset() method returns the power-set and not the elements in it. </span>
+<span class="c"># This makes it memory friendly and useful for computations</span>
+<span class="n">s1</span><span class="o">.</span><span class="n">powerset</span><span class="p">()</span>
+
+<span class="c"># equality</span>
+<span class="n">FiniteSet</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="n">s1</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span>
+
+<span class="c"># inclusion</span>
+<span class="n">FiniteSet</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">is_proper_subset</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="c"># true</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">is_subset</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="c"># true</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">is_proper_subset</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="c"># false</span>
+
+<span class="c"># cartezian product</span>
+<span class="c"># keeps the operation symbolic until iterated through</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s1</span><span class="o">*</span><span class="n">s2</span><span class="o">*</span><span class="n">s3</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+<span class="c"># cartesian product with self used to compute arrangements</span>
+<span class="c"># unfortunately the syntax below forces computation</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">s1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s1</span><span class="p">)])</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+<span class="c"># combinations</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">powerset</span><span class="p">()</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">s1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="playing-with-probabilities-and-sets">Playing with probabilities and sets</h3>
+
+<p>Let’s define the following terms:</p>
+
+<ol>
+  <li><em>Experiment</em> - a test we want to perform (coin toss, for instance).</li>
+  <li><em>Trial</em> - a single run of an experiment.</li>
+  <li><em>Sample space (S)</em> - all possible outcomes of an experiment. For a coin toss is <code class="highlighter-rouge"><span class="p">{</span><span class="err">head,</span><span class="w"> </span><span class="err">tail</span><span class="p">}</span></code></li>
+  <li><em>Event (E)</em> - a set of outcomes we are testing for. For example, for a dice roll, event that the result is even is <code class="highlighter-rouge"><span class="p">{</span><span class="err">2,</span><span class="w"> </span><span class="err">4,</span><span class="w"> </span><span class="err">6</span><span class="p">}</span></code></li>
+</ol>
+
+<p>Obviously, for a uniform distribution, the probability of an event E is <code class="highlighter-rouge">P(E) = len(E) / len(S)</code></p>
+
+<p>Some formulas:</p>
+
+<ol>
+  <li>Probability of event A and event B: <code class="highlighter-rouge">P(A and B) = P(A intersect B) = P(A) * P(B)</code></li>
+  <li>Probability of event A or event B: <code class="highlighter-rouge">P(A or B) = P (A union B) = P(A) + P(B) - P(A) * P(B)</code></li>
+  <li>Conditional probability (Bayes Theorem): <code class="highlighter-rouge">P(A|B) = P(B|A) * P(A) / P(B)</code>. Speaking of Bayes theorem, this is a very interesting link: <a href="https://en.wikipedia.org/wiki/Base_rate_fallacy">Base rate fallacy</a></li>
+</ol>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">dice</span>    <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">odd</span>     <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">even</span>    <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">prime</span>   <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="n">p_odd</span>   <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">odd</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dice</span><span class="p">)</span>
+<span class="n">p_odd_and_prime</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">odd</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">prime</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dice</span><span class="p">)</span>
+<span class="n">p_odd_or_prime</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">odd</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">prime</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dice</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="assumptions">Assumptions</h3>
+
+<p>The behavior of symbols can be modified through what is called assumptions. Below is a list of assumptions with their default behavior and an usage example.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="err"> </span>
+<span class="s">"""
+Assumptions:    
+                algebraic: False,
+                commutative: True,
+                complex: False,
+                composite: False,
+                even: False,
+                imaginary: False,
+                integer: False,
+                irrational: False,
+                negative: False,
+                noninteger: False,
+                nonnegative: False,
+                nonpositive: False,
+                nonzero: False,
+                odd: False,
+                positive: False,
+                prime: False,
+                rational: False,
+                real: False,
+                transcendental: False,
+                zero: False
+"""</span>
+<span class="err"> </span>
+<span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'A B'</span><span class="p">,</span> <span class="n">commutative</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="n">B</span> <span class="o">==</span> <span class="n">B</span> <span class="o">*</span> <span class="n">A</span><span class="p">)</span>
+
+</code></pre>
+</div>
+
+<h3 id="calculus">Calculus</h3>
+
+<p>The following code should be run line by line in an interpreter like IPython. For my own play, I am using <code class="highlighter-rouge">select line + CTRL+ENTER</code> in Spyder.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/smp_3.png" alt="CTRL+ENTER in Spyder" /></p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">init_printing</span><span class="p">()</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
+
+<span class="c">## Limits</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Limit</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">'-'</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Limit</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="c"># output "E" - nice</span>
+<span class="err"> </span>
+<span class="c">## Derivative</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+<span class="c"># Partial derivative</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+<span class="c"># Finding maximum and minimum (critical points)</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">15</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">15</span><span class="p">)</span>
+
+<span class="c"># For equations of motion - throwing a ball at an angle theta, with velocity V, we find the range R</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s">'t'</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s">'v'</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s">'g'</span><span class="p">)</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">/</span> <span class="n">g</span>
+
+<span class="n">R_deriv</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">R_deriv</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
+
+<span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">v</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span><span class="mf">9.81</span><span class="p">}))</span> <span class="c"># just to have a graphical plot of the distance</span>
+
+<span class="c"># Integrals - no interval</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+<span class="c"># Integrals - with interval</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>I wrote this article as a short cheat-sheet for myself. Python is a great tool for mathemathics, not only for the numeric but also for the symbolic domain. Libraries like <code class="highlighter-rouge">sympy</code> make it both a powerful tool to write large programs but also a useful super easy-to-use desktop calculator. Of course, <a href="http://docs.sympy.org/latest/index.html"><code class="highlighter-rouge">sympy</code></a> is much larger than presented here, but the article should be helpful for a quicker start next time I am in front of a mathematical problem.</p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
