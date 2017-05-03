@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Symbolic Maths in Python</title>
-  <meta name="description" content="Doing symbolic computations is a crucial component of any mathematics-oriented package. It gives the ability to solve complex expressions, work with sets and...">
+  <meta name="description" content="Ability to perform symbolic computations is a crucial component of any mathematics-oriented package. Symbolic mathematics can be used to work with complex ex...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/maths/2017/04/30/symbolic-maths-python.html">
@@ -68,7 +68,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>Doing symbolic computations is a crucial component of any mathematics-oriented package. It gives the ability to solve complex expressions, work with sets and probabilities, perform integrals or derivatives, plot charts based on user input, which further offer the possibility to implement generic numeric algorithms.</p>
+    <p>Ability to perform symbolic computations is a crucial component of any mathematics-oriented package. Symbolic mathematics can be used to work with complex expressions, sets and probabilities, perform integrals or derivatives, plot charts based on user input, without explicit numeric computations. This way, the Python interpreter becomes very much like a piece of paper on which one can jot down equations. By the end of the article I will implement a gradient descent function to demonstrate the power of <code class="highlighter-rouge">sympy</code> to code easy to work with generic algorithms.</p>
 
 <h3 id="basic-usage">Basic usage</h3>
 
@@ -370,14 +370,14 @@ Assumptions:   
                 noninteger: False,
                 nonnegative: False,
                 nonpositive: False,
-                nonzero: False,
-                odd: False,
+                nonzero: False,                odd: False,
                 positive: False,
                 prime: False,
                 rational: False,
                 real: False,
                 transcendental: False,
                 zero: False
+
 """</span>
 <span class="err"> </span>
 <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'A B'</span><span class="p">,</span> <span class="n">commutative</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -386,7 +386,7 @@ Assumptions:   
 </code></pre>
 </div>
 
-<h3 id="calculus">Calculus</h3>
+<p>### Calculus</p>
 
 <p>The following code should be run line by line in an interpreter like IPython. For my own play, I am using <code class="highlighter-rouge">select line + CTRL+ENTER</code> in Spyder.</p>
 
@@ -395,7 +395,7 @@ Assumptions:   
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
 <span class="n">sp</span><span class="o">.</span><span class="n">init_printing</span><span class="p">()</span>
 
-<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
+<span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
 
 <span class="c">## Limits</span>
 <span class="n">sp</span><span class="o">.</span><span class="n">Limit</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
@@ -431,9 +431,68 @@ Assumptions:   
 </code></pre>
 </div>
 
+<p>A more complex example which employs both derivative and integrals in the same formula: computing the length of the <code class="highlighter-rouge">x**2</code> curve between -1 and 1. Please note that <code class="highlighter-rouge">.doit()</code> may only called once.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">sp</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p>Length of the curve is computed by: <code class="highlighter-rouge">Integral(sqrt(1 + (df/dx)**2))</code> on the desired domain.</p>
+
+<h3 id="a-more-complex-example---gradient-descent">A more complex example - gradient descent</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sp</span>
+
+<span class="k">def</span> <span class="nf">grad_descent</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">,</span> <span class="o">**</span><span class="n">initial_values</span><span class="p">):</span>    
+    
+    <span class="n">derivatives</span> <span class="o">=</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">initial_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">}</span>
+    
+    <span class="n">n_val</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span>
+    <span class="n">c_val</span> <span class="o">=</span> <span class="n">n_val</span>
+    
+	<span class="c"># variable step (used to secure it does not accidentally jump over a peak)</span>
+    <span class="n">lambda_changes</span> <span class="o">=</span> <span class="mi">4</span> 
+    <span class="k">while</span> <span class="n">lambda_changes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        
+        <span class="n">no_change</span> <span class="o">=</span> <span class="bp">True</span>
+        
+        <span class="c"># advance a little bit each coordinate</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">initial_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            
+            <span class="n">initial_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">lmbda</span> <span class="o">*</span> <span class="n">derivatives</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span>
+            <span class="n">n_val</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span>
+                        
+            <span class="k">if</span> <span class="n">n_val</span> <span class="o">+</span> <span class="mf">1e-10</span>  <span class="o">&gt;=</span> <span class="n">c_val</span><span class="p">:</span>
+                <span class="n">initial_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="c"># preserve the past value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c_val</span> <span class="o">=</span> <span class="n">n_val</span>
+                <span class="n">no_change</span> <span class="o">=</span> <span class="bp">False</span>
+                
+        <span class="k">if</span> <span class="n">no_change</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">lambda_changes</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">lmbda</span> <span class="o">*=</span> <span class="mf">0.5</span>
+
+    <span class="k">return</span> <span class="n">initial_values</span>            
+
+                
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+
+	<span class="n">sp</span><span class="o">.</span><span class="n">init_printing</span><span class="p">()</span>	
+
+	<span class="c"># the function to minimize; obviously the minimum is in (0, 0, 0)</span>
+	<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">'x y z'</span><span class="p">)</span>
+	<span class="n">f</span> <span class="o">=</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">z</span> <span class="o">**</span> <span class="mi">2</span>
+
+	<span class="c"># start with a large lambda factor to exemplify the variable step</span>
+	<span class="c"># start with a random initial condition</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="n">grad_descent</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+	<span class="k">print</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+</code></pre>
+</div>
+
 <h3 id="conclusion">Conclusion</h3>
 
-<p>I wrote this article as a short cheat-sheet for myself. Python is a great tool for mathemathics, not only for the numeric but also for the symbolic domain. Libraries like <code class="highlighter-rouge">sympy</code> make it both a powerful tool to write large programs but also a useful super easy-to-use desktop calculator. Of course, <a href="http://docs.sympy.org/latest/index.html"><code class="highlighter-rouge">sympy</code></a> is much larger than presented here, but the article should be helpful for a quicker start next time I am in front of a mathematical problem.</p>
+<p>I wrote this article as a short cheat-sheet for myself. Python is a great tool for mathemathics, not only for the numeric but also for the symbolic domain. Libraries like <code class="highlighter-rouge">sympy</code> make it both a powerful tool to write large programs but also a useful super easy-to-use desktop calculator. Of course, <a href="http://docs.sympy.org/latest/index.html"><code class="highlighter-rouge">sympy</code></a> is much larger than presented here, but the article should be helpful for a quicker start next time you are in front of a mathematical problem.</p>
 
   </div>
 
