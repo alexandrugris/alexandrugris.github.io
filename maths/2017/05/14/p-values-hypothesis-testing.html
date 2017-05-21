@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>P-Values And Hypothesis Testing</title>
-  <meta name="description" content="This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. The article follows quite cl...">
+  <meta name="description" content="This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. It also includes a worked ex...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing.html">
@@ -68,7 +68,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. The article follows quite closely a chapter from “Data Science from Scratch” by Joel Grus and it is annotated with my own research and observations.</p>
+    <p>This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. It also includes a worked example, how to validate that an A/B test indeed produces a significant outcome. The article follows quite closely a chapter from “Data Science from Scratch” by Joel Grus and it is annotated with my own research and observations.</p>
 
 <h2 id="definitions">Definitions</h2>
 
@@ -108,7 +108,16 @@
 
 <p>Before that, here is some prerequisite code:</p>
 
-<p>Notes: coin toss is represented by a <code class="highlighter-rouge">Binomial(n, p)</code> distribution, where <code class="highlighter-rouge">n</code> is the number of trials and <code class="highlighter-rouge">p</code> the probability of hitting head.</p>
+<p><em>Notes:</em></p>
+
+<ul>
+  <li>
+    <p>The coin toss is represented by a <code class="highlighter-rouge">Binomial(n, p)</code> distribution, where <code class="highlighter-rouge">n</code> is the number of trials and <code class="highlighter-rouge">p</code> the probability of hitting head.</p>
+  </li>
+  <li>
+    <p>A common rule of thumb is that if both <code class="highlighter-rouge">n*p</code> and <code class="highlighter-rouge">n * (1 – p)</code> are greater than <code class="highlighter-rouge">5</code>, the binomial distribution may be approximated by the normal distribution.</p>
+  </li>
+</ul>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">math</span>
 
@@ -116,7 +125,11 @@
 <span class="c">#parameters n and p is the discrete probability distribution of the number of </span>
 <span class="c">#successes in a sequence of n independent experiments</span>
 <span class="k">def</span> <span class="nf">normal_approximation_to_binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>    
-    <span class="s">"""finds mu and sigma corresponding to a Binomial(n, p)"""</span>    
+    <span class="s">"""finds mu and sigma corresponding to a Binomial(n, p)"""</span> 
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">*</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Cannot be approximated by a normal distribution"</span><span class="p">)</span>
+    
     <span class="n">mu</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">n</span>    
     <span class="n">sigma</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>    
     <span class="k">return</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span>
@@ -271,7 +284,9 @@
 
 <h2 id="p-values">P-values:</h2>
 
-<p>Instead of choosing bounds based on some probability cutoff, we compute the probability— assuming H0 is true—that we would see a value at least as extreme as the one we actually observed:</p>
+<p>Instead of choosing bounds based on some probability cutoff, we compute the probability, assuming H0 is true, that we would see a value at least as extreme as the one we actually observed. From wikipedia,</p>
+
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/P-value_in_statistical_significance_testing.svg" alt="pvalue" /></p>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">two_sided_p_value</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>    
     <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">mu</span><span class="p">:</span>
@@ -303,7 +318,76 @@
 
 <h2 id="example---ab-testing">Example - A/B testing</h2>
 
-<h2 id="baesyan-inference">Baesyan Inference</h2>
+<p>Let’s put all these things together in a worked example - computing the success of an A/B test campaign.</p>
+
+<p>Let’s assume we have a banner for which we want to make a change and we want to understand if the change brings more clicks and thus profit. Our null hypothesis is “no, the change does not impact the number of clicks”.</p>
+
+<p>We split the clients in two cohorts (<code class="highlighter-rouge">A</code> and <code class="highlighter-rouge">B</code>). For cohort <code class="highlighter-rouge">A</code> we keep the old banner, for cohort <code class="highlighter-rouge">B</code> we have the banner changed. After <code class="highlighter-rouge">N(A)</code> views for banner <code class="highlighter-rouge">A</code> we have <code class="highlighter-rouge">n(A)</code> click-throughs and after <code class="highlighter-rouge">N(B)</code> views for banner <code class="highlighter-rouge">B</code> we have <code class="highlighter-rouge">n(B)</code> click-throughs. Let’s assume <code class="highlighter-rouge">N(A) == 1000</code>, <code class="highlighter-rouge">N(B) == 1000</code>, <code class="highlighter-rouge">n(A) == 180</code>, <code class="highlighter-rouge">n(B) == 200</code>. Is <code class="highlighter-rouge">B</code> a better campaign?</p>
+
+<p>Obviously we have a binomial variable with two posible outcomes: click (1) or not click (0), with a probability to click of <code class="highlighter-rouge">p</code>. Thus, for one trial, we have:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mu = p #expected value
+sigma = sqrt(1/2 * ((0 - p)^2 + (1 - p)^2)) = sqrt(p * (1 - p))
+</code></pre>
+</div>
+
+<p>For <code class="highlighter-rouge">N</code> trials we apply the central limit theorem which states:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mu_clt = 1/N * (x0 + x1 +... + xN) = 1/N * (1 + 0 + 0 + ... +1) = n/N = mu = p
+sigma_clt = sigma / sqrt(N) = sqrt(p * (1 - p)) / sqrt(N) = sqrt(p * (1 - p) / N)
+</code></pre>
+</div>
+
+<p>Now we want to test that distribution for <code class="highlighter-rouge">A</code> is the same as distribution for <code class="highlighter-rouge">B</code>, that is <code class="highlighter-rouge">p(A) == p(B)</code> - null hypothesis.</p>
+
+<p><code class="highlighter-rouge">p(A) == p(B)</code> means <code class="highlighter-rouge">p(A) - p(B) == 0</code> or, more precisely, has <code class="highlighter-rouge">mu == 0</code>. But <code class="highlighter-rouge">p(A) - p(B)</code> <a href="https://en.wikipedia.org/wiki/Normal_distribution#Operations_on_normal_deviates">is a normally distributed random variable</a>, thus</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mu(p(A) - p(B)) = mu(A) - mu(B)
+sigma(p(A) - p(B)) = sqrt(sigma(A) ^ 2 + sigma(B) ^ 2)
+</code></pre>
+</div>
+
+<p>If we are to <a href="http://stattrek.com/statistics/dictionary.aspx?definition=Normal_random_variable"><code class="highlighter-rouge">z-score</code></a> this distribution, we should obtain a distribution with <code class="highlighter-rouge">mu == 0</code> and <code class="highlighter-rouge">sigma == 1</code> - which is a mathematical expression of our null hypothesis. If our experimental <code class="highlighter-rouge">p(A) - p(B)</code> is within the constraints of this distribution, then <code class="highlighter-rouge">B</code> most likely does not provide any improvement (or worsening) over <code class="highlighter-rouge">A</code>. Now we can use our <code class="highlighter-rouge">two_sided_p_value</code> to test our hypothesis.</p>
+
+<p>The code:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">abtest_estimated_params_trial</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">n</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span> <span class="mi">1</span><span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">pA_minus_pB</span><span class="p">(</span><span class="n">Na</span><span class="p">,</span> <span class="n">na</span><span class="p">,</span> <span class="n">Nb</span><span class="p">,</span> <span class="n">nb</span><span class="p">):</span>
+    <span class="n">muA</span><span class="p">,</span> <span class="n">sigmaA</span> <span class="o">=</span> <span class="n">abtest_estimated_params_trial</span><span class="p">(</span><span class="n">Na</span><span class="p">,</span> <span class="n">na</span><span class="p">)</span>
+    <span class="n">muB</span><span class="p">,</span> <span class="n">sigmaB</span> <span class="o">=</span> <span class="n">abtest_estimated_params_trial</span><span class="p">(</span><span class="n">Nb</span><span class="p">,</span> <span class="n">nb</span><span class="p">)</span>
+    
+    <span class="c"># the following number should be normally distributed with mu = 0 and sigma == 1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">muA</span> <span class="o">-</span> <span class="n">muB</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sigmaA</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">sigmaB</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>With the results:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="mf">0.007313777221710671</span> <span class="c"># &gt; 0.05, we can safely reject the null hypothesis</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">350</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="mf">2.531308496145357e-14</span> <span class="c"># &gt; 0.5, we can safely reject the null hypothesis</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">210</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="mf">0.5796241923602059</span> <span class="c"># cannot reject the null</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="mf">0.25414197654223614</span> <span class="c"># cannot reject the null</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">170</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="mf">0.08382984264631776</span> <span class="c"># still cannot reject the null</span>
+
+<span class="n">two_sided_p_value</span><span class="p">(</span><span class="n">pA_minus_pB</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="mf">0.003189699706216853</span> <span class="c"># we can safely reject the null</span>
+</code></pre>
+</div>
 
 
   </div>
