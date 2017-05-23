@@ -1,5 +1,72 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-05-21T16:15:23+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">P-Values And Hypothesis Testing</title><link href="https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing.html" rel="alternate" type="text/html" title="P-Values And Hypothesis Testing" /><published>2017-05-14T14:15:16+03:00</published><updated>2017-05-14T14:15:16+03:00</updated><id>https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing</id><content type="html" xml:base="https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing.html">&lt;p&gt;This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. It also includes a worked example, how to validate that an A/B test indeed produces a significant outcome. The article follows quite closely a chapter from “Data Science from Scratch” by Joel Grus and it is annotated with my own research and observations.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-05-23T21:51:59+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Basic Tests For ML Models</title><link href="https://alexandrugris.github.io/maths/2017/05/23/basic-tests-for-models.html" rel="alternate" type="text/html" title="Basic Tests For ML Models" /><published>2017-05-23T14:15:16+03:00</published><updated>2017-05-23T14:15:16+03:00</updated><id>https://alexandrugris.github.io/maths/2017/05/23/basic-tests-for-models</id><content type="html" xml:base="https://alexandrugris.github.io/maths/2017/05/23/basic-tests-for-models.html">&lt;p&gt;Very short and simple post about metrics used for validating models.&lt;/p&gt;
+
+&lt;h3 id=&quot;confusion-matrix&quot;&gt;Confusion matrix&lt;/h3&gt;
+
+&lt;p&gt;A matrix made of:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;true positives:&lt;/em&gt; my test says spam and the email is spam (tp)&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;false positives (type 1 error):&lt;/em&gt; my test says spam but the email is not spam (fp)&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;false negatives (type 2 error):&lt;/em&gt; my test says not spam but the email is spam (fn)&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;true negatives:&lt;/em&gt; my test says not spam and the email is not spam (tn)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For the rest of the article let’s consider some numbers: tp = 10, fp = 100, fn = 1000, tn = 10000&lt;/p&gt;
+
+&lt;h3 id=&quot;accuracy&quot;&gt;Accuracy&lt;/h3&gt;
+
+&lt;p&gt;Fraction of correct predictions:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;accuracy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;accuracy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.900990099009901&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Very high, but obviously the test is crap, as we will see with the following three metrics. The results are completely biased by the true negatives. An example of such a crap test with high accuracy could be ‘you are CEO if your name is Jack’. Obviously, there are a lot of Jacks who are not CEOs.&lt;/p&gt;
+
+&lt;h3 id=&quot;precision&quot;&gt;Precision&lt;/h3&gt;
+
+&lt;p&gt;How accurate our positive predictions are.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;precision&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;precision&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.09090909090909091&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Obviously, accuracy is less than 1%.&lt;/p&gt;
+
+&lt;h3 id=&quot;recall&quot;&gt;Recall&lt;/h3&gt;
+
+&lt;p&gt;What fraction of positives the model identified.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;recall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;recall&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.009900990099009901&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Again, not such a good score.&lt;/p&gt;
+
+&lt;h3 id=&quot;f1-score&quot;&gt;F1 score&lt;/h3&gt;
+
+&lt;p&gt;The harmonic average between the recall and precision scores. The harmonic average is a good choice because it gets a score closer to the lowest result.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;f1_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;precision&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;f1_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.017857142857142856&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary type="html">Very short and simple post about metrics used for validating models.</summary></entry><entry><title type="html">P-Values And Hypothesis Testing</title><link href="https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing.html" rel="alternate" type="text/html" title="P-Values And Hypothesis Testing" /><published>2017-05-14T14:15:16+03:00</published><updated>2017-05-14T14:15:16+03:00</updated><id>https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing</id><content type="html" xml:base="https://alexandrugris.github.io/maths/2017/05/14/p-values-hypothesis-testing.html">&lt;p&gt;This post is about p-values and hypothesis testing. What they are, why they are needed, how to compute them and how to use them. It also includes a worked example, how to validate that an A/B test indeed produces a significant outcome. The article follows quite closely a chapter from “Data Science from Scratch” by Joel Grus and it is annotated with my own research and observations.&lt;/p&gt;
 
 &lt;h2 id=&quot;definitions&quot;&gt;Definitions&lt;/h2&gt;
 
@@ -2836,190 +2903,4 @@ services:
 
 &lt;p&gt;A useful parameter is &lt;code class=&quot;highlighter-rouge&quot;&gt;depends_on:&lt;/code&gt; which instructs docker to only start the container after the dependecies are statisfied. &lt;a href=&quot;https://docs.docker.com/compose/compose-file/#dependson&quot;&gt;docker&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Happy Hacking! :)&lt;/p&gt;</content><summary type="html">This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container, connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases). The last part will be dedicated to Docker Compose.</summary></entry><entry><title type="html">Docker And Containers Part 2</title><link href="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html" rel="alternate" type="text/html" title="Docker And Containers Part 2" /><published>2017-02-25T10:25:16+02:00</published><updated>2017-02-25T10:25:16+02:00</updated><id>https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers%20-%202</id><content type="html" xml:base="https://alexandrugris.github.io/web/development/2017/02/25/Docker-Containers-2.html">&lt;p&gt;This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers 
-and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.&lt;/p&gt;
-
-&lt;p&gt;Here is the first part: &lt;a href=&quot;/web/development/2017/02/12/Docker-Containers.html&quot;&gt;Docker And Containers&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;using-host-files-in-a-docker-containers&quot;&gt;Using host files in a docker containers&lt;/h3&gt;
-
-&lt;p&gt;First thing, we need to enable drives to be visible within the container. For this, we use the Settings dialog from Docker For Windows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_1.png&quot; alt=&quot;Settings Dialog Mount FileSystem&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Port 445 must be opened in the Windows Firewall.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_2.png&quot; alt=&quot;Firewall warning&quot; /&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;To share the drive, allow connections between the Windows host machine and the virtual machine in Windows Firewall or your third party firewall software. You do not need to open port 445 on any other network. 
-By default, allow connections to 10.0.75.1 port 445 (the Windows host) from 10.0.75.2 (the virtual machine).&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;em&gt;Attention:&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;By default, the Docker network is considered in the Public Networks profile. 
-For my desktop PC at home, I have simply enabled firewall rules for the public networks (default is to block all inbound connections). This setting might be dangerous on a laptop.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_3.png&quot; alt=&quot;Network rules&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Another option is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;gpedit.msc&lt;/code&gt; and change network profile for &lt;em&gt;Unidentifiable Networks&lt;/em&gt;. :)&lt;/p&gt;
-
-&lt;p&gt;Now that we have enabled access to host folders, let’s run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run --rm -v d:\OneDrive\Pictures:/my_pictures alpine sh -c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_4.png&quot; alt=&quot;Running a command on a volume in docker&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Let’s disect it:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run --rm&lt;/code&gt; tells docker to remove the image after the command is run. The image is not persisted.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-v d:\OneDrive\Pictures:/my_pictures&lt;/code&gt; tells docker to mount the &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\OneDrive\Pictures&lt;/code&gt; from the host to the &lt;code class=&quot;highlighter-rouge&quot;&gt;/my_pictures&lt;/code&gt; folder in the container.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;alpine sh -c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;&lt;/code&gt; from the &lt;code class=&quot;highlighter-rouge&quot;&gt;alpine&lt;/code&gt; image run the &lt;code class=&quot;highlighter-rouge&quot;&gt;sh&lt;/code&gt; command with the &lt;code class=&quot;highlighter-rouge&quot;&gt;-c &quot;cd /my_pictures &amp;amp;&amp;amp; ls -l&quot;&lt;/code&gt; parameters. It means change directory to &lt;code class=&quot;highlighter-rouge&quot;&gt;/my_pictures&lt;/code&gt; and then, if successful, run the &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -l&lt;/code&gt; command.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For a list of parameters of the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; command, here they are: &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/run/&quot;&gt;Docker Run&lt;/a&gt;. Another parameter very useful is the &lt;code class=&quot;highlighter-rouge&quot;&gt;--env&lt;/code&gt; to sent environment variables in the container.&lt;/p&gt;
-
-&lt;h3 id=&quot;example-no-1-delete-all-mongo-named-containers&quot;&gt;Example no. 1: delete all “mongo”-named containers:&lt;/h3&gt;
-
-&lt;p&gt;The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container. 
-It is clearly not efficient at all as it is much simpler to simply use batch &lt;code class=&quot;highlighter-rouge&quot;&gt;for&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;if&lt;/code&gt; in Windows, but it is just an example to show that it actually works.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a 
-    &amp;gt; d:\to_delete.txt 
-    &amp;amp;&amp;amp; docker run --rm -v d:\to_delete.txt:/my_data/to_delete.txt 
-    alpine sh -c &quot;grep mongo /my_data/to_delete.txt | awk '{print $1}'&quot; 
-    &amp;gt; d:\to_delete_2.txt 
-    &amp;amp;&amp;amp; for /F %I in (d:\to_delete_2.txt) DO docker rm %I
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Explanation: the command uses two files &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\to_delete.txt&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;d:\to_delete_2.txt&lt;/code&gt; as IPC between Windows and the command ran in the Linux container.&lt;/p&gt;
-
-&lt;h3 id=&quot;-example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker&quot;&gt;&lt;a name=&quot;vclinuxdocker&quot;&gt;&lt;/a&gt; Example no. 2: developing Linux applications with Visual C++ for Linux and Docker&lt;/h3&gt;
-
-&lt;p&gt;Visual C++ for Linux is great and  works right outside the box when connected to a Virtual Box VM (in the picture below the VM is running a Debian).&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/vsdebian.jpg&quot; alt=&quot;VM VC for Linux&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher alternative - use a Docker container for running and debugging the app.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; - gdb will not be able to connect to the executable otherwise.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it --env &quot;USERNAME=agris&quot; --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
-    debian bash -c &quot;echo sshd: ALL &amp;gt;&amp;gt; /etc/hosts.allow 
-        &amp;amp;&amp;amp; apt-get update 
-        &amp;amp;&amp;amp; apt-get install -y openssh-server g++ gdb gdbserver 
-        &amp;amp;&amp;amp; mkdir /home/$USERNAME &amp;amp;&amp;amp; useradd -d /home/$USERNAME $USERNAME 
-        &amp;amp;&amp;amp; passwd $USERNAME 
-        &amp;amp;&amp;amp; /etc/init.d/ssh restart 
-        &amp;amp;&amp;amp; chown -hR $USERNAME /home/$USERNAME &amp;amp;&amp;amp; bash&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_8.png&quot; alt=&quot;Running the command above&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Type Linux password when prompted.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Create a Visual C++ for Linux project. Set connection to localhost on port 2222 (forwarded 22, the default sshd port, from the container)&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_5.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Set the debugger type to gdb.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_6.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Clean / Rebuild the project.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Happy debugging. :)&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/docker_2_7.png&quot; alt=&quot;Visual Studio Project Config&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The container is run with the &lt;code class=&quot;highlighter-rouge&quot;&gt;--rm&lt;/code&gt; flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.&lt;/p&gt;
-
-&lt;h3 id=&quot;creating-an-image-to-host-all-the-tools-needed-for-building-and-debugging-with-vc-for-linux&quot;&gt;Creating an image to host all the tools needed for building and debugging with VC++ for Linux&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Create the docker file (Dockerfile):&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM debian:latest
-
-ARG USERNAME=agris
-ARG PASSWD=1234
-
-ENV USERNAME $USERNAME
-ENV PASSWD $PASSWD
-
-RUN echo sshd: ALL &amp;gt;&amp;gt; /etc/hosts.allow
-
-RUN apt-get update
-
-RUN apt-get install -y apt-utils
-
-RUN apt-get install -y openssh-server openssl g++ gdb gdbserver
-
-RUN mkdir /home/$USERNAME \
-        &amp;amp;&amp;amp; useradd -d /home/$USERNAME $USERNAME -s /bin/bash -p `openssl passwd -1 -salt iuuA8932 $PASSWD` \
-        &amp;amp;&amp;amp; /etc/init.d/ssh restart \
-        &amp;amp;&amp;amp; chown -hR $USERNAME /home/$USERNAME
-        
-CMD /etc/init.d/ssh start &amp;amp;&amp;amp; bash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Build the image with the &lt;code class=&quot;highlighter-rouge&quot;&gt;gcc_debug_debian:latest&lt;/code&gt; tag:&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker build -t gcc_debug_debian:latest .
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Clean up a little bit&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;for /f &quot;tokens=1, 3&quot; %I in ('docker images') do if &quot;%I&quot;==&quot;&amp;lt;none&amp;gt;&quot; (docker rmi -f %J)
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Run the container and map the port 22 to 2222 on the host:&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined gcc_debug_debian
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Try SSH by running ssh command in another container to test the SSH connection (192.168.1.6 is the local IP of my computer):&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;c:&amp;gt;docker run -it --rm gcc_debug_debian /usr/bin/ssh -l agris -p 2222 192.168.1.6
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Clean / Rebuild and then Start Remote Debugging in Visual C++. If the build step works but debugging fails, please make sure you have not forgotten the &lt;code class=&quot;highlighter-rouge&quot;&gt;--security-opt seccomp=unconfined&lt;/code&gt; flag.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This is it for running and debugging C++ applications in a Linux docker container. Happy Hacking! :)&lt;/p&gt;</content><summary type="html">This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers 
-and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.</summary></entry></feed>
+&lt;p&gt;Happy Hacking! :)&lt;/p&gt;</content><summary type="html">This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container, connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases). The last part will be dedicated to Docker Compose.</summary></entry></feed>
