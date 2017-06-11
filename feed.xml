@@ -1,9 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-06-11T10:43:01+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Apache Kafka</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/04/kafka-patterns.html" rel="alternate" type="text/html" title="Apache Kafka" /><published>2017-06-04T14:15:16+03:00</published><updated>2017-06-04T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/04/kafka-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/04/kafka-patterns.html">&lt;p&gt;Playing around with Apache Kafka. The article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing producers and consumers.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-06-11T21:29:10+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Apache Kafka</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html" rel="alternate" type="text/html" title="Apache Kafka" /><published>2017-06-11T14:15:16+03:00</published><updated>2017-06-11T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html">&lt;p&gt;This article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing basic producers and consumers. 
+The source code associated with this article can be found &lt;a href=&quot;https://github.com/alexandrugris/Play_With_Kafka&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;how-to-run-apache-kafka&quot;&gt;How to run Apache Kafka&lt;/h3&gt;
 
 &lt;p&gt;The simplest way: &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose up&lt;/code&gt; with the following &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose.yml&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;To run a single instance of Kafka on the localhost, with ports exposed to localhost:&lt;/em&gt;&lt;/p&gt;
 
 &lt;div class=&quot;language-yml highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3'&lt;/span&gt;
 
@@ -33,7 +36,7 @@
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;Another option, if we want to scale the Kafka cluster is to run:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Another option, if we want to scale the Kafka cluster is to run:&lt;/em&gt;&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker-compose up -d
 &lt;/code&gt;&lt;/pre&gt;
@@ -64,9 +67,10 @@
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9092&quot;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# we do not publish these ports anymore to host&lt;/span&gt;
       
     &lt;span class=&quot;s&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;# we remove the KAFKA_ADVERTISED_HOST_NAME property&lt;/span&gt;
       &lt;span class=&quot;s&quot;&gt;HOSTNAME_COMMAND&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;route&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-n&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;awk&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/UG[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;]/{print&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$$2}'&quot;&lt;/span&gt;
       &lt;span class=&quot;s&quot;&gt;KAFKA_ZOOKEEPER_CONNECT&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;zookeeper:2181&lt;/span&gt;
-      &lt;span class=&quot;c1&quot;&gt;# we dropped completely the JMX part&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;# we drop completely the JMX part&lt;/span&gt;
 
     &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/run/docker.sock:/var/run/docker.sock&lt;/span&gt;
@@ -344,7 +348,124 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/kafka_9.png&quot; alt=&quot;Messages&quot; /&gt;&lt;/p&gt;
 
-&lt;h3 id=&quot;consuming-messages&quot;&gt;Consuming messages&lt;/h3&gt;</content><summary type="html">Playing around with Apache Kafka. The article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing producers and consumers.</summary></entry><entry><title type="html">RabbitMQ Patterns and Considerations</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html" rel="alternate" type="text/html" title="RabbitMQ Patterns and Considerations" /><published>2017-06-03T14:15:16+03:00</published><updated>2017-06-03T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html">&lt;p&gt;This post summmarizes my forray into RabbitMQ. The code which merges most of the concepts from this article can be found &lt;a href=&quot;https://github.com/alexandrugris/RabbitMQ_Play&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&quot;consuming-messages&quot;&gt;Consuming messages&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;Basic notions:&lt;/em&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There is one thread per Kafka consumer&lt;/li&gt;
+  &lt;li&gt;Polling is a single threaded operation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Properties:&lt;/em&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enable.auto.commit=true&lt;/code&gt; - allow Kafka to manage when last committed offset is incremented&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;auto.commit.interval=5000&lt;/code&gt; - together with &lt;code class=&quot;highlighter-rouge&quot;&gt;enable.auto.commit&lt;/code&gt; enables Kafka consumer to autocommit every XXX milliseconds.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;auto.offset.reset=&quot;latest&quot; or &quot;earliest&quot;&lt;/code&gt; - from where to start reading the messages from a partition - latest / earliest refers to known committed offset.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Kafka keeps track of consumer offsets in a Kafka topic named &lt;code class=&quot;highlighter-rouge&quot;&gt;__consumer_offsets&lt;/code&gt;, which is partitioned across 50 partitions.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic __consumer_offsets
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;KafkaConsumer&lt;/code&gt; API has functions to manually retreive and / or reset the position in the stream on a per topic/partition basis. This allows true manual cursor movement, very similar to working with a file. It has also options to pause / resume a subscribed topic when there are higher priority messages to consider.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Manual offset API&lt;/em&gt;:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;seek()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;seekToBeginning()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;seekToEnd()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;position()&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Flow control API:&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pause&lt;/code&gt; partition&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;resume&lt;/code&gt; partition&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Rebalance listeners:&lt;/em&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// subscribe to all partitions in a topic&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;consumer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;subscribe&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;topicPatterns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;TopicPattern:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getTopic&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;collect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Collectors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toSet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()),&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConsumerRebalanceListener&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onPartitionsRevoked&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TopicPartition&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;partitions&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// do something here&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// https://kafka.apache.org/0101/javadoc/org/apache/kafka/clients/consumer/ConsumerRebalanceListener.html&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// for instance, save restore offset from an external store&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onPartitionsAssigned&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TopicPartition&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;partitions&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// do something here&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;If we set the &lt;code class=&quot;highlighter-rouge&quot;&gt;enable.auto.commit=false&lt;/code&gt; we need to use one of the two API functions &lt;code class=&quot;highlighter-rouge&quot;&gt;commitSync()&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;commitAsync()&lt;/code&gt; to advance the last known committed offset. &lt;code class=&quot;highlighter-rouge&quot;&gt;commitSync&lt;/code&gt; retries in case of failure. The retry is controlled by the
+&lt;code class=&quot;highlighter-rouge&quot;&gt;retries.backoff.ms&lt;/code&gt; setting. In case of unrecoverable error, a &lt;code class=&quot;highlighter-rouge&quot;&gt;CommitFailedException&lt;/code&gt; is thrown.  &lt;code class=&quot;highlighter-rouge&quot;&gt;commitAsync&lt;/code&gt; receives a callback as parameter for the calling application to know when the commit has occured. It does not automatically retry.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://stackoverflow.com/questions/28561147/how-to-read-data-using-kafka-consumer-api-from-beginning&quot;&gt;How to start everytime from beginning in Kafka&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Scaling out - consumer groups:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;By sharing the &lt;code class=&quot;highlighter-rouge&quot;&gt;group.id&lt;/code&gt; property, a group of processes can consume messages together in parallel, advancing the offset in a collaborative way, thus distributig the burden of message processing to several cores / machines.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;Group Coordinator&lt;/code&gt; is monitoring and taking care of work distribution and group membership. It controls availability of consumer nodes through two parameters:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;heartbeat.interval.ms=3000&lt;/code&gt; - how often consumers send heartbeats to Kafka&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;session.timeout.ms=30000&lt;/code&gt; - how long before the consumer is considered down and removed from group membership&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Partition allocation in consumer groups:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;If the number of consumers == the number of partitions, the group coordinator will allocate to each consumer a partition in a 1:1 setup.&lt;/p&gt;
+
+&lt;p&gt;If the number of consumers &amp;gt; the number of partitions, there will be idle consumers until more partitions become available.&lt;/p&gt;
+
+&lt;p&gt;Otherswise, partitions will be allocated to consumers so that each consumer consumes full partitions.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Very important:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Partition allocation in consumer groups work as described below IF the consumer subscribes to the full topic. Otherwise, if subscribed directly to partitions, all data will be distributed to all consumers independent of the consumer group allocation. This is because all consumers read from the same last committed offset on, since the commit message (&lt;code class=&quot;highlighter-rouge&quot;&gt;consumer.commitSync()&lt;/code&gt;) arrives to the queue too late, when the messages have already been read.&lt;/p&gt;
+
+&lt;p&gt;This means we need to change the client as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;c1&quot;&gt;// subscribe to all partitions in a topic -&amp;gt; uncomment the line below if part of a consumer group&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;consumer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;subscribe&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;topicPatterns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;TopicPattern:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getTopic&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;collect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Collectors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toSet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()));&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// subscribe to specific partitions -&amp;gt; comment the line below if part of a consumer group&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// consumer.assign(topicPatterns.stream().map( TopicPattern::getPartition).collect(Collectors.toList()));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/kafka_10.png&quot; alt=&quot;With subscribe not assign&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;topics-not-covered&quot;&gt;Topics not covered:&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;Kafka Schema Registry:&lt;/em&gt; - Avro schema registry and serializers&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.confluent.io/blog/schema-registry-kafka-stream-processing-yes-virginia-you-really-need-one/&quot;&gt;https://www.confluent.io/blog/schema-registry-kafka-stream-processing-yes-virginia-you-really-need-one/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/confluentinc/examples/blob/3.2.x/kafka-clients/specific-avro-producer/src/main/java/io/confluent/examples/producer/AvroClicksProducer.java&quot;&gt;Example Producer&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Apache Kafka Connect:&lt;/em&gt; - standardized integration pipeline with Kafka in the middle. &lt;a href=&quot;http://docs.confluent.io/current/connect/index.html&quot;&gt;http://docs.confluent.io/current/connect/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Connect makes it simple to use existing connector implementations for common data sources and sinks to move data into and out of Kafka. Kafka Connect’s applications are wide ranging. 
+A source connector can ingest entire databases and stream table updates to Kafka topics or even collect metrics from all of your application servers into Kafka topics, making the data available for stream processing with low latency.
+A sink connector can deliver data from Kafka topics into secondary indexes like Elasticsearch or into batch systems such as Hadoop for offline analysis.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;em&gt;Kafka Streams:&lt;/em&gt; - &lt;a href=&quot;https://www.confluent.io/blog/introducing-kafka-streams-stream-processing-made-simple/&quot;&gt;Stream processing with kafka&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Compaction:&lt;/em&gt; &lt;a href=&quot;http://kafka.apache.org/documentation.html#compaction&quot;&gt;http://kafka.apache.org/documentation.html#compaction&lt;/a&gt; - keeping only the last updated value for a key&lt;/p&gt;
+
+&lt;p&gt;Best source: &lt;a href=&quot;http://kafka.apache.org/documentation/&quot;&gt;http://kafka.apache.org/documentation/&lt;/a&gt;&lt;/p&gt;</content><summary type="html">This article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing basic producers and consumers. 
+The source code associated with this article can be found here</summary></entry><entry><title type="html">RabbitMQ Patterns and Considerations</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html" rel="alternate" type="text/html" title="RabbitMQ Patterns and Considerations" /><published>2017-06-03T14:15:16+03:00</published><updated>2017-06-03T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html">&lt;p&gt;This post summmarizes my forray into RabbitMQ. The code which merges most of the concepts from this article can be found &lt;a href=&quot;https://github.com/alexandrugris/RabbitMQ_Play&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;how-to-run-rabbitmq&quot;&gt;How to run RabbitMQ&lt;/h3&gt;
 
