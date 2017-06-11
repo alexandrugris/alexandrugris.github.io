@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>RabbitMQ Patterns and Considerations</title>
+  <meta name="description" content="This post summmarizes my forray into RabbitMQ. The code which merges most of the concepts from this article can be found here.">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">RabbitMQ Patterns and Considerations</h1>
+    <p class="post-meta"><time datetime="2017-06-03T14:15:16+03:00" itemprop="datePublished">Jun 3, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This post summmarizes my forray into RabbitMQ. The code which merges most of the concepts from this article can be found <a href="https://github.com/alexandrugris/RabbitMQ_Play">here</a>.</p>
+
+<h3 id="how-to-run-rabbitmq">How to run RabbitMQ</h3>
+
+<p>By far the easiest and most portable way to run RabbitMQ is to use the official docker container with the management console started:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
+    --name my_rabbit_mq rabbitmq:3-management
+</code></pre>
+</div>
+
+<p>The corresponding connetion string is <code class="highlighter-rouge">"amqp://guest:guest@localhost:5672"</code> and the management URL: <code class="highlighter-rouge">http://localhost:15672/#/ </code></p>
+
+<h3 id="basic-concepts">Basic concepts</h3>
+
+<p>Each service (application) maintains one connection to the queue. Connections are made to be shared across threads.</p>
+
+<p>Within a connection, one or more channels can coexist to provide for concurrency. Rule of thumb: 1 channel / thread. Channels are not meant to be shared across threads. The connection object is. Inside RabbitMQ, each channel is served by an Erlang thread (lightweight actor pattern, Erlang can spawn huge amount of threads).</p>
+
+<p>Producers write to an exchange. Exchanges can communicate with queues or other with exchanges through binding. Consumers read from queues. One application can read from one or more queues. In a configurtion with exactly one producer and one consumer, the oldest message is consumed first. RabbitMQ provides strong guarantees for this.</p>
+
+<p>Only when the queue receives an ACK, the message is deleted from the queue. Producers write to exchanges and attach to each message a routing key. The exchange will route the message to the corresponding queue based on the routing key and the exchange type. Exchanges can be of several types: Direct, Topic, Fanout, Headers. Below is a summary of each exchange type and the associated routing behavior:</p>
+
+<p><em>Direct Exchange</em></p>
+
+<p>Messages are routed to the specified queue using the routing key.</p>
+
+<p><em>Topic Exchange</em></p>
+
+<p>Routing behaves very much like for the direct exchange. However, routing keys can have several terms separated by dots. E.g. <code class="highlighter-rouge">package.fast.international</code>. Queues listen to various keys by using wildcards. E.g. <code class="highlighter-rouge">package.*.international</code>. <code class="highlighter-rouge">*</code> is the wildcard for one word. <code class="highlighter-rouge">#</code> is the hashtag for multiple words.</p>
+
+<p><em>Fanout Exchange</em></p>
+
+<p>The routing key is ignored. Message is sent to all bound queues.</p>
+
+<p><em>Headers Exchange</em></p>
+
+<p>Routing is based on the message headers which are set through <code class="highlighter-rouge">IBasicProperties::Headers</code> property. Matching is done for all headers or for any.</p>
+
+<p><a href="https://www.rabbitmq.com/tutorials/amqp-concepts.html">More details here</a></p>
+
+<h3 id="creating-a-connection-and-then-a-channel">Creating a connection and then a channel</h3>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
+<span class="p">{</span>
+	<span class="n">Uri</span> <span class="p">=</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQConnectionString</span><span class="p">,</span>
+	<span class="p">[...]</span>
+<span class="p">};</span>
+
+<span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span> <span class="c1">// one per application
+</span><span class="na">[...]</span>
+<span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="n">conn</span><span class="p">.</span><span class="nf">CreateModel</span><span class="p">();</span> <span class="c1">// one per thread
+</span></code></pre>
+</div>
+
+<h3 id="setting-up-the-routing-topology">Setting up the routing topology</h3>
+
+<p>Use:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">IModel::ExchangeDeclare()</code> to declare an exchange</li>
+  <li><code class="highlighter-rouge">IModel::QueueDeclare()</code> to declare a queue</li>
+  <li><code class="highlighter-rouge">IModel::QueueBind()</code> to bind a queue to an exchange</li>
+</ul>
+
+<p>Beside the normal exchange types, two special exchanges stand out:</p>
+
+<ul>
+  <li>
+    <p><em>Alternate Routing Exchange:</em> useful for routing messages which cannot be routed according to the predefined rules and otherwise would have been dropped.</p>
+  </li>
+  <li>
+    <p><em>Dead Letter Exchange:</em>  messages that have been rejected or messages that have their TTL expired are routed here. The dead letter exhange can be used for scheduling messages at a specific time, by setting their TTL property.</p>
+  </li>
+</ul>
+
+<p>Here is an example on how to declare such a topology, with a dead letter exchange (DLX) and alternate routing exchange set to the same exchange instance:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code> <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="p">...;</span>
+ <span class="p">[...]</span>
+ <span class="n">chan</span><span class="p">.</span><span class="nf">ExchangeDeclare</span><span class="p">(</span>
+     <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span><span class="p">,</span>
+     <span class="n">ExchangeType</span><span class="p">.</span><span class="n">Fanout</span><span class="p">,</span>
+     <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">arguments</span><span class="p">:</span> <span class="k">null</span>
+ <span class="p">);</span>
+
+ <span class="c1">// to simplify the topology,
+</span> <span class="c1">// we will use the same dead letter exchange as alternative exchange in case of routing failures
+</span> <span class="n">chan</span><span class="p">.</span><span class="nf">ExchangeDeclare</span><span class="p">(</span>
+         <span class="n">exchange</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span>
+         <span class="n">type</span><span class="p">:</span> <span class="n">ExchangeType</span><span class="p">.</span><span class="n">Direct</span><span class="p">,</span> <span class="c1">// change to Fanout to send to several queues
+</span>         <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// no serialization
+</span>         <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+         <span class="n">arguments</span><span class="p">:</span> <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;()</span>
+         <span class="p">{</span>
+             <span class="p">{</span> <span class="s">"alternate-exchange"</span><span class="p">,</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span> <span class="p">}</span>
+         <span class="p">}</span>
+  <span class="p">);</span>
+ 
+ <span class="n">chan</span><span class="p">.</span><span class="nf">QueueDeclare</span><span class="p">(</span>
+     <span class="n">queue</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName</span><span class="p">,</span>
+     <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">exclusive</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">arguments</span><span class="p">:</span> <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;()</span>
+     <span class="p">{</span>
+         <span class="p">{</span> <span class="s">"x-dead-letter-exchange"</span><span class="p">,</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span> <span class="p">}</span>
+     <span class="p">}</span>
+ <span class="p">);</span>
+
+ <span class="n">chan</span><span class="p">.</span><span class="nf">QueueDeclare</span><span class="p">(</span>
+     <span class="n">queue</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName_DLX</span><span class="p">,</span>
+     <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">exclusive</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+     <span class="n">arguments</span><span class="p">:</span> <span class="k">null</span>
+ <span class="p">);</span>
+
+ <span class="n">chan</span><span class="p">.</span><span class="nf">QueueBind</span><span class="p">(</span>
+     <span class="n">queue</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName</span><span class="p">,</span>
+     <span class="n">exchange</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span>
+     <span class="n">routingKey</span><span class="p">:</span> <span class="s">"RabbitMQ_Play"</span><span class="p">);</span>
+
+ <span class="cm">/**
+  * The dead-lettering process adds an array to the header of each dead-lettered message named x - death.
+  * This array contains an entry for each dead lettering event, identified by a pair of { queue, reason}. 
+  * https://www.rabbitmq.com/dlx.html
+  */</span>
+
+ <span class="n">chan</span><span class="p">.</span><span class="nf">QueueBind</span><span class="p">(</span>
+     <span class="n">queue</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName_DLX</span><span class="p">,</span>
+     <span class="n">exchange</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span><span class="p">,</span>
+     <span class="n">routingKey</span><span class="p">:</span> <span class="s">""</span>
+ <span class="p">);</span>
+</code></pre>
+</div>
+
+<p>In the code above several parameters have been used to declare exchanges and queues. Here are their meaning:</p>
+
+<ul>
+  <li><em>durable: false</em> : messages will not be persisted to disk. Even if set to true, each message should have the durable flag turn on for persistence</li>
+  <li><em>exclusive: false</em> : if set to true, messages can only be consumed by this connection. Anyone can publish though. When set to true, this configuration is used in the RPC and scatter-gather usage patterns as reply queues.</li>
+  <li><em>autoDelete: false</em> : if true, the queue is deleted when there are no more consumers. However, if there are no consumers ever on the queue, it is not deleted.</li>
+</ul>
+
+<h3 id="sending-messages">Sending messages</h3>
+
+<p>We may want confirmation that the message has been received by the queue:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="c1">// for publisher to get confirmation that the message has been received by the queue: 
+</span><span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span>  <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Msg confimed {args.DeliveryTag}"</span><span class="p">);</span> 
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Error sending message to queue {args.DeliveryTag"</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Then set the message properties and headers and call:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
+</code></pre>
+</div>
+
+<h3 id="receiving-messages">Receiving messages</h3>
+
+<p>Inside the client, for receiving messages, one can set <code class="highlighter-rouge">prefetchCount</code> to load multiple messages. However, if the server crashes, these will all remain unacknowledged even if processed.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">cthread</span> <span class="p">!=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="p">(</span><span class="s">"Channel reused from a different thread"</span><span class="p">);</span>
+
+<span class="n">chan</span><span class="p">.</span><span class="nf">BasicQos</span><span class="p">(</span>
+          <span class="n">prefetchSize</span><span class="p">:</span> <span class="m">0</span><span class="p">,</span> <span class="c1">// no limit
+</span>          <span class="n">prefetchCount</span><span class="p">:</span> <span class="m">1</span><span class="p">,</span> <span class="c1">// 1 by 1
+</span>          <span class="k">global</span><span class="p">:</span> <span class="k">false</span> <span class="c1">// true == set QoS for the whole connection or false only for this channel
+</span>          <span class="p">);</span>
+<span class="n">chan</span><span class="p">.</span><span class="nf">BasicConsume</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName</span><span class="p">,</span> <span class="n">noAck</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="n">consumer</span><span class="p">:</span> <span class="k">this</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">consumer: this</code> in the listing above refers to the <code class="highlighter-rouge">Consumer</code> class below which extends the <code class="highlighter-rouge">DefaultBasicConsumer</code> class:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Consumer</span> <span class="p">:</span> <span class="n">DefaultBasicConsumer</span><span class="p">,</span> <span class="n">IDisposable</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="k">null</span><span class="p">;</span>    
+    <span class="k">private</span> <span class="kt">int</span> <span class="n">cthread</span> <span class="p">=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">;</span>
+   
+   <span class="p">[...]</span>
+   
+    <span class="c1">// callback for each received message
+</span>    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
+        <span class="kt">ulong</span> <span class="n">deliveryTag</span><span class="p">,</span> 
+        <span class="kt">bool</span> <span class="n">redelivered</span><span class="p">,</span> 
+        <span class="kt">string</span> <span class="n">exchange</span><span class="p">,</span> 
+        <span class="kt">string</span> <span class="n">routingKey</span><span class="p">,</span> 
+        <span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">,</span> 
+        <span class="kt">byte</span><span class="p">[]</span> <span class="n">body</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="p">[...]</span>            
+    <span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Another way to go is to use the <code class="highlighter-rouge">QueuingBasicConsumer(model)</code> and then <code class="highlighter-rouge">(BasicDeliveryEventArgs)consumer.Queue.Dequeue();</code> for extracting the message in a loop.</p>
+
+<h3 id="reliability-options">Reliability options</h3>
+
+<p><em>Acks</em> - Rabbitmq only deletes a message from the queue when the message is acknowledged by the consumer. Can be set to off in the consumer, which means the message is deleted as soon as it is delivered. The consumer is notified if a message is redelivered by a <code class="highlighter-rouge">redelivered == true</code> flag.</p>
+
+<p><em>Publisher confirms</em> - for the publisher to know that a message has been queued or not. In case of important messages, implement a re-send strategy for the cases when the queue is not accessible.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Msg confimed {args.DeliveryTag}"</span><span class="p">);</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Error sending message to queue {args.DeliveryTag}"</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p><em>Mandatory</em> - set as a flag in <code class="highlighter-rouge">BasicPublish</code>. If the message cannot be routed to the queue it will be sent back to the producer. By default, if the flag is not set, the message is lost. The event <code class="highlighter-rouge">BasicReturn</code> is fired on the channel. Routing failures can be treated using the alternative exchange feature.</p>
+
+<p><em>Reply to sender</em> - producer is notified when the consumer has received the message. Use the <code class="highlighter-rouge">ReplyTo</code> field in message properties or use <code class="highlighter-rouge">SimpleRpcServer</code> and <code class="highlighter-rouge">SimpleRpcClient</code>. <a href="https://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html">Example here</a></p>
+
+<p><em>Connection and topology recovery</em> - retry in case of failure to send messages, only if the queues and exchanges are set to durable. Even if the topology is set to durable, the messages are lost if their individual flag for durability is not set.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
+<span class="p">{</span>
+	<span class="n">Uri</span> <span class="p">=</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQConnectionString</span><span class="p">,</span>
+	<span class="n">AutomaticRecoveryEnabled</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+	<span class="n">TopologyRecoveryEnabled</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+	<span class="n">NetworkRecoveryInterval</span> <span class="p">=</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="nf">FromSeconds</span><span class="p">(</span><span class="m">5</span><span class="p">),</span>
+	<span class="n">UseBackgroundThreadsForIO</span> <span class="p">=</span> <span class="k">false</span> <span class="c1">//Foreground threads keep the app alive until finished
+</span><span class="p">};</span>
+
+<span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span>
+</code></pre>
+</div>
+
+<h3 id="supported-routing-scenarios">Supported Routing Scenarios:</h3>
+
+<p><em>Basic patterns:</em></p>
+
+<ul>
+  <li>Simple one-way messaging (Exchange type: direct, message sent to unnamed (default queue))</li>
+  <li>Worker queues (Exchange type: direct, several consumer listening to the same queue, reading the messages in a round-robin fashion if all are waiting)</li>
+  <li>Publish-subscribe (Exchange type: fan-out, routing key is ignored, message is sent to all queues bound to the exchange)</li>
+  <li>RPC (Exchange type: direct, message can be sent to default exchange with a specified routing key and response is received on a specified unique response queue, owned by the client)</li>
+</ul>
+
+<p><em>Advanced patterns:</em></p>
+
+<ul>
+  <li>Routing (Exchange Type: direct, message is sent to a named exchange, routing key is specified so information only reaches the queues matching the pattern)</li>
+  <li>Topic (Exchange type: topic. Routing key is a string separated by dots and wildcards. E.g.: “ro.alexandrugris.*”.)</li>
+  <li>Headers (Exchange type: headers. Message is sent to the queues which match the headers. Routing key should not be set. Match type should indicate if all or any header must match)</li>
+  <li>Scatter-gather (Exchange type: can be any, routing key is optional depending on the exchange type. The sender will start by creating and polling a response queue and then dispatch its request)</li>
+</ul>
+
+<p>These are covered extensively in the <a href="http://www.rabbitmq.com/getstarted.html">RabbitMQ tutorials</a>.</p>
+
+<h3 id="dealing-with-errors">Dealing with errors</h3>
+
+<p><em>Scenario 1: exception is caught in the consumer and <code class="highlighter-rouge">chan.BasicNack(resend: true)</code> is sent to the queue.</em></p>
+
+<p>The message is then immediately redispatched to a consumer with the flag <code class="highlighter-rouge">redelivered == true</code>. However there is no mechanism to know how many retries have occured. Thus, a better alternative is to requeue the message again.</p>
+
+<p><em>Scenario 2: exception is caught and the message is redelivered to the queue for a number of times.</em></p>
+
+<p>The message is posted back at the beginning of the queue, so the retry will happen only after all other messages have been consumed. In order to keep track of the number of retries, a header is set in the properties which is decreased with each retry. After resubmitting the message back the the queue, the failed message is ACKed. When the resubmit count reaches 0, the message is rejected. If a dead letter queue is specified in the routing topology, the message is automatically directed by RabbitMQ to this queue. Otherwise it is silently dropped.</p>
+
+<p>A strategy that is mixing both approaches is implemented in the code below:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
+        <span class="kt">ulong</span> <span class="n">deliveryTag</span><span class="p">,</span> 
+        <span class="kt">bool</span> <span class="n">redelivered</span><span class="p">,</span> 
+        <span class="kt">string</span> <span class="n">exchange</span><span class="p">,</span> 
+        <span class="kt">string</span> <span class="n">routingKey</span><span class="p">,</span> 
+        <span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">,</span> 
+        <span class="kt">byte</span><span class="p">[]</span> <span class="n">body</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">[...]</span>
+    <span class="k">if</span> <span class="p">([</span><span class="n">MessageProcessedSuccessfully</span><span class="p">])</span>
+    <span class="p">{</span>
+        <span class="c1">// send ack only for this message and only if no error so far
+</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicAck</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="c1">// error condition
+</span>    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">redelivered</span> <span class="p">||</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">MAX_RETRY_COUNT</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nf">Requeue</span><span class="p">(</span><span class="n">consumerTag</span><span class="p">,</span> <span class="n">deliveryTag</span><span class="p">,</span> <span class="n">exchange</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="c1">// first time simply put it back in the queue for another try
+</span>            <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">private</span> <span class="kt">int</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// use the headers field of the message properties to keep track of 
+</span>    <span class="c1">// the number of retries
+</span>    <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">?)</span><span class="n">properties</span><span class="p">.</span><span class="n">Headers</span><span class="p">?[</span><span class="s">"Retries"</span><span class="p">]</span> <span class="p">??</span> <span class="n">MAX_RETRY_COUNT</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">private</span> <span class="k">void</span> <span class="nf">SetRetryCount</span><span class="p">(</span><span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">,</span> <span class="kt">int</span> <span class="n">retryCount</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">properties</span><span class="p">.</span><span class="n">Headers</span> <span class="p">=</span> <span class="n">properties</span><span class="p">.</span><span class="n">Headers</span> <span class="p">??</span> <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;();</span>
+    <span class="n">properties</span><span class="p">.</span><span class="n">Headers</span><span class="p">[</span><span class="s">"Retries"</span><span class="p">]</span> <span class="p">=</span> <span class="n">retryCount</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">private</span> <span class="k">void</span> <span class="nf">Requeue</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
+    <span class="kt">ulong</span> <span class="n">deliveryTag</span><span class="p">,</span> 
+    <span class="kt">string</span> <span class="n">exchange</span><span class="p">,</span> 
+    <span class="kt">string</span> <span class="n">routingKey</span><span class="p">,</span> 
+    <span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">,</span> 
+    <span class="kt">byte</span><span class="p">[]</span> <span class="n">body</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">retryCount</span> <span class="p">=</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">);</span>
+    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Retry count: {retryCount}"</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">retryCount</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nf">SetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="p">--</span><span class="n">retryCount</span><span class="p">);</span>
+        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">exchange</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">);</span>
+        <span class="c1">// this is slow, but we need to make sure somehow the message reaches the queue back
+</span>        <span class="c1">// channel is configured with chan.ConfirmSelect()
+</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">WaitForConfirmsOrDie</span><span class="p">();</span> 
+        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicAck</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="c1">// reject the message to dead letter queue.
+</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>In the code above there is no control over when the retry will occur. This is generally not a good strategy because the system might have not yet recovered from the conditions that led to the error in the first place. A better approach is to set the TTL to the message and then push it to another waiting queue for which there is no consumer, but has attached this queue to its dead letter exchange. When the TTL expires, RabbitMQ automatically moves the message to the dead letter exchange (and from here routed to our queue) from which we can consume it once again.</p>
+
+<p>Patterns to take into consideration:</p>
+
+<ul>
+  <li>
+    <p>Dead letter exchange (DLX): RabbitMQ moves TTL-expired messages and rejected messages to this exchange. DLX can have any type and with various queues attached for custom routing.</p>
+  </li>
+  <li>
+    <p>Routing error: alternative queue - a queue declared for messages that cannot be routed to any other queue and would otherwise be silently dropped</p>
+  </li>
+  <li>
+    <p>Scheduled delivery / redelivery: together with the DLX, the messages have a TTL after which they are moved to the DLX</p>
+  </li>
+</ul>
+
+<p>In my demo the producer creates the routing topology with:</p>
+<ul>
+  <li>One exchange of type direct (<code class="highlighter-rouge">alexandrugris.1st_exchange</code>)</li>
+  <li>One one alternate exchange which is also the dead letter exchange (<code class="highlighter-rouge">alexandrugris.1st_exchange_dead_letter_exchnage</code>)</li>
+</ul>
+
+<p><img src="https://alexandrugris.github.io/assets/rabbitmq_3.png" alt="Exchanges" /></p>
+
+<p>And two queues:</p>
+<ul>
+  <li>One queue connected to the the <code class="highlighter-rouge">1st_exchange</code></li>
+  <li>One connected to the dead letter exchange</li>
+</ul>
+
+<p>The producer dispatches roughly 99% of the messages to the right queue and 1% of the messages have a bogus routing key. Thus, if the producer is run without a consumer, we get the following:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/rabbitmq_1.png" alt="Producer run without a consuming client" /></p>
+
+<p>It is visible that some messages are sent to the alternate exchange queue due to failed routing.</p>
+
+<p>The producer also sets a TTL to all the messages that are sent. Thus, after roughly a minute, we get the following:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/rabbitmq_2.png" alt="Some messages moved to the DLX, some messages deleted" /></p>
+
+<p>Two things are worth noting:</p>
+<ul>
+  <li>The main bulk of the messages that were not consumed are moved to the dead letter queue</li>
+  <li>The messages that were already in the dead letter queue, when their TTL expires, are deleted as there is no other destination for them</li>
+</ul>
+
+<p>Because after the movement the TTL is reset for all messages, the situation remains stable until the server is reset.</p>
+
+<h3 id="message-persistence-and-serialization">Message persistence and serialization</h3>
+
+<p>Durability of a queue does not make messages that are routed to that queue automatically durable. If a broker is taken down and then brought back up, a durable queue will be re-declared during broker startup, however, only persistent messages will be recovered.</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<span class="n">props</span><span class="p">.</span><span class="nf">SetPersistent</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>To set properties for the message, <code class="highlighter-rouge">model.CreateBasicProperties()</code> returns the following interface instance:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">public</span> <span class="k">interface</span> <span class="n">IBasicProperties</span><span class="p">{</span>
+<span class="err">  </span> 
+<span class="err">   </span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">/// Message timestamp.
+</span><span class="err">   </span> <span class="n">AmqpTimestamp</span> <span class="n">Timestamp</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Convenience property; parses RabbitMQ.Client.IBasicProperties.ReplyTo property
+</span><span class="err">   </span> <span class="c1">// using RabbitMQ.Client.PublicationAddress.Parse(System.String), /// and serializes
+</span><span class="err">   </span> <span class="c1">// it using RabbitMQ.Client.PublicationAddress.ToString.
+</span><span class="err">   </span> <span class="n">PublicationAddress</span> <span class="n">ReplyToAddress</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Destination to reply to.
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ReplyTo</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="c1">// Message priority, 0 to 9. ///
+</span><span class="err">   </span> <span class="kt">byte</span> <span class="n">Priority</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Sets RabbitMQ.Client.IBasicProperties.DeliveryMode 
+</span>    <span class="c1">// to either persistent (2) or non-persistent (1). ///
+</span><span class="err">   </span> <span class="kt">bool</span> <span class="n">Persistent</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application message Id. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">MessageId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Message header field table. Is of type System.Collections.Generic.IDictionary`2.        
+</span><span class="err">   </span> <span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">Headers</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Message expiration specification. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">Expiration</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Non-persistent (1) or persistent (2). ///
+</span><span class="err">   </span> <span class="kt">byte</span> <span class="n">DeliveryMode</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application correlation identifier. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">CorrelationId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// MIME content type. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ContentType</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// MIME content encoding. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ContentEncoding</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Intra-cluster routing identifier (cluster id is deprecated in AMQP 0-9-1).        
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ClusterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application Id. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">AppId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">    </span><span class="c1">// Message type name. ///
+</span><span class="err">   </span> <span class="kt">string</span> <span class="n">Type</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>With the associated “Is[PropName]Present()” one can check if the property has been set.</p>
+
+<p>Here is a usage example:</p>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">msgProps</span> <span class="p">=</span> <span class="n">chan</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<span class="n">msgProps</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">"application/json"</span><span class="p">;</span>
+<span class="n">msgProps</span><span class="p">.</span><span class="n">CorrelationId</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="nf">NewGuid</span><span class="p">().</span><span class="nf">ToString</span><span class="p">();</span> <span class="c1">// set a correlation id to the message
+</span><span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
+</code></pre>
+</div>
+
+<p><em>Serialization</em></p>
+
+<ol>
+  <li>Convert object to byte[] array</li>
+  <li>Indicate the message <code class="highlighter-rouge">IBasicProperties::Type</code> (what kind of object is serialized, for instance <code class="highlighter-rouge">ro.alexandrugris.Person</code>)</li>
+  <li>Indicate the format of serialization and encoding, using <code class="highlighter-rouge">IBasicProperties::ContentType</code> and <code class="highlighter-rouge">IBasicProperties::ContentEncoding</code></li>
+  <li>Send the message</li>
+</ol>
+
+<p><em>Deserialization</em></p>
+
+<ol>
+  <li>Receive the message</li>
+  <li>Select deserializer based on content type and content encoding</li>
+  <li>Workout the message type to select the deserialization target</li>
+  <li>Deserialize the message</li>
+</ol>
+
+<p>Ideally the serialization should be application agnostic (for instance a fully qualified class name might not be a good solution if the message is to be consumed across tehnology boundaries) and, of course, versioning should be taken into account.</p>
+
+<p>For binary messages, a potential encoding could be <code class="highlighter-rouge">Protocol Buffers</code> or <code class="highlighter-rouge">Apache Thrift</code> which support versioning as well as multiple language bindings.</p>
+
+<p>AMQP supports very large messages. However, if the application requires sending such messages it is better to use a separate, dedicated instance of the server in order not to impact the throughput of smaller, more frequent exchanges.</p>
+
+<p>Approaches for sending large messages:</p>
+
+<ul>
+  <li>Buffered (small to medium files) - attention to memory performance.</li>
+  <li>Chunked (larger files) - use headers to keep track on how to assemble back the file on the receiving end. Attention to <code class="highlighter-rouge">Worker Queue</code> pattern where the <a href="https://stackoverflow.com/questions/21363302/rabbitmq-message-order-of-delivery">chunks will not all end up on the same machine</a>.</li>
+</ul>
+
+<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<span class="n">props</span><span class="p">.</span><span class="nf">SetPersistent</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
+<span class="n">props</span><span class="p">.</span><span class="n">Headers</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ListDictionary</span><span class="p">();</span>
+<span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"FileName"</span><span class="p">,</span> <span class="n">fileName</span><span class="p">);</span>
+<span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"ChunkNumber"</span><span class="p">,</span> <span class="n">chunkNumber</span><span class="p">);</span>
+<span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"EOF"</span><span class="p">,</span> <span class="n">eof</span><span class="p">);</span>
+</code></pre>
+</div>
+<p>Best though is better to avoid transferring large files.</p>
+
+<h3 id="notes">Notes</h3>
+
+<p><em>Federation</em></p>
+
+<p>RabbitMQ supports <a href="https://www.cloudamqp.com/blog/2015-03-24-rabbitmq-federation.html">Federation</a> for scaling out to another cluster or datacenter.</p>
+
+<p><em>How many queues?</em></p>
+
+<p>Can rabbitmq be used as the infrastructure for a chat server in which each person is modelled as an actor? More precise, how many queues can a rabbitmq instance support?</p>
+
+<p>The answer is yes, as the limit is not in the number of queues but in the number of TCP connections supported on a machine. For many connections it is better to have a rabbitmq cluster.</p>
+
+<ul>
+  <li><a href="https://stackoverflow.com/questions/22989833/rabbitmq-how-many-queues-rabbitmq-can-handle-on-a-single-server">How many queues on a single server</a></li>
+  <li><a href="http://rabbitmq.1065348.n5.nabble.com/How-many-queues-can-one-broker-support-td21539.html">How many queues on a single server</a></li>
+  <li><a href="https://www.rabbitmq.com/distributed.html">Distributed RabbitMQ</a></li>
+</ul>
+
+<p><em>Correlation ID and Microservices</em></p>
+
+<p>As each microservice is persisting its data in its own private database, with private indices, one needs a method for correlating various messages into a single logical entity. RabbitMQ provides a correlation ID property for messanges. A good value for it can be GUID.</p>
+
+<p>Correlation ID is also used in the RPC pattern so that the caller can track for which request each answer came.</p>
+
+<ul>
+  <li><a href="http://jeftek.com/178/what-is-a-correlation-id-and-why-do-you-need-one/">Correlation ID</a></li>
+  <li><a href="https://stackoverflow.com/questions/20184755/practical-examples-of-how-correlation-id-is-used-in-messaging">Practical examples for correlation IDs</a></li>
+  <li><a href="http://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html">RPC-like calls</a></li>
+</ul>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
