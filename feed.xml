@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-08-20T22:19:16+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Hazelcast Intro [WIP]</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/11/hazelcast-intro.html" rel="alternate" type="text/html" title="Hazelcast Intro [WIP]" /><published>2017-06-11T14:15:16+03:00</published><updated>2017-06-11T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/11/hazelcast-intro</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/11/hazelcast-intro.html">&lt;p&gt;A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-10-22T23:31:57+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Hazelcast Intro [WIP]</title><link href="https://alexandrugris.github.io/distributed/systems/2017/08/11/hazelcast-intro.html" rel="alternate" type="text/html" title="Hazelcast Intro [WIP]" /><published>2017-08-11T14:15:16+03:00</published><updated>2017-08-11T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/08/11/hazelcast-intro</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/08/11/hazelcast-intro.html">&lt;p&gt;A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.&lt;/p&gt;
 
 &lt;h2 id=&quot;what-is-hazelcast&quot;&gt;What is Hazelcast&lt;/h2&gt;
 
@@ -445,7 +445,71 @@ we can implement &lt;code class=&quot;highlighter-rouge&quot;&gt;EntryProcessor&
   &lt;li&gt;A provided aggregator: &lt;code class=&quot;highlighter-rouge&quot;&gt;Aggregations.longSum()&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;If in the supplier we want to exclude an item (like is the case above for where &lt;code class=&quot;highlighter-rouge&quot;&gt;emailAddress == null&lt;/code&gt;), we simply return &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt; from the &lt;code class=&quot;highlighter-rouge&quot;&gt;Supplier::apply&lt;/code&gt; function.&lt;/p&gt;</content><summary type="html">A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.</summary></entry><entry><title type="html">Apache Kafka</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html" rel="alternate" type="text/html" title="Apache Kafka" /><published>2017-06-11T14:15:16+03:00</published><updated>2017-06-11T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html">&lt;p&gt;This article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing basic producers and consumers. 
+&lt;p&gt;If in the supplier we want to exclude an item (like is the case above for where &lt;code class=&quot;highlighter-rouge&quot;&gt;emailAddress == null&lt;/code&gt;), we simply return &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt; from the &lt;code class=&quot;highlighter-rouge&quot;&gt;Supplier::apply&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&quot;data-affinity&quot;&gt;Data Affinity&lt;/h3&gt;
+
+&lt;p&gt;Hazelcast always puts two identical keys in the same partition. To make sure an operation (join) occurs on the same partition, one needs to implement, beside &lt;code class=&quot;highlighter-rouge&quot;&gt;Serializable&lt;/code&gt;, the &lt;code class=&quot;highlighter-rouge&quot;&gt;PartitionAware&amp;lt;&amp;gt;&lt;/code&gt; interface with the method &lt;code class=&quot;highlighter-rouge&quot;&gt;getPartitionKey&lt;/code&gt;, on the mapped data.&lt;/p&gt;
+
+&lt;p&gt;This is not enough, however. We also need to create an &lt;code class=&quot;highlighter-rouge&quot;&gt;EntryProcessor&lt;/code&gt; and, additionally, implement  the &lt;code class=&quot;highlighter-rouge&quot;&gt;HazelcastInstanceAware&lt;/code&gt; interface. This interface will set the Hazelcast instance when the entry processor is run so that we can query the instance for other local maps.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;JoinLikeEntryProcessor&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; 
+        &lt;span class=&quot;n&quot;&gt;Serializable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; 
+        &lt;span class=&quot;n&quot;&gt;EntryProcessor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Customer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;HazelcastInstanceAware&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+            &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;transient&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HazelcastInstace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// not serialized&lt;/span&gt;
+
+            &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+            &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Entry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;processedEntry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+                &lt;span class=&quot;c1&quot;&gt;// [...]&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;IMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&amp;lt;map of related data&amp;gt;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; 
+                &lt;span class=&quot;c1&quot;&gt;// get only the related keys stored locally on the node&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Set&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keys&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;localKeyset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SqlPredicate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;join_key =&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;processedEntry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt; 
+                &lt;span class=&quot;c1&quot;&gt;// [...]&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+            &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+            &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;setHazelcastInstance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HazelcastInstance&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_hi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_hi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;notes-on-other-data-structures&quot;&gt;Notes On Other Data Structures&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;Set&lt;/em&gt; and &lt;em&gt;List&lt;/em&gt;: data must fit on a single machine, with replicas on other machines. Therefore, one cannot store unlimited amount of data in a single set. Iterating through a set by using an iterator will bring all data to the local machine, no batching, thus must be used with care.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Queues&lt;/em&gt;: allow persistence.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Topics&lt;/em&gt;: publish / subscribe pattern, do not allow persistence.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;MultiMap&lt;/em&gt;: similar to map, but stores a collection inside the value. By default, the values are backed by sets and do not allow identical elements to be stored. Can be changed through config to other data structure. MultiMaps do not support persistence.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Locks&lt;/em&gt;: Hazelcast implementation of distributed synchronization primitives.&lt;/p&gt;
+
+&lt;h3 id=&quot;events-and-listeners&quot;&gt;Events and Listeners&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;EntryListeners&lt;/em&gt;:&lt;/p&gt;
+
+&lt;p&gt;Work on maps and multimaps by permiting notifications for when an element has been added or removed from the map. Example usage: a new customer is added to our map. In our entry listener we acknowledge the change and then publish his email to queue of emails to be sent out to new cusomters. This pattern is very useful for distributed applications where you want to separate logic of adding a customer, for instance, to various potential actions that should be triggered by such an event. They permit access to the &lt;code class=&quot;highlighter-rouge&quot;&gt;oldValue&lt;/code&gt; of the key.&lt;/p&gt;
+
+&lt;p&gt;If we start several clients which register the entry listener, all will be invoked for all data that is added to that map. If we want to listen only to the local data, we have &lt;code class=&quot;highlighter-rouge&quot;&gt;LocalEntryListeners&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Continuous queries&lt;/em&gt;:&lt;/p&gt;
+
+&lt;p&gt;Setup just like EntryListeners, but with a filtering predicate.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;ItemListeners&lt;/em&gt;:&lt;/p&gt;
+
+&lt;p&gt;Used for queues, lists and sets.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Partition lost listeners&lt;/em&gt;:&lt;/p&gt;
+
+&lt;p&gt;Used for alerting for when a data partition is lost.&lt;/p&gt;</content><summary type="html">A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.</summary></entry><entry><title type="html">Apache Kafka</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html" rel="alternate" type="text/html" title="Apache Kafka" /><published>2017-06-11T14:15:16+03:00</published><updated>2017-06-11T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/11/kafka-patterns.html">&lt;p&gt;This article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing basic producers and consumers. 
 The source code associated with this article can be found &lt;a href=&quot;https://github.com/alexandrugris/Play_With_Kafka&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;how-to-run-apache-kafka&quot;&gt;How to run Apache Kafka&lt;/h3&gt;
