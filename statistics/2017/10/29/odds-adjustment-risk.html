@@ -250,16 +250,18 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
 
 <p>To keep the results understandable, I used a test bed composed of 3 types of bet placing strategies:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">place_bet_random</span><span class="p">():</span>
-    <span class="s">"""Places a random bet, with probabilities of placing the bet for each outcome 
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">#### place bet functions</span>
+<span class="k">def</span> <span class="nf">place_bet_random</span><span class="p">(</span><span class="n">max_bet</span><span class="p">):</span>
+    <span class="s">"""Places a random bet, with probabilities of placing the bet for each outcome
     hardcoded in the first line of the function"""</span>
+
     <span class="n">bet_probabilities</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
 
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">):</span>
-        <span class="n">money</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bets</span><span class="p">):</span>
+        <span class="n">money</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">max_bet</span><span class="p">()</span>
         <span class="n">bet</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
-        <span class="c"># bet according to probabilities above</span>
+        <span class="c"># bet according to local preferences</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">f</span> <span class="o">&lt;</span> <span class="n">bet_probabilities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -270,22 +272,29 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
             <span class="k">yield</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">money</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">place_bet_max_stake</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">place_bet_max_stake</span><span class="p">(</span><span class="n">max_bet</span><span class="p">):</span>
     <span class="s">"""Places a bet on the highest stake"""</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">):</span>
-        <span class="n">money</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bets</span><span class="p">):</span>
         <span class="n">bet</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="n">ix</span> <span class="o">=</span> <span class="n">odds_evolution</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">odds_evolution</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="n">bet</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="n">money</span>
+        <span class="n">bet</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_bet</span><span class="p">()</span>
         <span class="k">yield</span> <span class="n">bet</span>
 
 
-<span class="k">def</span> <span class="nf">place_bet_diverse</span><span class="p">():</span>
-    <span class="s">""" A combination of the strategies above, with a probability of 1/3 to place bet on the max stake"""</span>
-    <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">place_bet_max_stake</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">place_bet_random</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">place_bet_diverse</span><span class="p">(</span><span class="n">max_bet</span>  <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">):</span>
+    <span class="s">""" A combination of the strategies above, with a probability of 1/20 to place bet on the max stake"""</span>
+
+    <span class="n">pbms</span> <span class="o">=</span> <span class="n">place_bet_max_stake</span><span class="p">(</span><span class="n">max_bet</span><span class="p">)</span>
+    <span class="n">pbr</span> <span class="o">=</span> <span class="n">place_bet_random</span><span class="p">(</span><span class="n">max_bet</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bets</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">pbms</span><span class="o">.</span><span class="n">__next__</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">pbr</span><span class="o">.</span><span class="n">__next__</span><span class="p">()</span>
+
 </code></pre>
 </div>
 
@@ -309,12 +318,13 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
 <span class="c"># simulation</span>
 <span class="n">payments_per_outcome</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="n">probabilities</span> <span class="o">=</span> <span class="n">initial_probabilities</span>
+<span class="n">total_deposits</span> <span class="o">=</span> <span class="mi">0</span>
 
 <span class="c"># our initial alpha and beta probabilities </span>
 <span class="c"># in short, for each outcome (1, x, 2) we assign a beta distribution of probabilities for that outcome to occur</span>
 <span class="c"># just like the coin: p of winning and 1-p of losing, weighted by the confidence_factor * total_market_risk</span>
-<span class="n">alpha_beta</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span> <span class="o">*</span> <span class="n">confidence_factor</span><span class="p">,</span> <span class="n">confidence_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">total_market_risk</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span>
-              <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">total_market_risk</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">initial_probabilities</span><span class="p">]]</span>
+<span class="n">alpha_beta</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">total_market_risk</span> <span class="o">*</span> <span class="n">confidence_factor</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span>
+              <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">total_market_risk</span> <span class="o">*</span> <span class="n">confidence_factor</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">initial_probabilities</span><span class="p">]]</span>
 
 <span class="c"># an array we use forward to save the odds in order to chart the graphs</span>
 <span class="n">odds_evolution</span> <span class="o">=</span> <span class="p">[]</span>
@@ -329,25 +339,28 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
     The risk computation is simple:
         - We have X buckets for X mutually exclusive outcomes - (for 1x2, 3 buckets: home-draw-away)
         - We add the payments to be made in case of winning the bet to the right bucket. payment = odds x stake
-        - We compute the exposure by substracting from the maximum bucket the sum of the other two.
+        - We compute the exposure by substracting from the maximum bucket the sum of all the placed bets so far.
         - If the exposure is higher than the maximum market exposure, we don't acccept the bet"""</span>
 
     <span class="k">global</span> <span class="n">payments_per_outcome</span>
     <span class="k">global</span> <span class="n">alpha_beta</span>
+    <span class="k">global</span> <span class="n">total_deposits</span>
 
     <span class="k">assert</span> <span class="p">(</span><span class="mf">0.999</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">probabilities</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.001</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="o">==</span> <span class="nb">max</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">min</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="c"># just one is &gt; 0</span>
+
+    <span class="n">total_deposits</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>
 
     <span class="n">payment_per_bet</span> <span class="o">=</span> <span class="p">[</span><span class="n">pto</span> <span class="o">*</span> <span class="n">b</span> <span class="k">for</span> <span class="n">pto</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">probabilities_to_odds</span><span class="p">(</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">set_payout</span><span class="p">),</span> <span class="n">bet</span><span class="p">)]</span>
     <span class="n">total_payment_per_outcome</span> <span class="o">=</span> <span class="p">[</span><span class="n">ppo</span> <span class="o">+</span> <span class="n">ppb</span> <span class="k">for</span> <span class="n">ppo</span><span class="p">,</span> <span class="n">ppb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">payments_per_outcome</span><span class="p">,</span> <span class="n">payment_per_bet</span><span class="p">)]</span>
 
     <span class="c"># because we talk about mutually exclusive events:</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">total_payment_per_outcome</span><span class="p">)</span>
-    <span class="n">exposure</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ppo</span> <span class="o">-</span> <span class="n">s</span> <span class="k">for</span> <span class="n">ppo</span> <span class="ow">in</span> <span class="n">total_payment_per_outcome</span><span class="p">])</span>
+    <span class="n">exposure</span> <span class="o">=</span> <span class="n">total_market_risk</span> <span class="o">+</span> <span class="n">total_deposits</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">total_payment_per_outcome</span><span class="p">)</span>
 
     <span class="c"># somehow contradictory: while we do not accept the bet if the exposure is too high,</span>
     <span class="c"># we do allow the bet to shift the odds -&gt; can be a trigger for fraud, so additional care</span>
     <span class="c"># should be taken in a real-life implementation</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">exposure</span> <span class="o">&gt;</span> <span class="n">total_market_risk</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">exposure</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">total_market_risk</span><span class="p">):</span>
         <span class="k">print</span><span class="p">(</span><span class="s">"Bet Not Accepted"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bet</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">payment_per_bet</span>  <span class="c"># do not update the payments</span>
     <span class="k">elif</span> <span class="p">(</span><span class="n">exposure</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
@@ -359,17 +372,16 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
 
 <span class="c"># main service</span>
 <span class="n">odds_evolution</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probabilities_to_odds</span><span class="p">(</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">set_payout</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">bet</span> <span class="ow">in</span> <span class="n">place_bet_random</span><span class="p">():</span>
+<span class="k">for</span> <span class="n">bet</span> <span class="ow">in</span> <span class="n">place_bet_diverse</span><span class="p">():</span>
     <span class="n">returns</span> <span class="o">=</span> <span class="n">accept_bet_risk</span><span class="p">(</span><span class="n">bet</span><span class="p">,</span> <span class="n">probabilities</span><span class="p">)</span>
 
     <span class="c"># updates alpha and beta for each possible outcome using the financial information</span>
-    <span class="c"># like binomial (coin-toss), alpha + r, beta + max(returns) - r</span>
-    <span class="c"># where returns = odds * stake (a list of 3 in case of 1x2) and </span>
-    <span class="c"># r is the return on the specific outcome (can be 0 or max(returns))</span>
-    <span class="c"># basically each EUR won is transformed in a "heads" event, the max(returns) = the sum of tosses</span>
-    <span class="n">alpha_beta</span> <span class="o">=</span> <span class="p">[(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">r</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">alpha_beta</span><span class="p">,</span> <span class="n">returns</span><span class="p">)]</span>
-
+    <span class="c"># like binomial (coin-toss), alpha + r, beta + max(bet) - r</span>
+    <span class="c"># basically each EUR waged is transformed in a "heads" event, the max(bet) = the sum of tosses</span>
+    
+    <span class="n">alpha_beta</span> <span class="o">=</span> <span class="p">[(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">r</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">alpha_beta</span><span class="p">,</span> <span class="n">bet</span><span class="p">)]</span>
     <span class="n">probabilities</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">([</span><span class="n">center</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="k">for</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="ow">in</span> <span class="n">alpha_beta</span><span class="p">])</span>
+    
     <span class="n">odds_evolution</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probabilities_to_odds</span><span class="p">(</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">set_payout</span><span class="p">))</span>
 
 </code></pre>
@@ -378,9 +390,10 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
 <p>The results are then displayed as a chart, like this:</p>
 
 <div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">print</span><span class="p">(</span><span class="s">"Total exposure: "</span><span class="p">)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">payments_per_outcome</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ppo</span> <span class="o">-</span> <span class="n">s</span> <span class="k">for</span> <span class="n">ppo</span> <span class="ow">in</span> <span class="n">payments_per_outcome</span><span class="p">]))</span>
-<span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Worst case scenario profit: {0:.1f}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_deposits</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">payments_per_outcome</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Profit per each outcome: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">([</span><span class="n">total_deposits</span> <span class="o">-</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">payments_per_outcome</span><span class="p">]))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Odds: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">odds_evolution</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Done."</span><span class="p">)</span>
 
 <span class="n">h</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">odds_evolution</span><span class="p">]</span>
 <span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">odds_evolution</span><span class="p">]</span>
@@ -403,19 +416,40 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
   <li>We start with an offering of <code class="highlighter-rouge">[2.5, 3.5, 2.8]</code></li>
   <li>We place 1000 bets</li>
   <li>We place bet with a preference for the first outcome, according to <code class="highlighter-rouge">normalize([0.5, 0.3, 0.3])</code> (like, for instance, would happen in Bucharest if Steaua plays at home)</li>
-  <li>One third of the players aim just for the highest odds, playing just for money.</li>
+  <li>One in 20 players aim just for the highest odds, playing just for money.</li>
   <li>We place bets between 0 and 100 EURs</li>
 </ul>
 
 <p><em>How to interpret the results:</em></p>
 <ul>
   <li>Because the inital risk was just 1000 EUR and we kept the <code class="highlighter-rouge">confidence_factor=1</code>, we see some significant odds variations in the beginning (attention to markets where only just a few bets are placed, e.g. Afganistan second division)</li>
-  <li>After the initial chaos, the odds stabilize. Due to our preference for the first market, the odds there are lower there and, due to the fact that we have also a preference for the highest payout, the odds for the other two markets are roughly equal.</li>
-  <li>Despite the high payout (95%), our exposure is <code class="highlighter-rouge">-30536</code>, meaning that, no matter what the end result is, the house wins at least <code class="highlighter-rouge">-30536</code> from <code class="highlighter-rouge">1000</code> bets.</li>
-  <li>We are sometimes in the minus, meaning that the house might lose money on this market if there are not enough bets.</li>
+  <li>Another option to limit initial variations would be to limit the first stakes to a percentage of the total risk + total_deposits, like below:</li>
 </ul>
 
-<p>If we run several simulations we notice that, unless the initial offering is completely off-mark and the number of bets are is small, the house wins nice money in most of the cases. The results are consistent.</p>
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">for</span> <span class="n">bet</span> <span class="ow">in</span> <span class="n">place_bet_diverse</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">min</span><span class="p">((</span><span class="n">total_market_risk</span> <span class="o">+</span> <span class="n">total_deposits</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)):</span>
+<span class="p">[</span><span class="o">....</span><span class="p">]</span><span class="sb">``</span><span class="err">`</span>
+
+<span class="o">-</span> <span class="n">After</span> <span class="n">the</span> <span class="n">initial</span> <span class="n">chaos</span><span class="p">,</span> <span class="n">the</span> <span class="n">odds</span> <span class="n">stabilize</span><span class="o">.</span> <span class="n">Due</span> <span class="n">to</span> <span class="n">our</span> <span class="n">preference</span> <span class="k">for</span> <span class="n">the</span> <span class="n">first</span> <span class="n">market</span><span class="p">,</span> <span class="n">the</span> <span class="n">odds</span> <span class="n">there</span> <span class="n">are</span> <span class="n">lower</span> <span class="n">there</span> <span class="ow">and</span><span class="p">,</span> <span class="n">due</span> <span class="n">to</span> <span class="n">the</span> <span class="n">fact</span> <span class="n">that</span> <span class="n">we</span> <span class="n">have</span> <span class="n">also</span> <span class="n">a</span> <span class="n">preference</span> <span class="k">for</span> <span class="n">the</span> <span class="n">highest</span> <span class="n">payout</span><span class="p">,</span> <span class="n">the</span> <span class="n">odds</span> <span class="k">for</span> <span class="n">the</span> <span class="n">other</span> <span class="n">two</span> <span class="n">markets</span> <span class="n">are</span> <span class="n">roughly</span> <span class="n">equal</span><span class="o">.</span>
+<span class="o">-</span> <span class="n">Despite</span> <span class="n">the</span> <span class="n">high</span> <span class="n">payout</span> <span class="p">(</span><span class="mi">95</span><span class="o">%</span><span class="p">),</span> <span class="n">the</span> <span class="n">house</span> <span class="n">wins</span> <span class="n">at</span> <span class="n">least</span> <span class="sb">`1.85%`</span> <span class="kn">from</span> <span class="err">`1000`</span> <span class="nn">bets</span> <span class="nn">in</span> <span class="nn">this</span> <span class="nn">run.</span><span class="err">
+-</span> <span class="nn">We</span> <span class="nn">are</span> <span class="nn">sometimes</span> <span class="nn">in</span> <span class="nn">the</span> <span class="nn">minus</span><span class="err">,</span> <span class="nn">meaning</span> <span class="nn">that</span> <span class="nn">the</span> <span class="nn">house</span> <span class="nn">might</span> <span class="nn">lose</span> <span class="nn">money</span> <span class="nn">on</span> <span class="nn">this</span> <span class="nn">market</span> <span class="nn">if</span> <span class="nn">there</span> <span class="nn">are</span> <span class="nn">not</span> <span class="nn">enough</span> <span class="nn">bets.</span><span class="err">
+
+</span><span class="nn">If</span> <span class="nn">we</span> <span class="nn">run</span> <span class="nn">several</span> <span class="nn">simulations</span> <span class="nn">we</span> <span class="nn">notice</span> <span class="nn">that</span><span class="err">,</span> <span class="nn">unless</span> <span class="nn">the</span> <span class="nn">initial</span> <span class="nn">offering</span> <span class="nn">is</span> <span class="nn">completely</span> <span class="nn">off</span><span class="err">-</span><span class="nn">mark</span> <span class="nn">and</span> <span class="nn">the</span> <span class="nn">number</span> <span class="nn">of</span> <span class="nn">bets</span> <span class="nn">are</span> <span class="nn">is</span> <span class="nn">small</span><span class="err">,</span> <span class="nn">the</span> <span class="nn">house</span> <span class="nn">wins</span> <span class="nn">money</span> <span class="nn">on</span> <span class="nn">most</span> <span class="nn">of</span> <span class="nn">the</span> <span class="nn">matches.</span> <span class="nn">T</span><span class="err">
+</span><span class="nn">he</span> <span class="nn">results</span> <span class="nn">are</span> <span class="nn">consistent</span> <span class="nn">across</span> <span class="nn">several</span> <span class="nn">runs</span> <span class="nn">of</span> <span class="nn">the</span> <span class="nn">algorithm.</span> <span class="nn">Below</span> <span class="nn">are</span> <span class="nn">the</span> <span class="nn">gains</span> <span class="nn">for</span> <span class="err">100</span> <span class="nn">runs</span><span class="err">,</span> <span class="nn">which</span> <span class="nn">give</span><span class="err">:
+
+</span></code></pre>
+</div>
+<p>Worst case profit: : mean: 675.39, stddev: 705.46
+Min profit % of total stakes 1.29:
+```</p>
+
+<p><img src="https://alexandrugris.github.io/assets/bayes_3.png" alt="Results" /></p>
+
+<p>If we consider 10000 bets per match, the results are much more stable and the profit much better even in the worst case:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/bayes_4.png" alt="Results" /></p>
+
+<p><a href="https://github.com/alexandrugris/RiskWithPython/blob/master/risk.py">Full source code</a></p>
+
 
   </div>
 
