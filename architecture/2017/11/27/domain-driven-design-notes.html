@@ -68,11 +68,11 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with Big Data, performance or hardware specific optimisations.</p>
+    <p>A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with big data, performance or hardware specific optimisations.</p>
 
-<h3 id="note">Note</h3>
+<h3 id="notes">Notes</h3>
 
-<p>The content is build based on several Pluralsight classes from the ASP.NET track, but the example code I wrote in Java. The post is infused with my interpretation and comments, so I recommend going directly to the source for the original content:</p>
+<p>The content in this article is based on several Pluralsight classes from the ASP.NET track. The examples I wrote in Java The post is infused with my interpretation and comments, so I recommend going directly to the source for the original content:</p>
 
 <ul>
   <li>
@@ -87,6 +87,20 @@
   <li>
     <p><a href="https://app.pluralsight.com/library/courses/modern-software-architecture-domain-models-cqrs-event-sourcing/table-of-contents">Modern Software Architecture: Domain Models, CQRS, and Event Sourcing</a></p>
   </li>
+  <li>
+    <p><a href="https://www.pluralsight.com/courses/ux-driven-software-design">UX-driven Software Design</a></p>
+  </li>
+</ul>
+
+<p>Probably the most important thing to remember when starting a new a project is not to try to design it all upfront. A comprehensive domain model will most likely prove either expensive to develop or useless and rigid in face of changing business requirements. Even more, as developers usually develop what they understand from the domain and since business is usually not able to validate in depth the abstractions of the model, a comprehensive design up-front is usually proven wrong after a few iterations.</p>
+
+<p>Dino Esposito has a great slogan, “Stop Modeling, Start Mirroring”, meaning that instead of trying to build a comprehensive model of the whole domain, start mirroring the most important use cases and develop from there.</p>
+
+<p>Before proceeding forward is worth noting that every action in a business system is either a command (which alters the state of the system) or a query (which does not alter the state of the system). This leads to the obvious question: why not separate the two? This pattern is called CQRS (<a href="https://martinfowler.com/bliki/CQRS.html">command-query responsibily segregation</a>). If we take the CQRS course, we basically split the domain model in two distinct parts:</p>
+<ul>
+  <li>The command model - rich in business functionality</li>
+  <li>The read model - mostly DTOs, suitable for presentation
+As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code and its price may not pay off for a large range of applications. This article is not focused on CQRS, although it might touch the topic from time to time.</li>
 </ul>
 
 <h3 id="glossary">Glossary</h3>
@@ -129,15 +143,11 @@
     <p><em>Services:</em> a collection of behaviours (functionality) that does not belown elsewhere in the domain</p>
   </li>
   <li>
-    <p><em>Aggregate:</em> a cluster of associated objects that we treat as a unit for purposes of data changes (e.g. a Product which is assembled from a set of Parts). In DDD, we forbit direct access to parts of the aggregate and we only allow access through the <em>Aggregate Root</em>. A good case for one specific class to be the aggregate root is to check if on delete it generates a cascade. If so, it might be a good candidate for being the aggregate root of the cascaded object tree. Another critical criteria for choosing the right <em>Aggregate Root</em> is for it to naturally enforce invariants. In other words:</p>
+    <p><em>Aggregate:</em> a cluster of associated objects that we treat as a unit for purposes of data changes (e.g. a Product which is assembled from a set of Parts). In DDD, we forbit direct access to parts of the aggregate and we only allow access through the <em>Aggregate Root</em>. A good case for one specific class to be the aggregate root is to check if on delete it generates a cascade. If so, it might be a good candidate for being the aggregate root of the cascaded object tree. Another critical criteria for choosing the right <em>Aggregate Root</em> is for it to naturally enforce invariants. In other words, the <em>Aggregate</em> is a transactional graph of objects while the <em>Aggregate Root</em> is the entry point to the graph, with the role of assuring its integrit.</p>
   </li>
-</ul>
-
-<p><em>Aggregate:</em> a transactional graph of objects
-<em>Aggregate Root:</em> the entry point to the graph that assures the integrity of the entire graph
-<em>Invariant:</em> a condition that must be true for the system to be in a valid / consistent state</p>
-
-<ul>
+  <li>
+    <p><em>Invariant:</em> a condition that must be true for the system to be in a valid / consistent state</p>
+  </li>
   <li>
     <p><em>Repository:</em> persistent storage pattern. Only the aggregate roots should be available for querying directly from the repository. Repositories are a collection of objects of a certain type, with more ellaborate querying capabilities. For simple CRUD repositories, one can create a generic implementation for the pattern but, for more complex business rules, it is recommended to have a dedicated repository for each <em>Aggregate Root</em></p>
   </li>
@@ -157,11 +167,15 @@
   <li>Start with the core domain.</li>
   <li>Don’t introduce several bounded contexts upfront. Start with only one.</li>
   <li>Look for hidden abstractions; refactor.</li>
-  <li>Prefer value objects to entities. Try to put most of the business logic in value objects. Entities act like wrappers upon them.</li>
+  <li>Prefer value objects to entities. Try to put as much as possible of the business logic in value objects.</li>
   <li>Extend to other bounded contexts.</li>
 </ul>
 
-<h3 id="entities-and-value-objects">Entities and Value Objects</h3>
+<p>### Testing the domain</p>
+
+<p>When experimenting with the model, it might be feasible not to write tests at first. A lot of refactoring goes on in the beginning and TDD would only make refarctoring harder. However, once the code becomes pretty stable and we ar happy with our abstractions, we can add remaining tests and switch back to TDD.</p>
+
+<p>### Entities and Value Objects</p>
 
 <p><em>Entities</em> have identifier identity, meaning that two entities with the same identifier are equal. IDs are mandatory for entities.</p>
 
@@ -171,9 +185,7 @@
 
 <p>Because the Value Objects do not have a lifetime different from that of the Entity that holds them (and they don’t have an ID), they should be serialized in the same table as the Entity itself. A good analogy is with an integer; we would not create a separate table to store integers.</p>
 
-<p>Examples below are from a DDD SnackMachine application implementation. Please look at the code and note the type of code each class contains. Low level algorthms in Value Objects and higher level orchestration in the Entity.</p>
-
-<p>The entity can be uniquely identified and restored from the database. It has business functionality but, in most of the cases, orchestrates the value objects inside it. A lot of logic is stored inside Value Objects like, for instance, the management of banknotes and coins inside the machine.</p>
+<p>The example below is from a hypothetical DDD snack machine application implementation. Please note the type of code each class contains. Low level algorthms in Value Objects and higher level orchestration in the Entity. Entities can be uniquely identified and restored from the database. A lot of logic is stored inside Value Objects like, for instance, the management of banknotes and coins inside the machine.</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{</span>
 
@@ -226,7 +238,7 @@
 </code></pre>
 </div>
 
-<p>This is a simple type - a value object, immutable. It is a part of the intrinsic types of the system, so it does not make sense to persit it in its own table.</p>
+<p>A simple type, a value object, immutable. It is a part of the intrinsic types of the system, so it does not make sense to persit it in its own table:</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Money</span><span class="o">{</span>
 
@@ -319,7 +331,7 @@
 </code></pre>
 </div>
 
-<p>At first look, the <code class="highlighter-rouge">MoneyCollection</code> object does not seem at all immutable which violates the core characteristic of a value object. However, if you look at its methods they can be expressed as:</p>
+<p>At first look, the <code class="highlighter-rouge">MoneyCollection</code> object does not seem at all immutable, which violates the core characteristic of a value object. However, if you look at its methods they can be expressed as:</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>MoneyCollection a, b, c;
 int d;
@@ -330,17 +342,13 @@ a = a - d; // MoneyCollection::substract
 </code></pre>
 </div>
 
-<p>In such cases, a decision must be taken: do we refactor to keep the value object immutability characteristic, in this case paying the price of a small array allocation and copy, or do we hide the dirty details behind a clean facade? Beside the (small) perfomance hit, here is also visible a certain mismatch between a theoretical concept and the comfort with which it can be expressed in our programming language.</p>
+<p>In such cases, a decision must be taken: do we refactor to keep the value object immutable, in this case paying the price of a small array allocation and copy, or do we hide the dirty details behind a clean facade? Beside the (small) perfomance hit, here is also visible a certain mismatch between a theoretical concept and the comfort with which it can be expressed in our programming language.</p>
 
 <p><em>ID generation and serialization</em></p>
 
 <p>If we are to take a purist approach, the IDs should be independent of the database or, at least, not come from an autoincrement column. IDs can be GUIDs (like in the example above) or come from other ID generation service that is independent of the storage layer. The problem with using autoincrement columns is twofold: once it allows the repository abstraction to leak in and, second, it violates the Unit Of Work pattern, which states that all changes should be committed to the database in one single short transaction.</p>
 
-<p>A clean design does not allow ORM-specific code to pollute the domain objects. This might create additional work for mapping between the DDD entity fields and the persisted entity fields (attention, wording overload), but the hope is that this separation will keep the architecture clean and independent of various underlying technologies. This would allow, for instance, to have a dedicated team working on the business logic, specialized in business processes, and another one on persistence, with specialists in optimized caching, DB queries, various ORMs.</p>
-
-<h3 id="testing-the-domain">Testing the domain</h3>
-
-<p>When experimenting with the model, it might be feasible not to write tests at first. A lot of refactoring goes on in the beginning and TDD would only make refarctoring harder. However, once the code becomes pretty stable and we ar happy with our abstractions, we can add remaining tests and switch back to TDD.</p>
+<p>A clean design does not allow ORM-specific code to pollute the domain objects. This might create additional work for mapping between the DDD entity fields and the persisted entity fields (attention, wording overload), but the hope is that this separation will keep the architecture clean and independent of various underlying technologies. This would allow, for instance, to have a dedicated team working on the business logic, specialized in business processes, and another one on persistence, with specialists in optimized caching, databases and various ORMs.</p>
 
 <h3 id="aggregates">Aggregates</h3>
 
@@ -355,32 +363,32 @@ a = a - d; // MoneyCollection::substract
 
 <p>In our example, let’s consider that each <code class="highlighter-rouge">SnackMachine</code> has a set of slots that are filled with products. The user selects the slot (1-10, let’s say) and the product that is topmost is returned. This introduces two new abstractions: <code class="highlighter-rouge">Slot</code> and <code class="highlighter-rouge">Product</code>. Unlike <code class="highlighter-rouge">MoneyCollection</code>, each machine can have a different number of slots and in each slot several products:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Product</span><span class="p">{</span>
-<span class="p">}</span>
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span><span class="o">{</span>
+<span class="o">}</span>
 
-<span class="k">class</span> <span class="nc">Slot</span> <span class="p">{</span>
-    <span class="n">List</span><span class="p">&lt;</span><span class="n">Product</span><span class="p">&gt;</span> <span class="n">productList</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="kd">class</span> <span class="nc">Slot</span> <span class="o">{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Product</span><span class="o">&gt;</span> <span class="n">productList</span><span class="o">;</span>
+<span class="o">}</span>
 
-<span class="k">class</span> <span class="nc">SnackMachine</span> <span class="n">extends</span> <span class="n">Entity</span><span class="p">&lt;</span><span class="n">UUID</span><span class="p">&gt;{</span>
-    <span class="n">List</span><span class="p">&lt;</span><span class="n">Slot</span><span class="p">&gt;</span> <span class="n">slots</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Slot</span><span class="o">&gt;</span> <span class="n">slots</span><span class="o">;</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
 <p>This setup leads pretty quickly to the idea that while the slot is an integral part of the <code class="highlighter-rouge">SnackMachine</code>, it requires its own separate serialization to the database. However, a slot by itself does cannot exist in vacuum, so when a snack machine is deleted its associated slots must be deleted as well. Just the same, each <code class="highlighter-rouge">SnackMachine</code> knows well how many slots it has, so it can enforce this invariant. For implementation, it is good to have a marker abstract class, <code class="highlighter-rouge">AggregateRoot</code>, which inherits from <code class="highlighter-rouge">Entity</code> and helps clarify the aggregate boundaries. Thus, the declarations above become:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">abstract</span> <span class="k">class</span> <span class="nc">AggregateRoot</span><span class="p">&lt;</span><span class="n">ID</span><span class="p">&gt;</span> <span class="n">extends</span> <span class="n">Entity</span><span class="p">&lt;</span><span class="n">ID</span><span class="p">&gt;</span> <span class="p">{}</span> 
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AggregateRoot</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
-<span class="k">class</span> <span class="nc">Slot</span> <span class="n">extends</span> <span class="n">Entity</span><span class="p">&lt;</span><span class="n">Long</span><span class="p">&gt;</span> <span class="p">{}</span> 
+<span class="kd">class</span> <span class="nc">Slot</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
-<span class="k">class</span> <span class="nc">SnackMachine</span> <span class="n">extends</span> <span class="n">AggregateRoot</span><span class="p">&lt;</span><span class="n">UUID</span><span class="p">&gt;</span> <span class="p">{}</span>
+<span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{}</span>
 </code></pre>
 </div>
 
 <p>The <code class="highlighter-rouge">Product</code> abstraction has a life of its own, outside the <code class="highlighter-rouge">SnackMachine</code>. Therefore, it cannot be part of the <code class="highlighter-rouge">SnackMachine</code> aggregate, so it makes sense to have it as aggregate root by itself.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Product</span> <span class="n">extends</span> <span class="n">AggregateRoot</span><span class="p">&lt;</span><span class="n">UUID</span><span class="p">&gt;</span> <span class="p">{}</span> 
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{}</span> 
 </code></pre>
 </div>
 
@@ -398,29 +406,49 @@ a = a - d; // MoneyCollection::substract
 
 <p>Do not return partially initialized entities from the repository, because this would break the invariants and this is a great source of bugs. A better approach, for methods that do not require full data, is to create separate DTOs. An example below:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">public</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">Repository</span><span class="p">&lt;</span><span class="n">K</span><span class="p">,</span> <span class="n">T</span> <span class="n">extends</span> <span class="n">AggregateRoot</span><span class="p">&lt;</span><span class="n">K</span><span class="p">&gt;&gt;</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">abstract</span> <span class="n">T</span> <span class="nf">getByID</span><span class="p">(</span><span class="n">K</span> <span class="n">key</span><span class="p">);</span>
-    <span class="k">public</span> <span class="k">abstract</span> <span class="k">void</span> <span class="nf">save</span><span class="p">(</span><span class="n">T</span> <span class="n">obj</span><span class="p">)</span> <span class="n">throws</span> <span class="n">PersistenceException</span><span class="p">;</span>
-<span class="p">}</span>
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Repository</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">T</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;&gt;</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">abstract</span> <span class="n">T</span> <span class="nf">getByID</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">save</span><span class="o">(</span><span class="n">T</span> <span class="n">obj</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">PersistenceException</span><span class="o">;</span>
+<span class="o">}</span>
 
-<span class="k">public</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">AggregateRoot</span><span class="p">&lt;</span><span class="n">ID</span><span class="p">&gt;</span> <span class="n">extends</span> <span class="n">Entity</span><span class="p">&lt;</span><span class="n">ID</span><span class="p">&gt;</span> <span class="p">{}</span>
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AggregateRoot</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="o">{}</span>
 
-<span class="k">public</span> <span class="k">class</span> <span class="nc">MoneyInSnackMachineDTO</span> <span class="p">{</span>
-    <span class="n">MoneyCollection</span> <span class="n">mc</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MoneyInSnackMachineDTO</span> <span class="o">{</span>
+    <span class="n">MoneyCollection</span> <span class="n">mc</span><span class="o">;</span>
+<span class="o">}</span>
 
-<span class="k">public</span> <span class="k">class</span> <span class="nc">SnackMachineRepository</span> <span class="n">extends</span> <span class="n">Repository</span><span class="p">&lt;</span><span class="n">UUID</span><span class="p">,</span> <span class="n">SnackMachine</span><span class="p">&gt;{</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachineRepository</span> <span class="kd">extends</span> <span class="n">Repository</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">,</span> <span class="n">SnackMachine</span><span class="o">&gt;{</span>
 
-    <span class="c1">// returns fully initialized SnackMachine aggregate root instances
-</span>    <span class="k">public</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">SnackMachine</span><span class="p">&gt;</span> <span class="nf">getEmptySnackMachines</span><span class="p">()</span> <span class="p">{}</span> 
+    <span class="c1">// returns fully initialized SnackMachine aggregate root instances</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">SnackMachine</span><span class="o">&gt;</span> <span class="nf">getEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
 
-    <span class="c1">// return only the money data
-</span>    <span class="k">public</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">MoneyInSnackMachineDTO</span><span class="p">&gt;</span> <span class="nf">getMoneyInEmptySnackMachines</span><span class="p">()</span> <span class="p">{}</span> 
+    <span class="c1">// return only the money data</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MoneyInSnackMachineDTO</span><span class="o">&gt;</span> <span class="nf">getMoneyInEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
 
-    <span class="c1">// return only the IDs
-</span>    <span class="k">public</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">UUID</span><span class="p">&gt;</span> <span class="nf">getEmptySnackMachinesIDs</span><span class="p">()</span> <span class="p">{}</span> 
+    <span class="c1">// return only the IDs</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="nf">getEmptySnackMachinesIDs</span><span class="o">()</span> <span class="o">{}</span> 
 
-<span class="p">}</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>In a CQRS application, there would be two repositories. One for handling commands (changes to the state of the system) and one for handling reads (read-only). These two repositories might reference two different undelying databases, each modelled so that it does its job best (updates vs reads).</p>
+
+<p>Below you can see an example of a splitted repository:</p>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachineCommandsRepository</span> <span class="kd">extends</span> <span class="n">Repository</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">,</span> <span class="n">SnackMachine</span><span class="o">&gt;{</span>
+
+    <span class="c1">// returns read / write entities, suitable for handing commands</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">SnackMachine</span><span class="o">&gt;</span> <span class="nf">getEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
+
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachineReadRepository</span> <span class="o">{</span>
+
+   <span class="c1">// Returns read-only DTOs.</span>
+   <span class="c1">// These could be used directly as view models</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MoneyInSnackMachineDTO</span><span class="o">&gt;</span> <span class="nf">getMoneyInEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
+<span class="o">}</span>
 </code></pre>
 </div>
 
@@ -428,7 +456,7 @@ a = a - d; // MoneyCollection::substract
 
 <p>Bounded contexts can be viewed as namespaces for the ubiquitous language. The same term will usually have different meanings in two separate bounded contexts. They touch all layers of the onion architecture as their terminology will be reflected in UI, database model, domain model entities and application services. The relationship between bounded contexts is explicited in the context map.</p>
 
-<p>Subdomains and bounded contexts are best related to each other as 1:1. There is a distinction though; the subdomain is part of the problem space, while the bounded context is part of the solution space. The 1:1 requirement is not always possible. Imagine a situation in which we have the “Sales” subdomain composed of a legacy application and we need to add new functionality to it in terms of a totally new module. In this case we have a single subdomain but can opt to structure our solution as two bounded contexts separated by an anticorruption layer. Here are other rules of thumb for separating the bounded contexts:</p>
+<p>Subdomains and bounded contexts are best related to each other as 1:1. There is a distinction though; the subdomain is part of the problem space, while the bounded context is part of the solution space. The 1:1 requirement is not always possible. Imagine a situation in which we have the “Sales” subdomain composed of a legacy application and we need to add a new functionality to it in terms of a totally new module. In this case we have a single subdomain but can opt to structure our solution as two bounded contexts separated by an anticorruption layer. Here are some rules of thumb for separating the bounded contexts, independent of the subdomain:</p>
 <ul>
   <li>Team size: 6 - 8 developers per bounded context max</li>
   <li>Code size: code should “fit your head”; one developer shouldn’t have any trouble understanding it all</li>
@@ -468,9 +496,9 @@ a = a - d; // MoneyCollection::substract
 
 <p>Try to include as little information as possible in an event, preferably serializable and immutable, and independent of the domain model classes. This is because events may, at one point, pass the process boundaries when the application is distributed and because we don’t want the order in which the event is handled to matter. We don’t want to give the receivers the option to mutate the event. A good guideline is to only use primitive types when declaring a domain event.</p>
 
-<h3 id="a-bad-example">A bad example</h3>
+<p>A bad example:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Person</span> <span class="o">:</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;{</span>
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;{</span>
     <span class="kt">long</span> <span class="n">ID</span><span class="o">;</span>
     <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
     <span class="n">String</span> <span class="n">surname</span><span class="o">;</span>
@@ -483,9 +511,9 @@ a = a - d; // MoneyCollection::substract
 </code></pre>
 </div>
 
-<h3 id="a-better-example">A better example</h3>
+<p>A better example:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Person</span> <span class="o">:</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span> <span class="o">{}</span> 
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
 <span class="c1">// specific</span>
 <span class="c1">// passes only the relevat information</span>
@@ -506,9 +534,9 @@ a = a - d; // MoneyCollection::substract
 
 <h3 id="event-transport">Event Transport</h3>
 
-<p>Events can be transported through in-memory data structures or through service busses if the destination is outside the boundaries of the current process. No matter what the transport is, it is good to think of the events as a mechanism for decoupling components and thus always ask yourself the question: what if the transport changes?</p>
+<p>Events can be transported through in-memory data structures or through service busses, if the destination is outside the boundaries of the current process. No matter what the transport is, it is good to think of  events as a mechanism for decoupling components and thus always ask yourself the question: what if the transport changes?</p>
 
-<h3 id="implementation---simple-in-memory-transport">Implementation - simple, in memory, transport</h3>
+<p>Implementation, a simple, in memory, transport:</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// marker interface</span>
 <span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">DomainEvent</span><span class="o">{}</span>
@@ -613,19 +641,45 @@ a = a - d; // MoneyCollection::substract
 
 <p>A better way exits to preserve intact the Unit Of Work: split the event pipeline in <em>creation</em> (when the event occurs) and <em>dispatch</em> (after the UoW is committed successfully to the database). In the meantime, hold the events in an temporary list, on a per-unit-of-work instance or, if all commits are done through the aggregate roots, as it should be, on a per-aggregate root instance. If we take the aggregate root path, a good place to store the logic for queuing the events and dispatching them when the save transaction succeeds is the <code class="highlighter-rouge">AggregateRoot</code> base class.</p>
 
-<h3 id="in-the-end">In The End</h3>
+<h2 id="events-vs-commands">Events vs Commands</h2>
+
+<ul>
+  <li>Commands: something you want do happen. Might not happen.</li>
+  <li>Events: something that already happend.</li>
+</ul>
+
+<p>Commands are best named with present tense, imperative form, like <code class="highlighter-rouge">AddNewBookToLibraryCmd</code> or <code class="highlighter-rouge">ExtractMoneyCmd</code>. These can be refused. You don’t need to store commands although it is a good practice to log them for the purpose of debugging.</p>
+
+<p>In case Event Sourcing is implemented, events are the single source of truth and they must be persisted and stored virtually forever. Not the commands, but the events, because it is the events that build up to the current state of the system.</p>
+
+<h3 id="ddd-notes">DDD Notes</h3>
 
 <p>Prefer the “always valid” approach, that is to always maintain entities in a consistent state. This is preferable to the opposite approach where one checks the validity of the model just before serialization.</p>
 
 <p>Do not skip validations; perform them at all boundaries.</p>
 
-<p>Prefer the static factory method pattern (or, even better, dedicated factories) to constructors. Creating entities can be a heavyweight operation and exceptions might be thrown. Also, the construction of an entity has little to do with exploiting it afterwards. Factories should create whole aggregates, not just specific entities. On the other hand, factories create complexity and if the creation logic is simple, one can postpone the creation of an additional factory until it is actually needed.</p>
+<p>Prefer the static factory method pattern (or, even better, dedicated factories) to constructors. Creating entities can be a heavyweight operation and exceptions might be thrown. Construction of an entity often has little to do with exploiting it afterwards, so separating construction from the entity itself usualy is a good application of the Single Responsibility Principle. Factories should create whole aggregates, not just specific entities. On the other hand, factories create complexity and if the creation logic is simple, one can postpone the creation of an additional factory until it is actually needed.</p>
 
 <p>Keep domain services stateless.</p>
 
 <p>Do not add domain logic to application services. Application services are designed for orchestration with the outside world</p>
 
 <p>Domain Driven Design is an approach, not a mechanical recipe. It helps the architect understand the model and provide guidance on how to structure the code, but blind application will only lead to unnecessary complexity. Good rules of thumb are YAGNI and KISS, just like for any other software development approach.</p>
+
+<h3 id="ux-driven-design">UX Driven Design</h3>
+
+<p>UXDD is a process for software design which starts from the user screens to build the model. The assumption behind it is that users are more likely to give effective feedback to the developers if presented with a concrete visual model of how they will interact with the application.</p>
+
+<p>Instead of long written documents, the main tools for collaboration are the wireframes which depict the User Experience.</p>
+
+<p>Screens depict all the data that goes in and out of the system for each usecase. Therefore, the first important task for the architect is to iterate with the users until the screens are just right. Not talking about graphics, but about workflows and usability.</p>
+
+<p>By putting the requirements in the concrete form of an (interactive) user interface, UXDD mitigates the following problems:</p>
+<ul>
+  <li>Requirements are usually mostly guesses</li>
+  <li>Communication is slow and painful</li>
+  <li>Because of the two above, lots of development is done by assumption</li>
+</ul>
 
 
   </div>

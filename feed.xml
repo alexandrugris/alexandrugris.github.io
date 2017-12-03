@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-11-30T22:38:19+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Domain Driven Design Notes</title><link href="https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes.html" rel="alternate" type="text/html" title="Domain Driven Design Notes" /><published>2017-11-27T13:15:16+02:00</published><updated>2017-11-27T13:15:16+02:00</updated><id>https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes</id><content type="html" xml:base="https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes.html">&lt;p&gt;A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with Big Data, performance or hardware specific optimisations.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2017-12-03T12:03:29+02:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Domain Driven Design Notes</title><link href="https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes.html" rel="alternate" type="text/html" title="Domain Driven Design Notes" /><published>2017-11-27T13:15:16+02:00</published><updated>2017-11-27T13:15:16+02:00</updated><id>https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes</id><content type="html" xml:base="https://alexandrugris.github.io/architecture/2017/11/27/domain-driven-design-notes.html">&lt;p&gt;A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with big data, performance or hardware specific optimisations.&lt;/p&gt;
 
-&lt;h3 id=&quot;note&quot;&gt;Note&lt;/h3&gt;
+&lt;h3 id=&quot;notes&quot;&gt;Notes&lt;/h3&gt;
 
-&lt;p&gt;The content is build based on several Pluralsight classes from the ASP.NET track, but the example code I wrote in Java. The post is infused with my interpretation and comments, so I recommend going directly to the source for the original content:&lt;/p&gt;
+&lt;p&gt;The content in this article is based on several Pluralsight classes from the ASP.NET track. The examples I wrote in Java The post is infused with my interpretation and comments, so I recommend going directly to the source for the original content:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
@@ -18,6 +18,20 @@
   &lt;li&gt;
     &lt;p&gt;&lt;a href=&quot;https://app.pluralsight.com/library/courses/modern-software-architecture-domain-models-cqrs-event-sourcing/table-of-contents&quot;&gt;Modern Software Architecture: Domain Models, CQRS, and Event Sourcing&lt;/a&gt;&lt;/p&gt;
   &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://www.pluralsight.com/courses/ux-driven-software-design&quot;&gt;UX-driven Software Design&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Probably the most important thing to remember when starting a new a project is not to try to design it all upfront. A comprehensive domain model will most likely prove either expensive to develop or useless and rigid in face of changing business requirements. Even more, as developers usually develop what they understand from the domain and since business is usually not able to validate in depth the abstractions of the model, a comprehensive design up-front is usually proven wrong after a few iterations.&lt;/p&gt;
+
+&lt;p&gt;Dino Esposito has a great slogan, “Stop Modeling, Start Mirroring”, meaning that instead of trying to build a comprehensive model of the whole domain, start mirroring the most important use cases and develop from there.&lt;/p&gt;
+
+&lt;p&gt;Before proceeding forward is worth noting that every action in a business system is either a command (which alters the state of the system) or a query (which does not alter the state of the system). This leads to the obvious question: why not separate the two? This pattern is called CQRS (&lt;a href=&quot;https://martinfowler.com/bliki/CQRS.html&quot;&gt;command-query responsibily segregation&lt;/a&gt;). If we take the CQRS course, we basically split the domain model in two distinct parts:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;The command model - rich in business functionality&lt;/li&gt;
+  &lt;li&gt;The read model - mostly DTOs, suitable for presentation
+As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code and its price may not pay off for a large range of applications. This article is not focused on CQRS, although it might touch the topic from time to time.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h3 id=&quot;glossary&quot;&gt;Glossary&lt;/h3&gt;
@@ -60,15 +74,11 @@
     &lt;p&gt;&lt;em&gt;Services:&lt;/em&gt; a collection of behaviours (functionality) that does not belown elsewhere in the domain&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;&lt;em&gt;Aggregate:&lt;/em&gt; a cluster of associated objects that we treat as a unit for purposes of data changes (e.g. a Product which is assembled from a set of Parts). In DDD, we forbit direct access to parts of the aggregate and we only allow access through the &lt;em&gt;Aggregate Root&lt;/em&gt;. A good case for one specific class to be the aggregate root is to check if on delete it generates a cascade. If so, it might be a good candidate for being the aggregate root of the cascaded object tree. Another critical criteria for choosing the right &lt;em&gt;Aggregate Root&lt;/em&gt; is for it to naturally enforce invariants. In other words:&lt;/p&gt;
+    &lt;p&gt;&lt;em&gt;Aggregate:&lt;/em&gt; a cluster of associated objects that we treat as a unit for purposes of data changes (e.g. a Product which is assembled from a set of Parts). In DDD, we forbit direct access to parts of the aggregate and we only allow access through the &lt;em&gt;Aggregate Root&lt;/em&gt;. A good case for one specific class to be the aggregate root is to check if on delete it generates a cascade. If so, it might be a good candidate for being the aggregate root of the cascaded object tree. Another critical criteria for choosing the right &lt;em&gt;Aggregate Root&lt;/em&gt; is for it to naturally enforce invariants. In other words, the &lt;em&gt;Aggregate&lt;/em&gt; is a transactional graph of objects while the &lt;em&gt;Aggregate Root&lt;/em&gt; is the entry point to the graph, with the role of assuring its integrit.&lt;/p&gt;
   &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;em&gt;Aggregate:&lt;/em&gt; a transactional graph of objects
-&lt;em&gt;Aggregate Root:&lt;/em&gt; the entry point to the graph that assures the integrity of the entire graph
-&lt;em&gt;Invariant:&lt;/em&gt; a condition that must be true for the system to be in a valid / consistent state&lt;/p&gt;
-
-&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;em&gt;Invariant:&lt;/em&gt; a condition that must be true for the system to be in a valid / consistent state&lt;/p&gt;
+  &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;&lt;em&gt;Repository:&lt;/em&gt; persistent storage pattern. Only the aggregate roots should be available for querying directly from the repository. Repositories are a collection of objects of a certain type, with more ellaborate querying capabilities. For simple CRUD repositories, one can create a generic implementation for the pattern but, for more complex business rules, it is recommended to have a dedicated repository for each &lt;em&gt;Aggregate Root&lt;/em&gt;&lt;/p&gt;
   &lt;/li&gt;
@@ -88,11 +98,15 @@
   &lt;li&gt;Start with the core domain.&lt;/li&gt;
   &lt;li&gt;Don’t introduce several bounded contexts upfront. Start with only one.&lt;/li&gt;
   &lt;li&gt;Look for hidden abstractions; refactor.&lt;/li&gt;
-  &lt;li&gt;Prefer value objects to entities. Try to put most of the business logic in value objects. Entities act like wrappers upon them.&lt;/li&gt;
+  &lt;li&gt;Prefer value objects to entities. Try to put as much as possible of the business logic in value objects.&lt;/li&gt;
   &lt;li&gt;Extend to other bounded contexts.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id=&quot;entities-and-value-objects&quot;&gt;Entities and Value Objects&lt;/h3&gt;
+&lt;p&gt;### Testing the domain&lt;/p&gt;
+
+&lt;p&gt;When experimenting with the model, it might be feasible not to write tests at first. A lot of refactoring goes on in the beginning and TDD would only make refarctoring harder. However, once the code becomes pretty stable and we ar happy with our abstractions, we can add remaining tests and switch back to TDD.&lt;/p&gt;
+
+&lt;p&gt;### Entities and Value Objects&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;Entities&lt;/em&gt; have identifier identity, meaning that two entities with the same identifier are equal. IDs are mandatory for entities.&lt;/p&gt;
 
@@ -102,9 +116,7 @@
 
 &lt;p&gt;Because the Value Objects do not have a lifetime different from that of the Entity that holds them (and they don’t have an ID), they should be serialized in the same table as the Entity itself. A good analogy is with an integer; we would not create a separate table to store integers.&lt;/p&gt;
 
-&lt;p&gt;Examples below are from a DDD SnackMachine application implementation. Please look at the code and note the type of code each class contains. Low level algorthms in Value Objects and higher level orchestration in the Entity.&lt;/p&gt;
-
-&lt;p&gt;The entity can be uniquely identified and restored from the database. It has business functionality but, in most of the cases, orchestrates the value objects inside it. A lot of logic is stored inside Value Objects like, for instance, the management of banknotes and coins inside the machine.&lt;/p&gt;
+&lt;p&gt;The example below is from a hypothetical DDD snack machine application implementation. Please note the type of code each class contains. Low level algorthms in Value Objects and higher level orchestration in the Entity. Entities can be uniquely identified and restored from the database. A lot of logic is stored inside Value Objects like, for instance, the management of banknotes and coins inside the machine.&lt;/p&gt;
 
 &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachine&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
 
@@ -157,7 +169,7 @@
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;This is a simple type - a value object, immutable. It is a part of the intrinsic types of the system, so it does not make sense to persit it in its own table.&lt;/p&gt;
+&lt;p&gt;A simple type, a value object, immutable. It is a part of the intrinsic types of the system, so it does not make sense to persit it in its own table:&lt;/p&gt;
 
 &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Money&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
 
@@ -250,7 +262,7 @@
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;At first look, the &lt;code class=&quot;highlighter-rouge&quot;&gt;MoneyCollection&lt;/code&gt; object does not seem at all immutable which violates the core characteristic of a value object. However, if you look at its methods they can be expressed as:&lt;/p&gt;
+&lt;p&gt;At first look, the &lt;code class=&quot;highlighter-rouge&quot;&gt;MoneyCollection&lt;/code&gt; object does not seem at all immutable, which violates the core characteristic of a value object. However, if you look at its methods they can be expressed as:&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MoneyCollection a, b, c;
 int d;
@@ -261,17 +273,13 @@ a = a - d; // MoneyCollection::substract
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;In such cases, a decision must be taken: do we refactor to keep the value object immutability characteristic, in this case paying the price of a small array allocation and copy, or do we hide the dirty details behind a clean facade? Beside the (small) perfomance hit, here is also visible a certain mismatch between a theoretical concept and the comfort with which it can be expressed in our programming language.&lt;/p&gt;
+&lt;p&gt;In such cases, a decision must be taken: do we refactor to keep the value object immutable, in this case paying the price of a small array allocation and copy, or do we hide the dirty details behind a clean facade? Beside the (small) perfomance hit, here is also visible a certain mismatch between a theoretical concept and the comfort with which it can be expressed in our programming language.&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;ID generation and serialization&lt;/em&gt;&lt;/p&gt;
 
 &lt;p&gt;If we are to take a purist approach, the IDs should be independent of the database or, at least, not come from an autoincrement column. IDs can be GUIDs (like in the example above) or come from other ID generation service that is independent of the storage layer. The problem with using autoincrement columns is twofold: once it allows the repository abstraction to leak in and, second, it violates the Unit Of Work pattern, which states that all changes should be committed to the database in one single short transaction.&lt;/p&gt;
 
-&lt;p&gt;A clean design does not allow ORM-specific code to pollute the domain objects. This might create additional work for mapping between the DDD entity fields and the persisted entity fields (attention, wording overload), but the hope is that this separation will keep the architecture clean and independent of various underlying technologies. This would allow, for instance, to have a dedicated team working on the business logic, specialized in business processes, and another one on persistence, with specialists in optimized caching, DB queries, various ORMs.&lt;/p&gt;
-
-&lt;h3 id=&quot;testing-the-domain&quot;&gt;Testing the domain&lt;/h3&gt;
-
-&lt;p&gt;When experimenting with the model, it might be feasible not to write tests at first. A lot of refactoring goes on in the beginning and TDD would only make refarctoring harder. However, once the code becomes pretty stable and we ar happy with our abstractions, we can add remaining tests and switch back to TDD.&lt;/p&gt;
+&lt;p&gt;A clean design does not allow ORM-specific code to pollute the domain objects. This might create additional work for mapping between the DDD entity fields and the persisted entity fields (attention, wording overload), but the hope is that this separation will keep the architecture clean and independent of various underlying technologies. This would allow, for instance, to have a dedicated team working on the business logic, specialized in business processes, and another one on persistence, with specialists in optimized caching, databases and various ORMs.&lt;/p&gt;
 
 &lt;h3 id=&quot;aggregates&quot;&gt;Aggregates&lt;/h3&gt;
 
@@ -286,32 +294,32 @@ a = a - d; // MoneyCollection::substract
 
 &lt;p&gt;In our example, let’s consider that each &lt;code class=&quot;highlighter-rouge&quot;&gt;SnackMachine&lt;/code&gt; has a set of slots that are filled with products. The user selects the slot (1-10, let’s say) and the product that is topmost is returned. This introduces two new abstractions: &lt;code class=&quot;highlighter-rouge&quot;&gt;Slot&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;Product&lt;/code&gt;. Unlike &lt;code class=&quot;highlighter-rouge&quot;&gt;MoneyCollection&lt;/code&gt;, each machine can have a different number of slots and in each slot several products:&lt;/p&gt;
 
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Product&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Product&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Slot&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Product&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;productList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Slot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Product&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;productList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Slot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;slots&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachine&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Slot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;slots&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
 &lt;p&gt;This setup leads pretty quickly to the idea that while the slot is an integral part of the &lt;code class=&quot;highlighter-rouge&quot;&gt;SnackMachine&lt;/code&gt;, it requires its own separate serialization to the database. However, a slot by itself does cannot exist in vacuum, so when a snack machine is deleted its associated slots must be deleted as well. Just the same, each &lt;code class=&quot;highlighter-rouge&quot;&gt;SnackMachine&lt;/code&gt; knows well how many slots it has, so it can enforce this invariant. For implementation, it is good to have a marker abstract class, &lt;code class=&quot;highlighter-rouge&quot;&gt;AggregateRoot&lt;/code&gt;, which inherits from &lt;code class=&quot;highlighter-rouge&quot;&gt;Entity&lt;/code&gt; and helps clarify the aggregate boundaries. Thus, the declarations above become:&lt;/p&gt;
 
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Slot&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Slot&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachine&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
 &lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;Product&lt;/code&gt; abstraction has a life of its own, outside the &lt;code class=&quot;highlighter-rouge&quot;&gt;SnackMachine&lt;/code&gt;. Therefore, it cannot be part of the &lt;code class=&quot;highlighter-rouge&quot;&gt;SnackMachine&lt;/code&gt; aggregate, so it makes sense to have it as aggregate root by itself.&lt;/p&gt;
 
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Product&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Product&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
@@ -329,29 +337,49 @@ a = a - d; // MoneyCollection::substract
 
 &lt;p&gt;Do not return partially initialized entities from the repository, because this would break the invariants and this is a great source of bugs. A better approach, for methods that do not require full data, is to create separate DTOs. An example below:&lt;/p&gt;
 
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Repository&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getByID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PersistenceException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Repository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getByID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;K&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PersistenceException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AggregateRoot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MoneyInSnackMachineDTO&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;MoneyCollection&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MoneyInSnackMachineDTO&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MoneyCollection&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachineRepository&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Repository&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;{&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachineRepository&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Repository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
 
-    &lt;span class=&quot;c1&quot;&gt;// returns fully initialized SnackMachine aggregate root instances
-&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+    &lt;span class=&quot;c1&quot;&gt;// returns fully initialized SnackMachine aggregate root instances&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
-    &lt;span class=&quot;c1&quot;&gt;// return only the money data
-&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MoneyInSnackMachineDTO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getMoneyInEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+    &lt;span class=&quot;c1&quot;&gt;// return only the money data&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MoneyInSnackMachineDTO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getMoneyInEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
-    &lt;span class=&quot;c1&quot;&gt;// return only the IDs
-&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getEmptySnackMachinesIDs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt; 
+    &lt;span class=&quot;c1&quot;&gt;// return only the IDs&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getEmptySnackMachinesIDs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In a CQRS application, there would be two repositories. One for handling commands (changes to the state of the system) and one for handling reads (read-only). These two repositories might reference two different undelying databases, each modelled so that it does its job best (updates vs reads).&lt;/p&gt;
+
+&lt;p&gt;Below you can see an example of a splitted repository:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachineCommandsRepository&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Repository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// returns read / write entities, suitable for handing commands&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SnackMachine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
+
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SnackMachineReadRepository&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+   &lt;span class=&quot;c1&quot;&gt;// Returns read-only DTOs.&lt;/span&gt;
+   &lt;span class=&quot;c1&quot;&gt;// These could be used directly as view models&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MoneyInSnackMachineDTO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getMoneyInEmptySnackMachines&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
@@ -359,7 +387,7 @@ a = a - d; // MoneyCollection::substract
 
 &lt;p&gt;Bounded contexts can be viewed as namespaces for the ubiquitous language. The same term will usually have different meanings in two separate bounded contexts. They touch all layers of the onion architecture as their terminology will be reflected in UI, database model, domain model entities and application services. The relationship between bounded contexts is explicited in the context map.&lt;/p&gt;
 
-&lt;p&gt;Subdomains and bounded contexts are best related to each other as 1:1. There is a distinction though; the subdomain is part of the problem space, while the bounded context is part of the solution space. The 1:1 requirement is not always possible. Imagine a situation in which we have the “Sales” subdomain composed of a legacy application and we need to add new functionality to it in terms of a totally new module. In this case we have a single subdomain but can opt to structure our solution as two bounded contexts separated by an anticorruption layer. Here are other rules of thumb for separating the bounded contexts:&lt;/p&gt;
+&lt;p&gt;Subdomains and bounded contexts are best related to each other as 1:1. There is a distinction though; the subdomain is part of the problem space, while the bounded context is part of the solution space. The 1:1 requirement is not always possible. Imagine a situation in which we have the “Sales” subdomain composed of a legacy application and we need to add a new functionality to it in terms of a totally new module. In this case we have a single subdomain but can opt to structure our solution as two bounded contexts separated by an anticorruption layer. Here are some rules of thumb for separating the bounded contexts, independent of the subdomain:&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;Team size: 6 - 8 developers per bounded context max&lt;/li&gt;
   &lt;li&gt;Code size: code should “fit your head”; one developer shouldn’t have any trouble understanding it all&lt;/li&gt;
@@ -399,9 +427,9 @@ a = a - d; // MoneyCollection::substract
 
 &lt;p&gt;Try to include as little information as possible in an event, preferably serializable and immutable, and independent of the domain model classes. This is because events may, at one point, pass the process boundaries when the application is distributed and because we don’t want the order in which the event is handled to matter. We don’t want to give the receivers the option to mutate the event. A good guideline is to only use primitive types when declaring a domain event.&lt;/p&gt;
 
-&lt;h3 id=&quot;a-bad-example&quot;&gt;A bad example&lt;/h3&gt;
+&lt;p&gt;A bad example:&lt;/p&gt;
 
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
     &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;surname&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
@@ -414,9 +442,9 @@ a = a - d; // MoneyCollection::substract
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;h3 id=&quot;a-better-example&quot;&gt;A better example&lt;/h3&gt;
+&lt;p&gt;A better example:&lt;/p&gt;
 
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Entity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt; 
 
 &lt;span class=&quot;c1&quot;&gt;// specific&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;// passes only the relevat information&lt;/span&gt;
@@ -437,9 +465,9 @@ a = a - d; // MoneyCollection::substract
 
 &lt;h3 id=&quot;event-transport&quot;&gt;Event Transport&lt;/h3&gt;
 
-&lt;p&gt;Events can be transported through in-memory data structures or through service busses if the destination is outside the boundaries of the current process. No matter what the transport is, it is good to think of the events as a mechanism for decoupling components and thus always ask yourself the question: what if the transport changes?&lt;/p&gt;
+&lt;p&gt;Events can be transported through in-memory data structures or through service busses, if the destination is outside the boundaries of the current process. No matter what the transport is, it is good to think of  events as a mechanism for decoupling components and thus always ask yourself the question: what if the transport changes?&lt;/p&gt;
 
-&lt;h3 id=&quot;implementation---simple-in-memory-transport&quot;&gt;Implementation - simple, in memory, transport&lt;/h3&gt;
+&lt;p&gt;Implementation, a simple, in memory, transport:&lt;/p&gt;
 
 &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// marker interface&lt;/span&gt;
 &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DomainEvent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
@@ -544,19 +572,45 @@ a = a - d; // MoneyCollection::substract
 
 &lt;p&gt;A better way exits to preserve intact the Unit Of Work: split the event pipeline in &lt;em&gt;creation&lt;/em&gt; (when the event occurs) and &lt;em&gt;dispatch&lt;/em&gt; (after the UoW is committed successfully to the database). In the meantime, hold the events in an temporary list, on a per-unit-of-work instance or, if all commits are done through the aggregate roots, as it should be, on a per-aggregate root instance. If we take the aggregate root path, a good place to store the logic for queuing the events and dispatching them when the save transaction succeeds is the &lt;code class=&quot;highlighter-rouge&quot;&gt;AggregateRoot&lt;/code&gt; base class.&lt;/p&gt;
 
-&lt;h3 id=&quot;in-the-end&quot;&gt;In The End&lt;/h3&gt;
+&lt;h2 id=&quot;events-vs-commands&quot;&gt;Events vs Commands&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Commands: something you want do happen. Might not happen.&lt;/li&gt;
+  &lt;li&gt;Events: something that already happend.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Commands are best named with present tense, imperative form, like &lt;code class=&quot;highlighter-rouge&quot;&gt;AddNewBookToLibraryCmd&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;ExtractMoneyCmd&lt;/code&gt;. These can be refused. You don’t need to store commands although it is a good practice to log them for the purpose of debugging.&lt;/p&gt;
+
+&lt;p&gt;In case Event Sourcing is implemented, events are the single source of truth and they must be persisted and stored virtually forever. Not the commands, but the events, because it is the events that build up to the current state of the system.&lt;/p&gt;
+
+&lt;h3 id=&quot;ddd-notes&quot;&gt;DDD Notes&lt;/h3&gt;
 
 &lt;p&gt;Prefer the “always valid” approach, that is to always maintain entities in a consistent state. This is preferable to the opposite approach where one checks the validity of the model just before serialization.&lt;/p&gt;
 
 &lt;p&gt;Do not skip validations; perform them at all boundaries.&lt;/p&gt;
 
-&lt;p&gt;Prefer the static factory method pattern (or, even better, dedicated factories) to constructors. Creating entities can be a heavyweight operation and exceptions might be thrown. Also, the construction of an entity has little to do with exploiting it afterwards. Factories should create whole aggregates, not just specific entities. On the other hand, factories create complexity and if the creation logic is simple, one can postpone the creation of an additional factory until it is actually needed.&lt;/p&gt;
+&lt;p&gt;Prefer the static factory method pattern (or, even better, dedicated factories) to constructors. Creating entities can be a heavyweight operation and exceptions might be thrown. Construction of an entity often has little to do with exploiting it afterwards, so separating construction from the entity itself usualy is a good application of the Single Responsibility Principle. Factories should create whole aggregates, not just specific entities. On the other hand, factories create complexity and if the creation logic is simple, one can postpone the creation of an additional factory until it is actually needed.&lt;/p&gt;
 
 &lt;p&gt;Keep domain services stateless.&lt;/p&gt;
 
 &lt;p&gt;Do not add domain logic to application services. Application services are designed for orchestration with the outside world&lt;/p&gt;
 
-&lt;p&gt;Domain Driven Design is an approach, not a mechanical recipe. It helps the architect understand the model and provide guidance on how to structure the code, but blind application will only lead to unnecessary complexity. Good rules of thumb are YAGNI and KISS, just like for any other software development approach.&lt;/p&gt;</content><summary type="html">A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with Big Data, performance or hardware specific optimisations.</summary></entry><entry><title type="html">Risk-based Odds Adjustment Using Bayesian Inference</title><link href="https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk.html" rel="alternate" type="text/html" title="Risk-based Odds Adjustment Using Bayesian Inference" /><published>2017-10-29T13:15:16+02:00</published><updated>2017-10-29T13:15:16+02:00</updated><id>https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk.html">&lt;p&gt;This blog introduces the basics of Bayesian inference and attempts to sketch a solution to a problem a bookmaker might have: starting from a predefined set of odds, how do we adjust them so that the risk for the bookmaker is minimized? We take into consideration the financial stakes the bettors have in the game, the total financial risk the house is willing to take and will only analyse the 1x2 market (home-draw-away), to keep the code clean.&lt;/p&gt;
+&lt;p&gt;Domain Driven Design is an approach, not a mechanical recipe. It helps the architect understand the model and provide guidance on how to structure the code, but blind application will only lead to unnecessary complexity. Good rules of thumb are YAGNI and KISS, just like for any other software development approach.&lt;/p&gt;
+
+&lt;h3 id=&quot;ux-driven-design&quot;&gt;UX Driven Design&lt;/h3&gt;
+
+&lt;p&gt;UXDD is a process for software design which starts from the user screens to build the model. The assumption behind it is that users are more likely to give effective feedback to the developers if presented with a concrete visual model of how they will interact with the application.&lt;/p&gt;
+
+&lt;p&gt;Instead of long written documents, the main tools for collaboration are the wireframes which depict the User Experience.&lt;/p&gt;
+
+&lt;p&gt;Screens depict all the data that goes in and out of the system for each usecase. Therefore, the first important task for the architect is to iterate with the users until the screens are just right. Not talking about graphics, but about workflows and usability.&lt;/p&gt;
+
+&lt;p&gt;By putting the requirements in the concrete form of an (interactive) user interface, UXDD mitigates the following problems:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Requirements are usually mostly guesses&lt;/li&gt;
+  &lt;li&gt;Communication is slow and painful&lt;/li&gt;
+  &lt;li&gt;Because of the two above, lots of development is done by assumption&lt;/li&gt;
+&lt;/ul&gt;</content><summary type="html">A very high level introduction to Domain Driven Design (DDD). DDD is a useful technique if the application we are building has complex business functionality. It will not help with big data, performance or hardware specific optimisations.</summary></entry><entry><title type="html">Risk-based Odds Adjustment Using Bayesian Inference</title><link href="https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk.html" rel="alternate" type="text/html" title="Risk-based Odds Adjustment Using Bayesian Inference" /><published>2017-10-29T13:15:16+02:00</published><updated>2017-10-29T13:15:16+02:00</updated><id>https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2017/10/29/odds-adjustment-risk.html">&lt;p&gt;This blog introduces the basics of Bayesian inference and attempts to sketch a solution to a problem a bookmaker might have: starting from a predefined set of odds, how do we adjust them so that the risk for the bookmaker is minimized? We take into consideration the financial stakes the bettors have in the game, the total financial risk the house is willing to take and will only analyse the 1x2 market (home-draw-away), to keep the code clean.&lt;/p&gt;
 
 &lt;h3 id=&quot;bayesian-inference-basics&quot;&gt;Bayesian Inference Basics&lt;/h3&gt;
 
