@@ -171,11 +171,11 @@ As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code
   <li>Extend to other bounded contexts.</li>
 </ul>
 
-<p>### Testing the domain</p>
+<h3 id="testing-the-domain">Testing the domain</h3>
 
 <p>When experimenting with the model, it might be feasible not to write tests at first. A lot of refactoring goes on in the beginning and TDD would only make refarctoring harder. However, once the code becomes pretty stable and we ar happy with our abstractions, we can add remaining tests and switch back to TDD.</p>
 
-<p>### Entities and Value Objects</p>
+<h3 id="entities-and-value-objects">Entities and Value Objects</h3>
 
 <p><em>Entities</em> have identifier identity, meaning that two entities with the same identifier are equal. IDs are mandatory for entities.</p>
 
@@ -353,6 +353,7 @@ a = a - d; // MoneyCollection::substract
 <h3 id="aggregates">Aggregates</h3>
 
 <p>Aggregates are a design pattern that helps us simplify the domain model by gathering several entities under a single abstraction:</p>
+
 <ul>
   <li>Classes outside the aggregate cannot access the entities within the aggegate except through its root.</li>
   <li>An aggregate is a conhesive whole. It represents a cohesive notion of the domain model.</li>
@@ -397,6 +398,7 @@ a = a - d; // MoneyCollection::substract
 <p>The idea behind the Repository pattern is to encapsulate the persistence and allow the client code to access the data as if it were stored in memory. The general rule is that it should be a single repository per each aggregate, which makes sense given the fact all entities within an aggregate should be accessible only through the aggregate root.</p>
 
 <p>In its simplest form, a repository base class has only two responsibilities:</p>
+
 <ul>
   <li>Get an aggregate root by its ID</li>
   <li>Commit the aggregate root changes to the database in a single transaction together, with all its dependent entities.</li>
@@ -457,6 +459,7 @@ a = a - d; // MoneyCollection::substract
 <p>Bounded contexts can be viewed as namespaces for the ubiquitous language. The same term will usually have different meanings in two separate bounded contexts. They touch all layers of the onion architecture as their terminology will be reflected in UI, database model, domain model entities and application services. The relationship between bounded contexts is explicited in the context map.</p>
 
 <p>Subdomains and bounded contexts are best related to each other as 1:1. There is a distinction though; the subdomain is part of the problem space, while the bounded context is part of the solution space. The 1:1 requirement is not always possible. Imagine a situation in which we have the “Sales” subdomain composed of a legacy application and we need to add a new functionality to it in terms of a totally new module. In this case we have a single subdomain but can opt to structure our solution as two bounded contexts separated by an anticorruption layer. Here are some rules of thumb for separating the bounded contexts, independent of the subdomain:</p>
+
 <ul>
   <li>Team size: 6 - 8 developers per bounded context max</li>
   <li>Code size: code should “fit your head”; one developer shouldn’t have any trouble understanding it all</li>
@@ -464,6 +467,7 @@ a = a - d; // MoneyCollection::substract
 </ul>
 
 <p>It is recommended that bounded contexts have:</p>
+
 <ul>
   <li>separate namespaces (or separate deployment units or processes)</li>
   <li>separate database schemas or separated databases</li>
@@ -476,6 +480,7 @@ a = a - d; // MoneyCollection::substract
 <p>Assuming that we want to introduce a new bounded context, the <code class="highlighter-rouge">ATM</code>, to our application, it is obvious that it shares a set of common core objects with our <code class="highlighter-rouge">SnackMachine</code>, while the rest of the business logic is completely different. The common core, the <code class="highlighter-rouge">Money</code> and the <code class="highlighter-rouge">MoneyCollection</code> objects, can be extracted as a shared kernel in a separate component. This, however, implies that the new component will affect two different domains, so changes to it must be very well controlled. Extracting the shared kernel also implies some refactoring as, if we look in the <code class="highlighter-rouge">MoneyCollection</code> code above, some business functionality from the <code class="highlighter-rouge">SnackMachine</code> leaks into it. Therefore, we need to make <code class="highlighter-rouge">MoneyCollection</code> business-agnostic, a true value object.</p>
 
 <p>When deciding what to put in a shared kernel, keep in mind the following:</p>
+
 <ul>
   <li>Business logic should not be reused in most cases as it alwasy evolves on separate trajectories. E.g. the sales perspective of what a product is is different from the perspective of customer support.</li>
   <li>Infrastructure / utility code could be reused, but should be duplicated if the changes from a team impact negatively the performance of another team.</li>
@@ -486,6 +491,7 @@ a = a - d; // MoneyCollection::substract
 <h3 id="domain-events">Domain Events</h3>
 
 <p>A domain event is an event that is significant for the domain. Its job is to:</p>
+
 <ul>
   <li>Decouple bounded contexts</li>
   <li>Facilitates communication between bounded contexts</li>
@@ -675,12 +681,12 @@ a = a - d; // MoneyCollection::substract
 <p>Screens depict all the data that goes in and out of the system for each usecase. Therefore, the first important task for the architect is to iterate with the users until the screens are just right. Not talking about graphics, but about workflows and usability.</p>
 
 <p>By putting the requirements in the concrete form of an (interactive) user interface, UXDD mitigates the following problems:</p>
+
 <ul>
   <li>Requirements are usually mostly guesses</li>
   <li>Communication is slow and painful</li>
   <li>Because of the two above, lots of development is done by assumption</li>
 </ul>
-
 
   </div>
 
