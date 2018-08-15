@@ -309,6 +309,21 @@ sigma = sqrt(0.25) = 0.5`
 
 <p>A nice property of variance is that <code class="highlighter-rouge">V[a1X1 + a2X2 + ... +b] = a1^2 * V[X1] + ... + an^2 * V[Xn]</code>.</p>
 
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">expected_values</span><span class="p">(</span><span class="n">events</span><span class="p">):</span>
+    <span class="s">""" Events is a collection of (probability, value) pairs, independent of each other, 
+    covering the whole spectrum of possible values (sum(pi) == 1) """</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">events</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)</span>
+
+    <span class="n">ev</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">))</span>
+    <span class="n">variance</span> <span class="o">=</span>  <span class="nb">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="o">-</span><span class="n">ev</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">variance</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>If we are to assess the variance of a population based on a sample of that population, consider using Bessel’s correction formula: <a href="https://en.wikipedia.org/wiki/Bessel%27s_correction">Bessel’s correction</a></p>
+
 <p><em>The joint probability mass function for two random variables X and Y</em> is defined as <code class="highlighter-rouge">P_XY(x,y) = P(X=x, Y=y)</code> with <code class="highlighter-rouge">sum(P_XY(x, y)) = 1</code></p>
 
 <p>To compute the measure of two variables varying together, we introduce the notion of <em>covariance</em>, which standardizes to <em>correlation</em> (covariance is dependend of the values of the two variables).</p>
