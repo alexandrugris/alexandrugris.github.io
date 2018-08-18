@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Risk Models</title>
+  <meta name="description" content="A not-so-short discussion about finanical risk, starting from computing the risk for a portfolio of stocks and discussing which ideas might be applied to mod...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/statistics/2018/08/15/risk.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Risk Models</h1>
+    <p class="post-meta"><time datetime="2018-08-15T14:15:16+03:00" itemprop="datePublished">Aug 15, 2018</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>A not-so-short discussion about finanical risk, starting from computing the risk for a portfolio of stocks and discussing which ideas might be applied to modelling risk for a sportsbook. Many points presented here have not been tested in production or on real datasets.</p>
+
+<p>A sportsbook can be seen as a portfolio of bets on a set of markets, each with an expected positive return for the bookmaker. But things can turn south and losses do occur. We need to limit such momentary losses so that the sportsbook remains profitable on the long run. However, simply summing up the worst case loss on each match may be too restrictive since there are tens of thousands of events happening every month and the probability of an extreme loss at any given period is tiny, but the same tens of thousands of events mean that extreme situations do occur. If the total risk is seen as too extreme and too improbable, the traders might be incetivised to simply ignore it and to increase the risk limits blindly, thus opening the gates to unquantified losses. Similarly, if we stick to risk limits that are too restrictive, we might miss the oportunity to make profit in otherwise highly profitable markets.</p>
+
+<h3 id="risk">Risk</h3>
+
+<p>Risk is a way to quantify uncertainty given a set of possible outcomes. A common way to quantify risk is by using the standard deviation. However, a poorly constructed risk model can lead to major financial failures. Risks is derived from uncertainty. Whenever there is an uncertainty regarding an outcome, there is a risk associated with it. Risk can estimated based on a probabilistic model and expressed as probabilities and consequences for a specific set of outcomes.</p>
+
+<p>Several values come to mind when speaking of the set of possible outcomes:</p>
+
+<ul>
+  <li>Worst case (maximul loss, if worst case &lt; 0)</li>
+  <li>Best case (maximum win, if best case &gt; 0)</li>
+  <li>Expected case (the probability-weighted average of all possible outcomes)</li>
+  <li>Range, the best case minus the worst case, but highly affected by outliers</li>
+  <li>Variance and stardard deviation. However they tend to hide extreme risks, like the low but still possible risk of getting bankrupt.</li>
+</ul>
+
+<p>When computing the variance, it is important to verify if it makes sense to use <a href="https://en.wikipedia.org/wiki/Bessel%27s_correction">Bessel’s correction</a>. Yes, if we assess the risk based on a subset of a larger population, no if the population is fixed and we cover the whole set of possible outcomes.</p>
+
+<p>We define a portfolio as a set of assets that vary their prices based on two large categories of factors - indiosyncratic (specific to the asset at hand) and systemic (not-specific). As an example, we can consider the team form as an example of idiosyncratic factor and a certain market preference for a specific team as a systemic factor for the finanical risks associated with a portfolio of bets.</p>
+
+<p><em>Note:</em> we have a natural bias for identifying fake cause-effect relationships attributed solely to idiosyncratic factors, e.g. “X failed because of his own behavior”, whereas in most cases the systemic factors far outweight the individual factors. However, it seems it is very hard for us humans to have a good grasp of the properties of the system as a whole, as these cannot be attributed solely to obsevable individuals, but rather to the invisible relationships between individuals. When I say “individuals”, they can be humans if we talk about social systems, computers or software in IT systems or any other uniquely identifiable element in a configuration that can be bounded (which we like) or unbounded (which we don’t like and which usually is the case as systems don’t exist in a vacuum, but rather are part of a larger network of systems).</p>
+
+<p><em>Note 2:</em> it is a bad idea to bet with borrowed money that tomorrow will look like yesterday.</p>
+
+<h3 id="risk-in-a-portfolio-of-stocks-as-compared-to-the-sportsbook-risk">Risk in a portfolio of stocks as compared to the sportsbook risk</h3>
+
+<p>What we want to do is to be able to issue statements like: <em>the probability to lose <code class="highlighter-rouge">X</code> mount of money or more in the following <code class="highlighter-rouge">T</code> period is <code class="highlighter-rouge">p%</code></em>. This amount of money, <code class="highlighter-rouge">X</code>, is called <em>value at risk</em>.</p>
+
+<p>The important thing to notice is that a portfolio can be modelled as a sum of random variables. Unlike the sportsbook portfolio where the outcome of each sport event is a discrete random variable, with a finite set of possibilities, stock movement can be thought as a continuous random variable. However, given the sheer number of sport events and their continuous flux, intuition tells me there are parallels to be made between studying financial risk models and sportsbook risk models.</p>
+
+<p>For the stock portfolio, we will assume the distribution of stock movement to be normal, although its use is questionable, as it seems that extreme events in this space are more frequent than what it predicts.</p>
+
+<p>In this case, <code class="highlighter-rouge">VaR(p%) = X = Amount-Of-Money-Invested * Zscore(p%) * sigma</code>, where <code class="highlighter-rouge">Zscore(p%)</code> is the amount of standard deviations corresponding to the probability <code class="highlighter-rouge">p</code>. Thus, the only thing we need to compute is <code class="highlighter-rouge">sigma = sqrt(Var(P))</code>.</p>
+
+<p>In the case of the sportsbook, we have a large discrete set of possible losses and wins, each with a probability that can be numerically computed. However, computing this set is not computationally effective as the tree of possibilities doubles with each additional event. For instance, in the small case of a portfolio of only 10 binomial independent events, the cardinality of the set of possible outcomes is <code class="highlighter-rouge">2^10 = 1024</code>. Thus, we need to seek alternative means of computing the <code class="highlighter-rouge">VaR</code>. A simple model to be tested in practice would be to compute the risk for the worst possible scenario (sum of all maximum losses), compute its probability (product of all probabilities of the worst possible outcomes) and given this probability compute its Zscore and thus distribute risks accordingly. However, such a model might prove to hide too much error due to the extreme values and simplistic assumptions baked into it. Another option might be to sample the distribution of returns, let’s say to compute 1000 random returns / losses for 1000 events, assume them equiprobable, and compute the variance based on these. These would, additionally, give us a hint at the shape of the real distribution, so we might have the option to not consider the normal distribution. We can push this model even further, selectively picking the most extreme cases (wins / loses), leading to a lobed distribution, with inflated tails.</p>
+
+<p>However, the two options above are mostly invalidated by practice. Below is a run for a simulation of 4 sets of different matches (win-lose), each described by the tuple <code class="highlighter-rouge">(prob_loss, loss_value, prob_win = 1- prob_loss, win_value)</code>. The rows (series) are as follows:</p>
+<ol>
+  <li>small number of 8 matches, prob of loss small and the possible loss value large, which leads to <code class="highlighter-rouge">2^8=256 outcomes</code></li>
+  <li>small set of 12 matches, prob of loss and prob of win distributed evenly, thus also the win / loss values are similarly matched. In total, <code class="highlighter-rouge">2^12=4096 possible outcomes</code></li>
+  <li>small set of 12 matches, prob of loss limited to 0.5% per match. In total, <code class="highlighter-rouge">2^12=4096 possible outcomes</code></li>
+  <li>small set of 12 matches, prob of loss limited to 0.2% match (unprobable high losses, paired by probable smaller wins). In total, <code class="highlighter-rouge">2^12=4096 possible outcomes</code>.</li>
+</ol>
+
+<p>Code below:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+<span class="s">"""
+The following code assumes a series of independent matches, each modeled as a tuple (p_loss, loss, won), with p_won assumed to be 1-p_loss. Each event is a Bernoulli trial.
+"""</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">statistics</span> <span class="kn">as</span> <span class="nn">stats</span>
+
+
+<span class="k">def</span> <span class="nf">prob_tree</span><span class="p">(</span><span class="n">risks</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="s">""" element in risks is (prob_loss, value_loss, value_won) """</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"cannot handle"</span><span class="p">)</span>
+
+    <span class="n">pl</span><span class="p">,</span> <span class="n">vl</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">risks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>        
+        <span class="k">yield</span> <span class="p">[(</span><span class="n">pl</span><span class="p">,</span> <span class="n">vl</span><span class="p">)]</span>
+        <span class="k">yield</span> <span class="p">[(</span><span class="mi">1</span><span class="o">-</span><span class="n">pl</span><span class="p">,</span> <span class="n">w</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">remaining</span> <span class="ow">in</span> <span class="n">prob_tree</span><span class="p">(</span><span class="n">risks</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">yield</span> <span class="p">[(</span><span class="n">pl</span><span class="p">,</span> <span class="n">vl</span><span class="p">)]</span> <span class="o">+</span> <span class="n">remaining</span> <span class="c"># event happened (event == loss)</span>
+            <span class="k">yield</span> <span class="p">[(</span><span class="mi">1</span><span class="o">-</span><span class="n">pl</span><span class="p">,</span> <span class="n">w</span><span class="p">)]</span> <span class="o">+</span> <span class="n">remaining</span> <span class="c"># event did not happen</span>
+    
+<span class="k">def</span> <span class="nf">gen_disjoint_events</span><span class="p">(</span><span class="n">risks</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="s">""" element in risks is (prob_loss, value_loss, value_won) """</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">prob_tree</span><span class="p">(</span><span class="n">risks</span><span class="p">):</span>        
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">p_</span> <span class="k">for</span> <span class="n">p_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">r</span><span class="p">))</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v_</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v_</span> <span class="ow">in</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="k">yield</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">display_cases</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="s">""" Shows the nice charts """</span>
+
+    <span class="n">row_cnt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">row_cnt</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">row_cnt</span><span class="p">):</span>
+
+        <span class="n">list_of_wins</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">list_of_probs</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">list_of_expected</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="s">"Mean: {}, Stddev: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">list_of_expected</span><span class="p">),</span> <span class="n">stats</span><span class="o">.</span><span class="n">stdev</span><span class="p">(</span><span class="n">list_of_expected</span><span class="p">)))</span>
+        
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"List of wins - absolute values"</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">list_of_wins</span><span class="p">,</span> <span class="mi">10</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_of_wins</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1000</span> <span class="k">else</span> <span class="mi">100</span><span class="p">)</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"Probabilities"</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">list_of_probs</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"Expected wins"</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">list_of_expected</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>       
+        
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+<span class="k">def</span> <span class="nf">gen_statistics</span><span class="p">(</span><span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="n">disjoin_events</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gen_disjoint_events</span><span class="p">(</span><span class="n">matches</span><span class="p">)]</span>    
+    <span class="k">return</span> <span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">disjoin_events</span><span class="p">],</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">disjoin_events</span><span class="p">],</span> <span class="p">[</span><span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">disjoin_events</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">gen_matches</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">max_loss_prob</span><span class="p">):</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
+        <span class="n">p_loss</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">max_loss_prob</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">10000</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="o">-</span><span class="n">loss</span> <span class="o">*</span> <span class="n">p_loss</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p_loss</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p_loss</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">win</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+
+    <span class="c"># small number of matches</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span>
+       <span class="p">[(</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mi">750</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">220</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">110</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1050</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mi">550</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.31</span><span class="p">,</span> <span class="o">-</span><span class="mi">520</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">120</span><span class="p">,</span> <span class="mi">110</span><span class="p">)],</span>
+       <span class="n">gen_matches</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+       <span class="n">gen_matches</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+       <span class="n">gen_matches</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+       <span class="p">]</span>
+
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="n">plots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen_statistics</span><span class="p">(</span><span class="n">match</span><span class="p">))</span>
+
+    <span class="n">display_cases</span><span class="p">(</span><span class="n">plots</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
+
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_1.png" alt="Risk simulation" /></p>
+
+<p>But until then, let’s return to our stock risk model as the results are pretty interesting.</p>
+
+<h3 id="risk-in-a-portfolio-of-stocks">Risk in a portfolio of stocks</h3>
+
+<p>The principles behind assessing the risk in a portfolio of stocks for our simple model are:</p>
+<ul>
+  <li>Learn from history (identify relationships) but do not count on it repeating. Historical based VaR often underestimates the worst case.</li>
+  <li>Identify underlying risk factors</li>
+  <li>Stress-test each risk factor</li>
+</ul>
+
+<p><em>Theorem:</em></p>
+
+<p>Given a random variable <code class="highlighter-rouge">Y</code> expressed as a sum of <code class="highlighter-rouge">Xi</code> random variables, <code class="highlighter-rouge">Y = X1 + X2 + ... Xn</code>, <code class="highlighter-rouge">Variance(Y) = Covariance(X1, X1) + Covariance(X1, X2) + ... + Covariance(Xn, Xn)</code>, in total <code class="highlighter-rouge">n^2</code> terms. If <code class="highlighter-rouge">X1...Xn</code> are fully independent, <code class="highlighter-rouge">Covariance(Xi, Xj) = 0 with i=1..n and j=1..n and i!=j</code>. In this case, the result can be written as <code class="highlighter-rouge">Variance(Y) = Variance(X1) + Variance(X2) + .... Variance(Xn)</code> since <code class="highlighter-rouge">Covariance(Xi, Xi) = Variance(Xi)</code>.</p>
+
+<p>If <code class="highlighter-rouge">Y = w1 * X1 + w2 * X2 + ...+ wn * Xn</code>, <code class="highlighter-rouge">Variance(Y) = sum(wi * wj * Covariance(Xi, Xj) for i = 1..n, j = 1..n)</code> or, in matrix terms,  <code class="highlighter-rouge">Variance(Y) = W * COV_MTX(X) * WT</code> where <code class="highlighter-rouge">W = [w1 ... wn]</code>, <code class="highlighter-rouge">X = [x1 ... Xn]</code>, <code class="highlighter-rouge">COV_MTX</code> is the covariance matrix and <code class="highlighter-rouge">WT</code> is <code class="highlighter-rouge">W</code> transposed.</p>
+
+<p><em>The Model</em>:</p>
+
+<p>We consider two systemic risks, the overal “market sentiment”, as captured by S&amp;P500, and the overall level of interest rates in the economy, as captured by FVX. If the whole market goes up (S&amp;P500 goes up), it is a reasonable expectation that our stock portfolio will also go up. If the interest rates go up, interest in stocks tends to decrease while interest in bonds tends to increase.</p>
+
+<p>We aim to express the returns of each of our stocks as a linear regression based on the factors identified above, as follows (<code class="highlighter-rouge">Yi</code> is the return of stock <code class="highlighter-rouge">i</code> in our portfolio). The return value of our portfolio over a period of time is <code class="highlighter-rouge">P = w1 * Y1 + w2 * Y2 + ...</code> where <code class="highlighter-rouge">wi</code> is the amount of money invested in that particular stock, with <code class="highlighter-rouge">sum(wi) = W</code>, our invested sum and <code class="highlighter-rouge">Yi</code> the variation expressed in percentages of that particular stock. Thus, the end value of our portfolio would be <code class="highlighter-rouge">S(t + dt) = W + P</code>, with <code class="highlighter-rouge">W = S(t)</code>.</p>
+
+<p>We consider a multiple linear regression model:</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">Yi = Ai + Bi1*F1 + Bi2*F2 + e_i</code>, <code class="highlighter-rouge">A</code> being called the <code class="highlighter-rouge">Alpha</code>, meaning the stock specific performance, <code class="highlighter-rouge">B</code> being called <code class="highlighter-rouge">Beta</code>, meaning the market performance as a whole, and <code class="highlighter-rouge">e</code> a residual stock-specific factor, derived from its idiosyncratic risks. Discussion about multiple regression <a href="https://alexandrugris.github.io/machine/learning/2017/03/25/MachineLearning-Notebook-2.html">here</a>.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">Var(Yi) = Var(Ai + Bi1*F1 + Bi2*F2) + Var(e_i)</code>, with <code class="highlighter-rouge">Ai</code> a constant, and <code class="highlighter-rouge">e_i</code> the idiosyncratic factor,  with <code class="highlighter-rouge">TotalVariance(Y) = SystemicVariance(Y) + IdiosyncraticVariance(Y)</code>. We can write like this since we assume the idiosyncratic and the systemic risks are fully independent.</p>
+  </li>
+  <li>
+    <p>Since the idiosyncratic risk is individual (independent) for each stock type, we can compute its variance as <code class="highlighter-rouge">Var( sum(e_i, i=1..n) ) = IdiosyncraticVariance(Y) = sum(wi^2 * Var(e_i), i=1..n)</code>.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">Var(Ai + Bi1*F1 + Bi2*F2) = SystemicVariance(Y) = Var(Ai) + Var(Bi1*F1 + Bi2*F2) = 0 + Var(Bi1*F1 + Bi2*F2)</code>, since <code class="highlighter-rouge">Ai</code> is a constant.</p>
+  </li>
+</ul>
+
+<p>For our value at risk calculation, we will assume the portfolio returns to be normally distributed and centered around 0 - no loss, no gain. In the case of a sportsbook, we can also consider the returns to be centered around the Expected Value of the portfolio, which should be above 0. This choice (0 or EV) is detabatable and should be tested both through simulation and with real data.</p>
+
+<p><em>Steps taken:</em></p>
+
+<ul>
+  <li><em>Aquire data and transform from non-stationary data to stationary</em>. Usually one cannot use timeseries data directly for mathematical models such as regression because data from one point to the next is not independent. However, converting to returns, with <code class="highlighter-rouge">return=(new_data - old_data) / old_data</code>, yields a much higher level of independence from one point to the next. E.g. temperature at moment <code class="highlighter-rouge">t+dt</code> is clearly dependent on temperature at moment <code class="highlighter-rouge">t</code>, whereas temperature gains / loss are not. Data is downloaded from Yahoo finance.</li>
+</ul>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_2.png" alt="Stock prices" /></p>
+
+<ul>
+  <li><em>Model historical relationships:</em> we have seen that <code class="highlighter-rouge">Variance(Y) = W * COV_MTX(X) * WT</code>, so we can assign the <code class="highlighter-rouge">W</code> vector to the weights we have in our porfolio (a good exercise is to determine these weights so that we maximize the return and minimize the risk) and compute the <code class="highlighter-rouge">COV_MTX(X)</code>. Now we can compute our <code class="highlighter-rouge">Var(Y)</code> which is our historical portfolio variance. This can be done in a simpler way by <code class="highlighter-rouge">dot</code>-ing (sum-product) the weight for each stock with the yield of each stock on a monthly basis to compute the monthly yield, and then computing the variation for the yields series. In such case, the covariance matrix formula might seem an overkill. However, if we are to do the reverse analysis, to compute the weights to optimize for risk or yield, the advantage of the cov-matrix approach quickly become apparent, considering the case in which the number of data points is much larger than the number of stocks in our portfolio. In the covariance matrix scenario, the complex calculation which involves the whole time series is performed only once, in the beginning. Then, for each change in weights, we would simply do 3 matrix multiplications. Simple approach, below. Numbers downloaded from Yahoo! Finance. Excel file <a href="(https://alexandrugris.github.io/assets/stock-indices.xlxs)">here</a></li>
+</ul>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_3.png" alt="Simple approach of computing historical portfolio variance based on monthly yields" /></p>
+
+<p>And the python code:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'stock-indices.csv'</span><span class="p">)</span>
+
+<span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="n">date</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">stocks</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+
+<span class="c"># convert first column to date by default it is dtype('O'), python object and make sure the set is sorted</span>
+<span class="n">df</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">date</span><span class="p">],</span> <span class="n">format</span><span class="o">=</span><span class="s">"</span><span class="si">%</span><span class="s">m/</span><span class="si">%</span><span class="s">d/</span><span class="si">%</span><span class="s">Y"</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="n">date</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="p">[</span><span class="bp">True</span><span class="p">])</span>
+
+<span class="c"># compute the returns for each stock</span>
+<span class="n">prev</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">stocks</span><span class="o">+</span><span class="n">indices</span><span class="p">]</span>
+<span class="n">current</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">stocks</span><span class="o">+</span><span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c"># reindex the data, because data is added index-wise</span>
+<span class="n">returns</span> <span class="o">=</span> <span class="p">((</span><span class="n">current</span> <span class="o">-</span> <span class="n">prev</span><span class="p">)</span> <span class="o">/</span> <span class="n">prev</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c">#last one is nan</span>
+
+<span class="c"># to simplify, we set weights to the same numbers as in excel so we can verify our calculations</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s">"MSFT"</span><span class="p">,</span> <span class="s">"GOOGL"</span><span class="p">,</span> <span class="s">"CVX"</span><span class="p">,</span> <span class="s">"IBM"</span><span class="p">,</span> <span class="s">"SBUX"</span><span class="p">,</span> <span class="s">"MCD"</span><span class="p">,</span> <span class="s">"AAPL"</span><span class="p">])</span>
+
+<span class="n">cov</span> <span class="o">=</span> <span class="n">returns</span><span class="p">[</span><span class="n">stocks</span><span class="p">]</span><span class="o">.</span><span class="n">cov</span><span class="p">()</span>
+
+<span class="c"># for computing the covariance matrix I have another blog post</span>
+<span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span><span class="o">*</span><span class="mi">100</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Historical variance: {}</span><span class="si">%</span><span class="s">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variance</span><span class="p">))</span> <span class="c"># similar to excel</span>
+</code></pre>
+</div>
+
+<ul>
+  <li><em>Create a systemic factor model based on S&amp;P500 and FVX</em>:</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># we do the factor analysis for  F1 = S&amp;P and F2 = FXV</span>
+<span class="c"># Yi = A + B1 * F1 + B2 * F2, with Y = return of stock Yi</span>
+<span class="c"># returns[stocks] = A + returns["^S&amp;P500"] + returns["^FVX"]</span>
+
+<span class="k">def</span> <span class="nf">idiosyncratic_variance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">As</span><span class="p">,</span> <span class="n">Bs</span><span class="p">,</span> <span class="n">Fs</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="n">Fs</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">Bs</span> <span class="o">=</span> <span class="n">Bs</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">As</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">As</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>    
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">As</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Bs</span><span class="p">,</span> <span class="n">Fs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">W</span> <span class="o">*</span> <span class="n">residuals</span> <span class="o">*</span> <span class="n">W</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"x and y should have the same size"</span><span class="p">)</span>
+
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">cov_mtx</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cov</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">lin_regress_mtx</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Fs</span><span class="p">):</span>
+
+    <span class="c"># Multiple regression: Y = As + sum(i, Bi * Fi)</span>
+    <span class="c"># Bs = cov(Y, F) * cov (F, F)^(-1)</span>
+    <span class="c"># As = mean_Y - sum(bi * mean_xi)</span>
+
+    <span class="c"># convert to numpy array</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="n">Fs</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">Cxx</span> <span class="o">=</span> <span class="n">cov_mtx</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">Fs</span><span class="p">)</span>
+    <span class="n">Cyx</span> <span class="o">=</span> <span class="n">cov_mtx</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Fs</span><span class="p">)</span>
+
+    <span class="n">Bs</span> <span class="o">=</span> <span class="n">Cyx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Cxx</span><span class="p">))</span>
+
+    <span class="n">mean_Fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">As</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">mean_Fs</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Bs</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">As</span><span class="p">,</span> <span class="n">Bs</span><span class="p">)))</span>    
+   
+
+<span class="n">coef_matrix</span> <span class="o">=</span> <span class="n">lin_regress_mtx</span><span class="p">(</span><span class="n">returns</span><span class="p">[</span><span class="n">stocks</span><span class="p">],</span> <span class="n">returns</span><span class="p">[</span><span class="n">indices</span><span class="p">])</span>
+
+<span class="c"># compute the variance</span>
+
+<span class="n">Bs</span> <span class="o">=</span> <span class="n">coef_matrix</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span>
+<span class="n">As</span> <span class="o">=</span> <span class="n">coef_matrix</span><span class="p">[[</span><span class="mi">0</span><span class="p">]]</span>
+
+<span class="n">reconstructedCovariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Bs</span><span class="p">,</span> <span class="n">returns</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">cov</span><span class="p">()),</span> <span class="n">Bs</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">systemic_var</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">reconstructedCovariance</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="n">idiosync_var</span> <span class="o">=</span> <span class="n">idiosyncratic_variance</span><span class="p">(</span><span class="n">returns</span><span class="p">[</span><span class="n">stocks</span><span class="p">],</span> <span class="n">As</span> <span class="p">,</span> <span class="n">Bs</span><span class="p">,</span> <span class="n">returns</span><span class="p">[</span><span class="n">indices</span><span class="p">],</span> <span class="n">weights</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+<span class="n">f_based_variance</span> <span class="o">=</span>  <span class="n">systemic_var</span> <span class="o">+</span> <span class="n">idiosync_var</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"Factor based variance: {}</span><span class="si">%</span><span class="s">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f_based_variance</span><span class="p">))</span> <span class="c"># rather similar to historic risk</span>
+</code></pre>
+</div>
+
+<ul>
+  <li><em>Compute a stress test based portfolio variance</em>. The process is described below:</li>
+</ul>
+
+<ol>
+  <li>Find the minimum for the <code class="highlighter-rouge">S&amp;P</code> and  the minimum for the <code class="highlighter-rouge">FVX</code>.</li>
+  <li>Find the maximul for the <code class="highlighter-rouge">S&amp;P</code> and the maximum for the <code class="highlighter-rouge">FVX</code>.</li>
+  <li>Divide each interval in, let’s say, <code class="highlighter-rouge">30</code> increments and obtain <code class="highlighter-rouge">30*30</code> pairs.</li>
+  <li>Apply our factor model (<code class="highlighter-rouge">As</code> and <code class="highlighter-rouge">Bs</code> obtained in the previous step) for each of these values and compute the returns for each stock. We will simply discard the idiosyncratic factor, as we don’t have information about it and should be small anyway.</li>
+  <li>Use the steps from computing the historic variance to compute the new portfolio variance.</li>
+  <li>Compare this variance to the previous two. This one should be more extreme.</li>
+  <li>Consider using this variance for computing the <code class="highlighter-rouge">VaR</code> for our portfolio.</li>
+</ol>
+
+<ul>
+  <li><em>Compute and interpret VaR</em></li>
+</ul>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+<span class="k">def</span> <span class="nf">value_at_risk</span><span class="p">(</span><span class="n">portfolio_sum</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">confidence_level</span><span class="p">,</span> <span class="n">no_of_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+
+    <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">st</span>
+    <span class="n">zscore</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">confidence_level</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">portfolio_sum</span> <span class="o">*</span> <span class="n">zscore</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">no_of_periods</span><span class="p">))</span>
+
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">stocks</span><span class="p">]</span>
+<span class="n">portfolio_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">s</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+<span class="n">var99</span> <span class="o">=</span> <span class="n">value_at_risk</span><span class="p">(</span><span class="n">portfolio_sum</span><span class="p">,</span> <span class="n">f_based_variance</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># / 100 because it was in percentage</span>
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">var99</code> number tells us that the probability to lose a value equal to <code class="highlighter-rouge">var99</code> or greater in the following period is <code class="highlighter-rouge">1%</code>. With our numbers, the <code class="highlighter-rouge">var99</code> value is <code class="highlighter-rouge">28.68</code>, with a total portfolio sum equal to <code class="highlighter-rouge">345</code>.</p>
+
+<h3 id="sportsbook-risk">Sportsbook risk</h3>
+
+<p>The goal of a sportsbook is to secure a long-term profit by adding a small margin to each betting market, while not running out of business due to losses on any single day. The main cycle is:</p>
+
+<ol>
+  <li>Select a match and a market and compute a set of probabilities for each possible outcome to occur.</li>
+  <li>Compute the odds by artificially increasing the probability of each outcome to secure long term profit (e.g., for a fair coin toss, instead of offering odds at 2.0, a sportsbook might decide to offer odds at 1.9, securing a long-term 10 cent profit for each game). This notion is called overround and is computed below.</li>
+  <li>Accept bets</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">overround</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">odds</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+</code></pre>
+</div>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_4.png" alt="Computing the profit based on total sakes and overround" /></p>
+
+<p>The sportsbook might not accurately determine the real odds odds or the market might have a strong preference towards a specific outcome. Like, for instance, in the example above, the coin might not be fair or the population might have a bias towards head due to some unknown factor. In these conditions, on that specific game, the sportsbook might lose money. In order to limit the risk of going bankrupt, the sportsbook has two strategies: decrease the odds for the preferred outcome thus incetivising people to bet on the other or stop accepting bets when a risk threshold is reached.</p>
+
+<p>The role of the risk model is to prevent the sportsbook from going bankrupt and, in general, has two components: a) limit the stakes placed on each bet so that the risk budget is not in danger of being exceeded and b) when the risk is reached on a specific market, suspend betting on the culprit outcome. The risk model is dynamic, it is updated with each incoming bet and with each settled bet. Since the amount of calculation can be pretty high, it might be delayed until a certain threshold is reached (a batch of bets being placed), but this is an implementation detail and does not impact the actual model behind.</p>
+
+<h3 id="sportsbook-data-model">Sportsbook data model</h3>
+
+<p>We will consider a rather simple domain model for our sportsbook, composed of the following domain objects:</p>
+<ul>
+  <li>Sportsbook - the aggregate root for this bounded context</li>
+  <li>Discipline - the type of sport, like football, basketball, tennis.</li>
+  <li>League - A discipline can have many leagues, but a league can only have one discipline. E.g, Champions League.</li>
+  <li>Match - A match is part of a league. A league can have multiple matches, but a match can only be part of a single league.</li>
+  <li>Outcome - some event that can occur and on which one can offer bets.</li>
+  <li>Team / Participant - A discipline can have several teams, but a team is part of a single discipline. A match has one or more participants.</li>
+  <li>Market - a set of 2 or more mutually exclusive outcomes offered for betting on. A match can have multiple markets. An outcome can be found in several markets.</li>
+  <li>Selection - a combination of a Match / Market / Outcome.</li>
+  <li>Bet - a combination of 1 or multiple selections.</li>
+</ul>
+
+<p>We will also consider only score-based markets, like 1x2, over-under, correct score. We will use strings for IDs so things are easy to follow and debug. For the sake of this example, we will leave aside other entities that would make a more complete and functional model, which for sure will include:</p>
+<ul>
+  <li>Event part - A time-based part of a match, e.g. first part, second part, ordinary time, extension, first set, etc.</li>
+  <li>Market template - build betting markets based on a set of common parameters, like <code class="highlighter-rouge">1x2</code>, which can be offered on a wide variety of matches. 
+etc.</li>
+</ul>
+
+<p>Some code snippets for placing and managing bets. As usual, we start by analysing usage. Throught our model, we will use this custom dictionary class to hold related objects.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CustomDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CustomDict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+  
+    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">b_create</span><span class="p">:</span>  <span class="nb">bool</span><span class="p">,</span> <span class="n">create_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">b_create</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">create_func</span><span class="p">()</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+</code></pre>
+</div>
+
+<p>The object model follows an implementation pattern like the following:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Sportsbook</span><span class="p">:</span>
+    <span class="s">""" Main class for the application. Allows placing bets, updating odds, settling bets, computing risk """</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">"disciplines"</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disciplines</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]):</span>
+
+        <span class="c"># A tree of model entities, accessible by a string key.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disciplines</span> <span class="o">=</span> <span class="n">CustomDict</span><span class="p">({</span> <span class="n">name</span> <span class="p">:</span> <span class="n">Discipline</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">disciplines</span> <span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">get_discipline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discipline</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">create_on_missing</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Discipline</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">disciplines</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">discipline</span><span class="p">,</span> <span class="n">create_on_missing</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">Discipline</span><span class="p">(</span><span class="n">discipline</span><span class="p">))</span>         
+    
+    <span class="k">def</span> <span class="nf">get_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discipline</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">league</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">create_on_missing</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matches</span><span class="p">:</span>
+        <span class="s">""" a shorcut, so we don't always query by discipline and leagues"""</span>
+        <span class="n">disc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_discipline</span><span class="p">(</span><span class="n">discipline</span><span class="p">,</span> <span class="n">create_on_missing</span><span class="p">)</span>
+        <span class="n">lg</span> <span class="o">=</span> <span class="n">disc</span><span class="o">.</span><span class="n">get_league</span><span class="p">(</span><span class="n">league</span><span class="p">,</span> <span class="n">create_on_missing</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Matches</span><span class="p">(</span><span class="n">disc</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_market_templates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discipline</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">league</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="s">""" returns a function! the reason is that for each match, each market will be created specifically. 
+        do not mistake market for market template"""</span>    
+        <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">Market</span><span class="p">(</span><span class="s">'1x2'</span><span class="p">),</span> <span class="n">Market</span><span class="p">(</span><span class="s">'OverUnder-1.5'</span><span class="p">),</span> <span class="n">Market</span><span class="p">(</span><span class="s">'CorrectScore-0-0'</span><span class="p">)]</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+
+    <span class="n">sportsbook</span> <span class="o">=</span> <span class="n">Sportsbook</span><span class="p">()</span>
+
+    <span class="n">teams</span> <span class="o">=</span> <span class="p">[</span><span class="s">"steaua"</span><span class="p">,</span> <span class="s">"dinamo"</span><span class="p">,</span> <span class="s">"iasi"</span><span class="p">,</span> <span class="s">"cluj"</span><span class="p">]</span>
+    <span class="n">mkt_templates</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">get_market_templates</span><span class="p">(</span><span class="s">"football"</span><span class="p">,</span> <span class="s">"ro"</span><span class="p">)</span> <span class="c"># disciline, league</span>
+
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">get_matches</span><span class="p">(</span><span class="s">"football"</span><span class="p">,</span> <span class="s">"ro"</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>    
+
+    <span class="c"># generate league matches, with their respective templates</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">teams</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">matches</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mkt_templates</span><span class="p">)</span>
+    
+    <span class="n">matches</span><span class="o">.</span><span class="n">set_odds</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.1</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+    <span class="n">matches</span><span class="o">.</span><span class="n">set_odds</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'iasi'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.1</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+    <span class="n">matches</span><span class="o">.</span><span class="n">set_odds</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'cluj'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.1</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+    <span class="n">matches</span><span class="o">.</span><span class="n">set_odds</span><span class="p">(</span><span class="s">'iasi'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.1</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+
+    <span class="c"># we will use these selections to place bets</span>
+    <span class="c"># number of the end is the outcome ID from th respective market. 0 -&gt; 1, x-&gt;1, 1-&gt;2</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">matches</span><span class="o">.</span><span class="n">create_selection</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">matches</span><span class="o">.</span><span class="n">create_selection</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">s3</span> <span class="o">=</span> <span class="n">matches</span><span class="o">.</span><span class="n">create_selection</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>    
+    <span class="n">s4</span> <span class="o">=</span> <span class="n">matches</span><span class="o">.</span><span class="n">create_selection</span><span class="p">(</span><span class="s">'iasi'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">'1x2'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c"># betslip single</span>
+    <span class="n">bet</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_single</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"Expected wins:"</span><span class="p">,</span> <span class="n">bet</span><span class="o">.</span><span class="n">payout</span><span class="p">())</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"Market risk: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">get_market</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">"1x2"</span><span class="p">)</span><span class="o">.</span><span class="n">market_risk</span><span class="p">()))</span>
+    
+    <span class="c"># betslip multiple</span>
+    <span class="n">bet</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_multiple</span><span class="p">([</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">]</span> <span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"Expected wins:"</span><span class="p">,</span> <span class="n">bet</span><span class="o">.</span><span class="n">payout</span><span class="p">())</span>
+
+    <span class="c"># betslip system</span>
+    <span class="c"># we keep the variable assignment for inspection with the debugger</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_system</span><span class="p">([</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_system</span><span class="p">([</span><span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">s4</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_system</span><span class="p">([</span><span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">s4</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">sportsbook</span><span class="o">.</span><span class="n">place_system</span><span class="p">([</span><span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">s4</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="c"># risk</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"Market risk: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">get_market</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">"1x2"</span><span class="p">)</span><span class="o">.</span><span class="n">market_risk</span><span class="p">()))</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"Football risk: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">discipline</span><span class="o">.</span><span class="n">discipline_risk</span><span class="p">()))</span>
+</code></pre>
+</div>
+
+<p>Also, since we touched the bet placement topic, here are the place bet methods (single, multiple, system):</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">generate_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="s">""" Generates an n-way system bet based on the selections list """</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Bet</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">)]</span>
+        
+    <span class="n">sel_cnt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selections</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">sel_cnt</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Number of bets is larger than the number of selections"</span><span class="p">)</span>
+
+    <span class="n">bet_combinations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>        
+    <span class="n">stake</span> <span class="o">=</span> <span class="n">stake</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">bet_combinations</span><span class="p">)</span> <span class="o">/</span> <span class="n">sel_cnt</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">Bet</span><span class="p">(</span><span class="n">sels</span><span class="p">,</span> <span class="n">stake</span><span class="p">)</span> <span class="k">for</span> <span class="n">sels</span> <span class="ow">in</span> <span class="n">bet_combinations</span><span class="p">]</span>
+               
+<span class="k">def</span> <span class="nf">place_bet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n_way_system</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">n_way_system</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">selections</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Invalid system bet"</span><span class="p">)</span>
+
+    <span class="c"># check if the odds are within market + threshold</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">selections</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">check_odds</span><span class="p">()</span>
+                
+    <span class="n">bets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_system</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n_way_system</span><span class="p">)</span>         
+    <span class="n">selections</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bets</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">selections</span><span class="p">]</span>
+
+    <span class="c"># check the risk; this method throws but does not alter the state of the market</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">selections</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">market</span><span class="o">.</span><span class="n">check_risk</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">outcome_id</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">odds</span><span class="p">,</span>  <span class="n">s</span><span class="o">.</span><span class="n">stake</span><span class="p">)</span> 
+
+    <span class="c"># commit risk; this method should not throw</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">selections</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">market</span><span class="o">.</span><span class="n">commit_selection</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">outcome_id</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">odds</span><span class="p">,</span>  <span class="n">s</span><span class="o">.</span><span class="n">stake</span><span class="p">)</span>
+
+    <span class="c"># TODO: store the bets    </span>
+
+    <span class="k">return</span> <span class="n">bets</span> 
+
+<span class="k">def</span> <span class="nf">place_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">,</span> <span class="n">stake</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">place_bet</span><span class="p">([</span><span class="n">selection</span><span class="p">],</span> <span class="n">stake</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">place_multiple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">stake</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">place_bet</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">place_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">stake</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n_way_system</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">place_bet</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n_way_system</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="risk-at-match-and-market-level">Risk at match and market level</h3>
+
+<p>Given a market with 3 disjoined outcomes, like 1x2, one can calculate the risk as follows:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_5.png" alt="Risk calculation" /></p>
+
+<p>The formulas are quite self explanatory. There is an amount which was taken from the players, the sum of all stakes. And then there are specific amounts that need to be paid to the bettors for each outcome that might occur. For each of these outcomes, we substract the money due from the total stakes and some outcomes will be positive for us and some negative, meaning we lose money if that outcome occurs. The risk is the maximum loss that can occur. I find it interesting to also compute an “expected risk” value. This value has a higher probability (sum of all probabilities where losses can occur) at the expense of a lower sum. Given the higher probability, I think this number can give a certain indication that losses can truly occur on this market.</p>
+
+<p>Obviously, score-based markets are connected to each other. One match cannot have both <code class="highlighter-rouge">0-1</code> correct score happening and <code class="highlighter-rouge">1</code> or <code class="highlighter-rouge">x</code> from <code class="highlighter-rouge">1x2</code> occuring at the same time. Just the same, one cannot have <code class="highlighter-rouge">1-0</code> correct score occuring and <code class="highlighter-rouge">over 2</code> occuring at the same time. Factoring in these relationships, the sports book can more accurately predict the actual risk on a match. In our example, by simply including the correct score market inside the 1x2 market and inside the over-under budget and then substracting it once from the total risk budget, we can remove all the correct score markets from being included in the total risk calculation. Obviously, more such relations exist, each relation leading to a more accurate risk assessment. This is actually the inverse process used for generating odds, which, in principle and only for football, I will discuss in the next paragraph.</p>
+
+<h3 id="odds-generation">Odds generation</h3>
+
+<p>For football, a rather simple and good way to generate odds is by estimated the number of expected goals each team will score and then use the Poisson distribution to compute the probability for each score. This model is useful for low scoring sports, like footbal, and treats each team independent of each other.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_6.png" alt="Poisson" /></p>
+
+<ol>
+  <li>Input the expected score for each team.</li>
+  <li>Use Poisson to compute the probability for each score.</li>
+  <li>Derrive the probabilities for over-under and 1x2 markets based on these values.</li>
+</ol>
+
+<p>The obvious deficiency is that teams do not play independently but together and the way each team plays influences the other. Thus, in practice, the probability of a draw is higher than what pure Poisson predicts. An improved model uses the bivariate Poisson distribution for more accurate score predictions:</p>
+
+<blockquote>
+  <p>This bivariate distribution allows for dependence between the two random variables. Marginally, each random variable follows a Poisson distribution with <code class="highlighter-rouge">E(X) = λ1+λ3</code> and <code class="highlighter-rouge">E(Y) = λ2+λ3</code>. 
+Moreover, <code class="highlighter-rouge">cov(X,Y)</code> = <code class="highlighter-rouge">λ3</code>, and hence <code class="highlighter-rouge">λ3</code> is a measure of dependence between the two random variables. If λ3 = 0 then the two variables are independent and the bivariate Poisson distribution 
+reduces to the product of two independent Poisson distributions (referred to as the double-Poisson distribution). For a comprehensive treatment of the bivariate Poisson distribution and its 
+multivariate extensions see Kocherlakota and Kocherlakota (1992) and Johnson et al. (1997). It is plausible to adopt this distribution for modelling dependence in team sports. A natural 
+interpretation of the parameters of a bivariate Poisson model is that <code class="highlighter-rouge">λ1</code> and <code class="highlighter-rouge">λ2</code> reﬂect the net scoring ability of each team whereas <code class="highlighter-rouge">λ3</code> reﬂects game conditions(e.g.the speed of the game, the weather or stadium conditions).</p>
+</blockquote>
+
+<p><a href="https://tolstoy.newcastle.edu.au/R/e8/help/att-6544/karlisntzuofras03.pdf">Paper here</a></p>
+
+<p>Now that we have a basic mathematical understanding on how to simulate probabilities, the remaining question is how to draw the input data, the expected goals. Both models here have two factors: the systemic factor (the league overall characteristic, which is strongly underlined in both models) and the idiosyncratic factor (how each team performs by itself).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>home expected number of goals = (expected total goals scored per this game + expected difference in favor of home) / 2
+away expected number of goals = (expected total goals scored per this game - expected difference in favor of home) / 2
+
+where:
+the expected of scored goals per this game = (total goals per game team 1 + total goals per game team 2) / 2
+
+where: 
+total goals per game team 1, 2 = (number of received goals + number of scored goals) / number of matches considered (at least since the beginning of the season)
+
+and:
+expected difference in favor of home = avg diff goals scored by home team - avg diff goals scored by away team + league home advantage
+
+where:
+league home advantage = home average scored  - away average scored, for all matches in the league, not for this match
+
+and:
+avg diff goals scored by home team = (scored by home team - received by home team) / number of matches considered
+avg diff goals scored by away team = (scored by away team - received by away team) / number of matches considered
+</code></pre>
+</div>
+
+<p>The input variables for the model above are <code class="highlighter-rouge">scored / received by home / away team</code>, <code class="highlighter-rouge">number of matches considered</code> and <code class="highlighter-rouge">home / away average scored</code> which can be obtained by looking up values on the internet, on each league page, for instance.</p>
+
+<p>Another model, the multiplicative model, has yet simpler formulas:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>goals for home = home team attack strength * away team defence strength * average league home goals
+goals for away = away team attack strength * home team defence strength * average league away goals
+
+wehere:
+attack strength = goal scored / average league goal scored #higher means stronger
+defence strength = goals conceded / average league goals conceded #lower means stronger
+</code></pre>
+</div>
+
+<p>Again, numbers can be found by seaching on Internet, for example <a href="https://en.wikipedia.org/wiki/2017–18_Premier_League">here</a>
+Similar formulas are used by bookmakers to set starting odds as well as by punters to seach for value bets. The beauty of Poisson-based models is that they can be used even during a match. Since we know the rate of goals for each team, we can compute the odds for each team to score an additional 1-2-…-n goals for the remainder of the match, at any given moment.</p>
+
+<h3 id="multiples">Multiples</h3>
+
+<p>Going back to risk, the main problem with multiples is that they are used by punters to boost their odds by adding to their betslips highly probable events priced low, or to bypass wagering restrictions imposed by bookmakers. Therefore, a more accurate formula for assessing risk takes into consideration these possible tricks, instead of simply splitting the stake equally across all selections:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_7.png" alt="Multiple risk allocation" /></p>
+
+<p>In our case, <code class="highlighter-rouge">=$E$7*(1-E2)/(COUNT($E$2:$E$4) - SUM($E$2:$E$4))</code></p>
+
+<h3 id="total-risk-and-conclusions">Total Risk and Conclusions</h3>
+
+<p>I don’t know yet a good way to estimate at any given moment the value at risk, like we did earlier with the portfolio of stocks. Unlike the stocks scenario, it is hard to find a factor model and estimating based only on past performance might be less than ideal. It is good to have a buffer, compute a maximum stake allowed for each outcome based on the total risk on that market and adjust odds to factor in risk and public preferences. I still think that relying only on adding the worst possible outcomes for a bookmaker is not optimal, but I am yet to find a better metric.</p>
+
+<p>I have written some code to validate my assumptions about risk distribution. I used also the “Expected Risk” notion introduced earlier to see how risk distribution is compared to this value. Results are underwhelming. Here is the simulation code, together with some charts.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">max_loss</span><span class="p">(</span><span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="c"># filter out those with probability 0</span>
+    <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">,</span> <span class="n">matches</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">expected_loss</span><span class="p">(</span><span class="n">losses</span><span class="p">):</span>
+
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">losses</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">))</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="o">/</span> <span class="n">p</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">expected_wins</span><span class="p">(</span><span class="n">losses</span><span class="p">):</span>
+
+    <span class="n">wins</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">losses</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wins</span><span class="p">))</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wins</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">p</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">expected_values</span><span class="p">(</span><span class="n">events</span><span class="p">):</span>
+    <span class="s">""" Events is a collection of (probability, value) pairs, independent of each other, covering the whole spectrum of possible values (sum(pi) == 1) """</span>
+
+    <span class="n">ev</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">))</span>
+    <span class="n">variance</span> <span class="o">=</span>  <span class="nb">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="o">-</span><span class="n">ev</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">variance</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">compute_compound_risk</span><span class="p">(</span><span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span> 
+    <span class="s">"""matches is a list of tuples of the following form: (p_loss, loss, won). loss must be a negative number """</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">pmax</span><span class="p">,</span> <span class="nb">max</span>            <span class="o">=</span> <span class="n">max_loss</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="c"># this should be computed on the initial array, less numbers</span>
+    
+    <span class="c"># generate disjoined events</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">gen_disjoint_events</span><span class="p">(</span><span class="n">matches</span><span class="p">)]</span>
+   
+    <span class="k">assert</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span>
+
+    <span class="c"># written like this so that I can inspect with the debugger</span>
+    <span class="n">pexpected</span><span class="p">,</span> <span class="n">expected</span>  <span class="o">=</span> <span class="n">expected_loss</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+    <span class="n">pwins</span><span class="p">,</span> <span class="n">wins</span>          <span class="o">=</span> <span class="n">expected_wins</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+    <span class="n">mean</span><span class="p">,</span> <span class="n">variance</span>       <span class="o">=</span> <span class="n">expected_values</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">pexpected</span> <span class="o">+</span> <span class="n">pwins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="nb">max</span><span class="p">,</span> <span class="n">pmax</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">pexpected</span><span class="p">,</span> <span class="n">wins</span><span class="p">,</span> <span class="n">pwins</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="n">plt</span><span class="p">,</span> <span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">N</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+
+    <span class="s">""" Simulates the results for a set matches, N times """</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">compute_compound_risk</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>    
+
+    <span class="n">trials</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="n">returns</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">trials</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trials</span><span class="p">):</span>
+        <span class="nb">round</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">random</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">]</span>
+        <span class="n">returns</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">round</span><span class="p">)</span>
+
+    <span class="n">worst_loss</span>               <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span>
+    <span class="n">percent_less_than_expected</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">returns</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span> <span class="o">/</span> <span class="n">trials</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+    <span class="n">between_expectations</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">returns</span> <span class="k">if</span> <span class="n">x</span><span class="o">&gt;=</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">[</span><span class="mi">4</span><span class="p">]])</span> <span class="o">/</span> <span class="n">trials</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+    <span class="n">total_winnings</span>           <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">returns</span><span class="p">)</span> <span class="o">/</span> <span class="n">trials</span>
+    <span class="n">total_expected_winnings</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">r</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">plt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+    <span class="c">## write summary for processing in excel:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">rr</span><span class="p">)</span> <span class="k">for</span> <span class="n">rr</span> <span class="ow">in</span> <span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">worst_loss</span><span class="p">,</span> <span class="n">percent_less_than_expected</span><span class="p">,</span> <span class="n">between_expectations</span><span class="p">,</span> <span class="n">total_winnings</span><span class="p">,</span> <span class="n">total_expected_winnings</span><span class="p">])]))</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+
+    <span class="c"># 12 - number of concurrent matches, 1, 0.75, ... 0.1 the maximum probability of losing on this market</span>
+    <span class="c"># 1 means equal chances of win and loss</span>
+    <span class="c"># 0.1 means 0.1 chances of loss; the lower chances of loss, the more extreme the distribution of results</span>
+    <span class="c"># see the gen_matches function above</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)]</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">),</span> <span class="mi">5</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span> <span class="c"># 5 different runs to show some possible distributions</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">gen_matches</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">simulate</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">matches</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p>And the results (same 4 match sets, 5 runs of 1000 simulations for each - stability means data on each line looks very similar to each other):</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_8.png" alt="Risk for the series above" />
+And also the print screen with data from this run (table above), as well as with 1500 other simulations of matches distributions each for 1000 trials for expected results.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_9.png" alt="Risk for the series above" />
+The expected loss and expected wins are seem to be rather stable indicators. Together with the max loss / max win indicators, they tend to hint towards a bell-shaped distribution for which the parameters are yet to be determined. However, the bell shape does not apply to all distributions of results in a given set of matches, as shown few sections above, thus much care should be taken to not generalize too early and also the variability of the max risk relative to the expected loss is very high - see the chart below.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/risk_10.png" alt="Scatter plot of max loss vs expected loss" /></p>
+
+<p><a href="https://alexandrugris.github.io/assets/risk-simulation.xlsx">Excel Data Here</a></p>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
