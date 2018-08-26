@@ -272,11 +272,61 @@ Out[209]: -9.731923600320158e-11
 
 <p><img src="https://alexandrugris.github.io/assets/pca_1.png" alt="Analysis" /></p>
 
+<h3 id="normalization-of-data">Normalization of data</h3>
+
+<p>If end up with the principal <code class="highlighter-rouge">F</code> factor explaining less of the variance any of the <code class="highlighter-rouge">X</code> initial factors, we must standardize our data. That is, from which the mean was substracted and then we divided them by their standard deviation. For our <code class="highlighter-rouge">A</code> matrix, the matrix of all <code class="highlighter-rouge">X</code> factors, the function is as follows:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">standardize</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</code></pre>
+</div>
+
+<p>We check this need by calculating the <a href="http://www.stat.yale.edu/Courses/1997-98/101/correl.htm">R^2 metric for each regression (RSQ in Excel)</a> - for the <code class="highlighter-rouge">X</code> factors and then for the <code class="highlighter-rouge">F</code> factors. Now we can safely use the covariance matrix to do PCA.</p>
+
+<p>Some notes - <a href="https://alexandrugris.github.io/assets/pca.pdf">example data here</a>:</p>
+
+<ul>
+  <li>R^2 is the square of R, the Pearson coefficient, the correlation coefficient between two data series</li>
+  <li>Correlation of two data series is the same before and after standardization. Standardization is a linear operator, thus does not affect the linear relationship between two variables.</li>
+</ul>
+
+<p>However, there are more points to consider:</p>
+
+<ol>
+  <li>
+    <p><a href="https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca">Why do we need to normalize data before principal component analysis?</a></p>
+  </li>
+  <li>
+    <p><a href="https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance">PCA on correlation or covariance?</a></p>
+  </li>
+</ol>
+
+<blockquote>
+  <p>Using the correlation matrix standardises the data. In general they [corr vs covar] give different results. Especially when the scales are different.</p>
+</blockquote>
+
+<p>If we use the correlation matrix, we don’t need to standardize the data before.</p>
+
+<blockquote>
+  <p>Hence, my answer is to use covariance matrix when variance of the original variable is important, and use correlation when it is not.</p>
+</blockquote>
+
+<p>And</p>
+
+<blockquote>
+  <p>The argument against automatically using correlation matrices is that it is quite a brutal way of standardising your data. The problem with automatically using the covariance matrix, which is very apparent with that heptathalon data, is that the variables with the highest variance will dominate the first principal component (the variance maximising property).</p>
+</blockquote>
+
+<p><em>DO NOT FORGET!</em> standardize not only the <code class="highlighter-rouge">X</code> factors, but also the <code class="highlighter-rouge">Y</code> vector, the results. This way, after we do the multiple regression on the PCA <code class="highlighter-rouge">F</code> factors, we have an inverse transform to get back to the scale of <code class="highlighter-rouge">Y</code>, the original data.</p>
+
 <h3 id="additional-notes">Additional notes:</h3>
 
 <ol>
   <li>
-    <p>When to use the correlation and when to use the covariance matrix: <a href="https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance">https://stats.stackexchange.com</a></p>
+    <p>Eigenvalues and eigenvectors are directly baked into numpy: <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eig.html">np.linalg.eig</a></p>
+  </li>
+  <li>
+    <p>Many other numeric algorithms are aleady baked into numpy: <a href="https://docs.scipy.org/doc/numpy/reference/routines.linalg.html">np.linalg</a></p>
   </li>
   <li>
     <p>Why use covariance (or correlation at all) - because we are interested in finding the axes which describe the highest variation of data:</p>

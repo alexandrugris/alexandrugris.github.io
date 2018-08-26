@@ -1,5 +1,187 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2018-08-24T09:34:25+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Principal Component Analisys</title><link href="https://alexandrugris.github.io/statistics/2018/08/22/pca.html" rel="alternate" type="text/html" title="Principal Component Analisys" /><published>2018-08-22T14:15:16+03:00</published><updated>2018-08-22T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2018/08/22/pca</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2018/08/22/pca.html">&lt;p&gt;This is a continuation on my previous post on linear regression. It talks about finding a set of axes (dimensions) along which to regress in such a way as to preserve the most relevant data while avoiding multicollinearity and reducing the amount of dimensions.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2018-08-26T13:00:18+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Logistic Regression</title><link href="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html" rel="alternate" type="text/html" title="Logistic Regression" /><published>2018-08-24T14:15:16+03:00</published><updated>2018-08-24T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html">&lt;p&gt;While linear regression is about predicting effects given a set of causes, logistic regression predicts the probability of certain effects. This way, its main applications are classification and forecasting. Logistic regression helps find how probabilities are changed by our actions or by various changes in the factors included in the regression.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-problem&quot;&gt;The problem&lt;/h3&gt;
+
+&lt;p&gt;The problem we want to solve is: given a vector of factors &lt;code class=&quot;highlighter-rouge&quot;&gt;X=[X1 ... Xn]&lt;/code&gt;, find a model that predicts the probability of a binary outcome to occur, &lt;code class=&quot;highlighter-rouge&quot;&gt;P(X, outcome = 1)&lt;/code&gt;. The input for the model are the previous observations of &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; and whether the expected outcome was &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;One can obviosly try to reduce the problem directly to a linear regression problem, as exemplified in the PDF file &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_1.pdf&quot;&gt;here&lt;/a&gt; but the shortcomings are immediately apparent:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;R^2 is low&lt;/li&gt;
+  &lt;li&gt;There is not an obvious way to link the results to probability, the regression line goes above 1 and below 0.&lt;/li&gt;
+  &lt;li&gt;Residuals are obviously not normally distributed&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If in this precise case, one predictor variable, one result, one can simply find a cut-off point, the problem becomes more difficult if we include several predictor variables in the equation.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-logistic-regression-approach&quot;&gt;The Logistic Regression Approach&lt;/h3&gt;
+
+&lt;p&gt;We notice that the Logistic function, &lt;code class=&quot;highlighter-rouge&quot;&gt;f(x) = 1 / (1+e^-(ax+b))&lt;/code&gt;, has properties that naturally map to our problem:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;it grows assimptotically from 0 to 1 - which are the natural boundaries of probabilty&lt;/li&gt;
+  &lt;li&gt;it is continuous&lt;/li&gt;
+  &lt;li&gt;has an inflection point from which &lt;code class=&quot;highlighter-rouge&quot;&gt;f(x)&lt;/code&gt; grows quickly from close to 0 to close to 1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_8.png&quot; alt=&quot;Logistic function&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And the wikipedia link: &lt;a href=&quot;https://en.wikipedia.org/wiki/Logistic_function&quot;&gt;Logistic function&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Therefore, we will find a mathematical model that uses the logistic function to map from causes to probabilities. The model aims to find a vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; that, when plugged into the logistic function multiplied by the factors &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt;, the observed results match as closely as possible to the results determined by our model. In this case, our logistic function looks like &lt;code class=&quot;highlighter-rouge&quot;&gt;f(X_i) = 1 / (1+e^-(b1 * xi_1 + ... bn * xi_n)&lt;/code&gt;, where &lt;code class=&quot;highlighter-rouge&quot;&gt;Xi = [xi_1, ... xi_n]&lt;/code&gt; are the observed &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; factors at point &lt;code class=&quot;highlighter-rouge&quot;&gt;i&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We will further define our problem like this:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Xi = [xi_1 ... xi_n]&lt;/code&gt; - factors, with i between 1 and k. Attention, one of the factors needs to be &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;, the intercept - see the excel example below&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;B = [b1 ... bn]&lt;/code&gt; - coefficients&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Y = [y1 ... yk]&lt;/code&gt; - a vector of 1 and 0 of k elements&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dot(Xi, B) == Xi_1 * b1 + ... Xi_n * bn&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is a fancy way of describing a table with n colums defined by X, the regression factors, and 1 column defined by Y, the observed result, with k rows.&lt;/p&gt;
+
+&lt;p&gt;The core of the model is assuming that the probability of Y being 1 is given by the logistic function:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(1|Xi) = f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Which makes:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(0|Xi) = 1 - P(1|Xi)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So, in compact form:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | Xi) = (P(1 | Xi) ^ yi) * (P(0 | Xi) ^ (1 - yi)&lt;/code&gt;), since &lt;code class=&quot;highlighter-rouge&quot;&gt;yi&lt;/code&gt; is either &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We conclude that &lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | X)&lt;/code&gt; is another column, that of probabilities, but we cannot fully compute it because we are missing the vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;A perfect fit means &lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | Xi) == 1&lt;/code&gt;, whatever &lt;code class=&quot;highlighter-rouge&quot;&gt;i=1..k&lt;/code&gt;, which reads &lt;em&gt;given the set of inputs Xi we estimate with absolute certainty that the result is yi, 0 or 1, just as observed in the real world.&lt;/em&gt; This leads to a &lt;em&gt;real world&lt;/em&gt; equation of &lt;code class=&quot;highlighter-rouge&quot;&gt;PRODUCT(P(yi | Xi), for i = 0..k) == 1&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;But since we only aim to model the real world, we are happy if this product is merely maximized by our estimated probability function (logistic) with &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; plugged in. That is,&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PRODUCT(P(yi | Xi), for i = 0..k) = P(y1 | X1) * P(y2 | X2) * ...&lt;/code&gt; is maximized, as close as possible to 1.&lt;/p&gt;
+
+&lt;p&gt;which is equivalent to&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM( yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt; is maximized as close as possible to 0.&lt;/p&gt;
+
+&lt;p&gt;Now we can use gradient descent to find the vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;. Unfortunately this method might be slow for large datasets because, for every incremental change in any &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;, all the exponentials and the logarithms for each line in the dataset need to be recomputed.&lt;/p&gt;
+
+&lt;h3 id=&quot;implementation-in-excel-on-the-iris-dataset&quot;&gt;Implementation in Excel on the Iris dataset&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;We download the Iris dataset.&lt;/li&gt;
+  &lt;li&gt;We setup 3 variables, one for each type of flower. They are 1 if the flower is of that type and 0 otherwise.&lt;/li&gt;
+  &lt;li&gt;We split the data into trainig and test dataset.&lt;/li&gt;
+  &lt;li&gt;Add a new column for intercept.&lt;/li&gt;
+  &lt;li&gt;Add a new row for the &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; vector. These are the values we want to find.&lt;/li&gt;
+  &lt;li&gt;Add a new column for &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa)&lt;/code&gt;, the probabilities we want as result from the logistic regression. &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 1/1+EXP(-SUMPRODUCT(B, X))&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Add a new column, the log column, &lt;code class=&quot;highlighter-rouge&quot;&gt;log(P(yi | Xi)&lt;/code&gt;, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is &lt;code class=&quot;highlighter-rouge&quot;&gt;yi *LN(P(setosa)+0.0001) + (1-yi)*LN(1-P(setosa)+0.0001)&lt;/code&gt;. I added a &lt;code class=&quot;highlighter-rouge&quot;&gt;0.0001&lt;/code&gt; correction factor because, as the maximization algorithm goes on, we might end up with &lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt; values due to computing &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 0&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(0)&lt;/code&gt; which is &lt;code class=&quot;highlighter-rouge&quot;&gt;-infinity&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Add a summary value for the column at 7, as &lt;code class=&quot;highlighter-rouge&quot;&gt;SUM(log(P(yi | Xi)))&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Use Excel Solver plugin to maximize the value of this summary value to as close to 0 as possible.&lt;/li&gt;
+  &lt;li&gt;Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the &lt;code class=&quot;highlighter-rouge&quot;&gt;1/1+EXP(-SUMPRODUCT)&lt;/code&gt; not to overflow, I added a constraint for the &lt;code class=&quot;highlighter-rouge&quot;&gt;-SUMPRODUCT()&lt;/code&gt; to be less or equal to 50. This does not seem to impact the quality of the regression.&lt;/li&gt;
+  &lt;li&gt;Check the test data.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Excel file &lt;a href=&quot;https://alexandrugris.github.io/assets/iris.xlsx&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_1.png&quot; alt=&quot;Solver Dialog&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Performing the same steps for &lt;em&gt;virginica&lt;/em&gt; leads also to very good results, while for &lt;em&gt;versicolor&lt;/em&gt; the results are barely above random choice.&lt;/p&gt;
+
+&lt;p&gt;In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the &lt;code class=&quot;highlighter-rouge&quot;&gt;log(odds)&lt;/code&gt; vs &lt;code class=&quot;highlighter-rouge&quot;&gt;most important factor&lt;/code&gt; chart, sorted by &lt;code class=&quot;highlighter-rouge&quot;&gt;odds = P(1) / P(0)&lt;/code&gt;, the ratio between the probability of &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt;. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_2.png&quot; alt=&quot;Standardized Data&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;linear-regression-and-logistic-regression&quot;&gt;Linear Regression and Logistic Regression&lt;/h3&gt;
+
+&lt;p&gt;By the choice for the logistic function, &lt;code class=&quot;highlighter-rouge&quot;&gt;p = 1 / (1+EXP(-SUMPROD(Beta, X)))&lt;/code&gt;, with &lt;code class=&quot;highlighter-rouge&quot;&gt;Beta&lt;/code&gt; the coefficients for each of the factors X included in the regression, including the intercept, Logistic Regression hints stongly towards the linear regression.&lt;/p&gt;
+
+&lt;p&gt;We introduce the function &lt;code class=&quot;highlighter-rouge&quot;&gt;Odds(p) = p / 1-p&lt;/code&gt; with its inverse, &lt;code class=&quot;highlighter-rouge&quot;&gt;p = Odds / (1+Odds)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;By simple arithmetic, we conclude that &lt;code class=&quot;highlighter-rouge&quot;&gt;Odds(p) = EXP(SUMPRODUCT(Beta, X))&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(Odds(p)) = SUMPRODUCT(Beta, X)&lt;/code&gt; which is a linear function.&lt;/p&gt;
+
+&lt;p&gt;Please remember that &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; is the probability for the event to happen, that is proability for the flower to be setosa, in the example above.&lt;/p&gt;
+
+&lt;p&gt;This function, &lt;code class=&quot;highlighter-rouge&quot;&gt;ln(Odds(p)) = ln(p/1-p)&lt;/code&gt;, called the &lt;em&gt;logit function&lt;/em&gt;, maps the probability space &lt;code class=&quot;highlighter-rouge&quot;&gt;[0,1]&lt;/code&gt; to a linear space &lt;code class=&quot;highlighter-rouge&quot;&gt;[-inf, inf]&lt;/code&gt; in which we can do the regression.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_3.png&quot; alt=&quot;Logit function&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In order to use linear regression to compute the probabilities and thus build our classifier, we need in our input data probabilities as well. The Iris dataset, as presented above, has only 0 and 1 inputs, so we need to collapse it to intervals on which meaninful probabilities can be computed.&lt;/p&gt;
+
+&lt;p&gt;In this example we will use another dataset which is already collapsed:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_4.png&quot; alt=&quot;Hypertensive men&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The data is described as follows:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Number of men analysed&lt;/li&gt;
+  &lt;li&gt;Number of men with hypertension&lt;/li&gt;
+  &lt;li&gt;Wether the man is smoking, obese or snores&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We want to:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Find the real probabilities for a man to be hypertensive given the factors above - please note that we are talking about a small sample of the population, so the real probabilities are not simply the division between men with hypertension and men.&lt;/li&gt;
+  &lt;li&gt;Map these probabilities to individual conditions of a patient - he may be fat but not obese or he might just be a casual smoker, metrics which can be represented as fractions of the smoking, obese, snores variables above.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;steps&quot;&gt;Steps&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;Linear regression on the raw, unprocessed, original data, just to have a benchmark&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;If we include an intercept, the intercept will reflect the amount of men included in the test, so, for a single man, the results for the prediction will be completely off. We will see that these results are pretty close to what we will obtain from logistic regression, because the probabilities themselves are in the lower part of the spectrum, where the logistic regression itself is quite linear. However, we expect that, as the risk factors increase significantly, for instance by codifying a “heavy smoker” or a “highly obese”, the results from the linear regression to diverge from the real probabilities.&lt;/p&gt;
+
+&lt;p&gt;Please see how the variables for smoking, obese and snoring are codified. We want them to affect the slope of the regression, not the intercept.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_5.png&quot; alt=&quot;Linear Regression&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Logistic Regression&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;We will do two types of logistic regression - one that does not account for the amount of men included in the sample and one which does. The problem with not ballancing the regression for the amount of men is equivalent to discarding the precision of the initial estimation of probability given by the sample (no of hypertensives / no of men). E.g., the more men we include, the more confident one can be that the expected value of the sample is closer to the actual expected value of the population.&lt;/p&gt;
+
+&lt;p&gt;First step for both regression is to remove from the regression the line where only 2 men are counted. This line does not contain enough information to be able to codify a probability out of it or, better said, the margin of error is too high.&lt;/p&gt;
+
+&lt;p&gt;The second step, also for both regressions, is to add the following columns:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Log(Odds Observed) = LN(P_observed / 1 - (P_observed))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;P_observed = hypertensives / total number of men in that category&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Smoking, obesity, snoring, codified as 1 if the person is smoking, obese or snoring.&lt;/li&gt;
+  &lt;li&gt;Intercept, all values equal to 1.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As result, we have:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Log(Odds regressed)&lt;/code&gt;, the result of the linear regression&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P Logistic&lt;/code&gt; which is the probability as computed from the logistic regression.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We also added two more tables:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;One under the logistic regression for drawing and validating how probabilities change for various fractions of Snoring, Smoking and Obese predictor variables.&lt;/li&gt;
+  &lt;li&gt;One under the linear regression to validate how many standard deviations the observed ratio (probability) is from the theoretical probability obtained from the logistic regression. That is, assuming the probabilities from the regression are correct, how likely it is to have observed the value we have observed. For this, we used the theoretical mean and variance for the &lt;em&gt;binomial distribution&lt;/em&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;mean = sample_size * p&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;variance = sample_size * p * (1-p)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;First run, the results without taking into consideration the sample size: &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_6.png&quot;&gt;Logistic Regression&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_6.png&quot; alt=&quot;Logistic Regression&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the &lt;code class=&quot;highlighter-rouge&quot;&gt;Bs&lt;/code&gt; by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_7.png&quot;&gt;Weighted Logistic Regression&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_7.png&quot; alt=&quot;Weighted Logistic Regression&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Excel file &lt;a href=&quot;(https://alexandrugris.github.io/assets/hypertensives.xlsx)&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;We used logistic regression to build a clasifier on the Iris dataset and to predict the probability of a person having hypertension given a set of predictors. We used two ways to compute the regression coefficients: one by maximizing directly a probability function using the gradient descent, the other by applying linear regression to the log-odds function and then computing the probabilities from it.&lt;/p&gt;</content><summary type="html">While linear regression is about predicting effects given a set of causes, logistic regression predicts the probability of certain effects. This way, its main applications are classification and forecasting. Logistic regression helps find how probabilities are changed by our actions or by various changes in the factors included in the regression.</summary></entry><entry><title type="html">Principal Component Analisys</title><link href="https://alexandrugris.github.io/statistics/2018/08/22/pca.html" rel="alternate" type="text/html" title="Principal Component Analisys" /><published>2018-08-22T14:15:16+03:00</published><updated>2018-08-22T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2018/08/22/pca</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2018/08/22/pca.html">&lt;p&gt;This is a continuation on my previous post on linear regression. It talks about finding a set of axes (dimensions) along which to regress in such a way as to preserve the most relevant data while avoiding multicollinearity and reducing the amount of dimensions.&lt;/p&gt;
 
 &lt;h3 id=&quot;pca&quot;&gt;PCA&lt;/h3&gt;
 
@@ -203,11 +385,61 @@ Out[209]: -9.731923600320158e-11
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/pca_1.png&quot; alt=&quot;Analysis&quot; /&gt;&lt;/p&gt;
 
+&lt;h3 id=&quot;normalization-of-data&quot;&gt;Normalization of data&lt;/h3&gt;
+
+&lt;p&gt;If end up with the principal &lt;code class=&quot;highlighter-rouge&quot;&gt;F&lt;/code&gt; factor explaining less of the variance any of the &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; initial factors, we must standardize our data. That is, from which the mean was substracted and then we divided them by their standard deviation. For our &lt;code class=&quot;highlighter-rouge&quot;&gt;A&lt;/code&gt; matrix, the matrix of all &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; factors, the function is as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;standardize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;var&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We check this need by calculating the &lt;a href=&quot;http://www.stat.yale.edu/Courses/1997-98/101/correl.htm&quot;&gt;R^2 metric for each regression (RSQ in Excel)&lt;/a&gt; - for the &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; factors and then for the &lt;code class=&quot;highlighter-rouge&quot;&gt;F&lt;/code&gt; factors. Now we can safely use the covariance matrix to do PCA.&lt;/p&gt;
+
+&lt;p&gt;Some notes - &lt;a href=&quot;https://alexandrugris.github.io/assets/pca.pdf&quot;&gt;example data here&lt;/a&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;R^2 is the square of R, the Pearson coefficient, the correlation coefficient between two data series&lt;/li&gt;
+  &lt;li&gt;Correlation of two data series is the same before and after standardization. Standardization is a linear operator, thus does not affect the linear relationship between two variables.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;However, there are more points to consider:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca&quot;&gt;Why do we need to normalize data before principal component analysis?&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance&quot;&gt;PCA on correlation or covariance?&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Using the correlation matrix standardises the data. In general they [corr vs covar] give different results. Especially when the scales are different.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If we use the correlation matrix, we don’t need to standardize the data before.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Hence, my answer is to use covariance matrix when variance of the original variable is important, and use correlation when it is not.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;And&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The argument against automatically using correlation matrices is that it is quite a brutal way of standardising your data. The problem with automatically using the covariance matrix, which is very apparent with that heptathalon data, is that the variables with the highest variance will dominate the first principal component (the variance maximising property).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;em&gt;DO NOT FORGET!&lt;/em&gt; standardize not only the &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; factors, but also the &lt;code class=&quot;highlighter-rouge&quot;&gt;Y&lt;/code&gt; vector, the results. This way, after we do the multiple regression on the PCA &lt;code class=&quot;highlighter-rouge&quot;&gt;F&lt;/code&gt; factors, we have an inverse transform to get back to the scale of &lt;code class=&quot;highlighter-rouge&quot;&gt;Y&lt;/code&gt;, the original data.&lt;/p&gt;
+
 &lt;h3 id=&quot;additional-notes&quot;&gt;Additional notes:&lt;/h3&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
-    &lt;p&gt;When to use the correlation and when to use the covariance matrix: &lt;a href=&quot;https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance&quot;&gt;https://stats.stackexchange.com&lt;/a&gt;&lt;/p&gt;
+    &lt;p&gt;Eigenvalues and eigenvectors are directly baked into numpy: &lt;a href=&quot;https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eig.html&quot;&gt;np.linalg.eig&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Many other numeric algorithms are aleady baked into numpy: &lt;a href=&quot;https://docs.scipy.org/doc/numpy/reference/routines.linalg.html&quot;&gt;np.linalg&lt;/a&gt;&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;Why use covariance (or correlation at all) - because we are interested in finding the axes which describe the highest variation of data:&lt;/p&gt;
@@ -303,7 +535,7 @@ Out[209]: -9.731923600320158e-11
 
 &lt;h3 id=&quot;improving-the-regression&quot;&gt;Improving the regression&lt;/h3&gt;
 
-&lt;p&gt;When we have a series that has an underlying pattern, we need to deflate the series in order to bring the residuals as close as possible to their desired properties. Usually a series that has an underlying pattern exhibits large variations towards its ends. Examples of such series is price evolution of stocks which need to be deflated by the inflation, prices vs demand, any time series as they usually tend to follow either periodic patterns or exhibit some kind of growth or both. If we don’t want to (or can’t) find such underlying patterns, the most simple general method of deflating the series with good results is switching to percentage returns. These can be calculated by one of the following formulas:&lt;/p&gt;
+&lt;p&gt;When we have a series that has an underlying pattern, we need to deflate the series in order to bring the residuals as close as possible to their desired properties. Usually, a series that has an underlying pattern exhibits large variations towards its ends. Examples of such series is price evolution of stocks which need to be deflated by the inflation, prices vs demand, any time series as they usually tend to follow either periodic patterns or exhibit some kind of growth or both. If we don’t want to (or can’t) find such underlying patterns, the most simple general method of deflating the series with good results is switching to percentage returns. These can be calculated by one of the following formulas:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;%return(t) = ln(value(t)) - ln(value(t-1))&lt;/code&gt; or&lt;/li&gt;
@@ -3882,518 +4114,4 @@ A sink connector can deliver data from Kafka topics into secondary indexes like 
 &lt;p&gt;&lt;em&gt;Compaction:&lt;/em&gt; &lt;a href=&quot;http://kafka.apache.org/documentation.html#compaction&quot;&gt;http://kafka.apache.org/documentation.html#compaction&lt;/a&gt; - keeping only the last updated value for a key&lt;/p&gt;
 
 &lt;p&gt;Best source: &lt;a href=&quot;http://kafka.apache.org/documentation/&quot;&gt;http://kafka.apache.org/documentation/&lt;/a&gt;&lt;/p&gt;</content><summary type="html">This article covers running a Kafka cluster on a development machine using a pre-made Docker image, playing around with the command line tools distributed with Apache Kafka and writing basic producers and consumers. 
-The source code associated with this article can be found here</summary></entry><entry><title type="html">RabbitMQ Patterns and Considerations</title><link href="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html" rel="alternate" type="text/html" title="RabbitMQ Patterns and Considerations" /><published>2017-06-03T14:15:16+03:00</published><updated>2017-06-03T14:15:16+03:00</updated><id>https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns</id><content type="html" xml:base="https://alexandrugris.github.io/distributed/systems/2017/06/03/rabbitmq-patterns.html">&lt;p&gt;A short intro into RabbitMQ and its C# client. The code which merges most of the concepts from this article can be found &lt;a href=&quot;https://github.com/alexandrugris/RabbitMQ_Play&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;how-to-run-rabbitmq&quot;&gt;How to run RabbitMQ&lt;/h3&gt;
-
-&lt;p&gt;By far the easiest and most portable way to run RabbitMQ is to use the official docker container with the management console started:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
-    --name my_rabbit_mq rabbitmq:3-management
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The corresponding connetion string is &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;amqp://guest:guest@localhost:5672&quot;&lt;/code&gt; and the management URL: &lt;code class=&quot;highlighter-rouge&quot;&gt;http://localhost:15672/#/ &lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;basic-concepts&quot;&gt;Basic concepts&lt;/h3&gt;
-
-&lt;p&gt;Each service (application) maintains one connection to the queue. Connections are made to be shared across threads.&lt;/p&gt;
-
-&lt;p&gt;Within a connection, one or more channels can coexist to provide for concurrency. Rule of thumb: 1 channel / thread. Channels are not meant to be shared across threads. The connection object is. Inside RabbitMQ, each channel is served by an Erlang thread (lightweight actor pattern, Erlang can spawn huge amount of threads).&lt;/p&gt;
-
-&lt;p&gt;Producers write to an exchange. Exchanges can communicate with queues or other with exchanges through binding. Consumers read from queues. One application can read from one or more queues. In a configurtion with exactly one producer and one consumer, the oldest message is consumed first. RabbitMQ provides strong guarantees for this.&lt;/p&gt;
-
-&lt;p&gt;Only when the queue receives an ACK, the message is deleted from the queue. Producers write to exchanges and attach to each message a routing key. The exchange will route the message to the corresponding queue based on the routing key and the exchange type. Exchanges can be of several types: Direct, Topic, Fanout, Headers. Below is a summary of each exchange type and the associated routing behavior:&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Direct Exchange&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Messages are routed to the specified queue using the routing key.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Topic Exchange&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Routing behaves very much like for the direct exchange. However, routing keys can have several terms separated by dots. E.g. &lt;code class=&quot;highlighter-rouge&quot;&gt;package.fast.international&lt;/code&gt;. Queues listen to various keys by using wildcards. E.g. &lt;code class=&quot;highlighter-rouge&quot;&gt;package.*.international&lt;/code&gt;. &lt;code class=&quot;highlighter-rouge&quot;&gt;*&lt;/code&gt; is the wildcard for one word. &lt;code class=&quot;highlighter-rouge&quot;&gt;#&lt;/code&gt; is the hashtag for multiple words.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Fanout Exchange&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;The routing key is ignored. Message is sent to all bound queues.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Headers Exchange&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Routing is based on the message headers which are set through &lt;code class=&quot;highlighter-rouge&quot;&gt;IBasicProperties::Headers&lt;/code&gt; property. Matching is done for all headers or for any.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://www.rabbitmq.com/tutorials/amqp-concepts.html&quot;&gt;More details here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;creating-a-connection-and-then-a-channel&quot;&gt;Creating a connection and then a channel&lt;/h3&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RabbitMQ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ConnectionFactory&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;Uri&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQConnectionString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;[...]&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateConnection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// one per application
-&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;[...]&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;IModel&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// one per thread
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;setting-up-the-routing-topology&quot;&gt;Setting up the routing topology&lt;/h3&gt;
-
-&lt;p&gt;Use:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;IModel::ExchangeDeclare()&lt;/code&gt; to declare an exchange&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;IModel::QueueDeclare()&lt;/code&gt; to declare a queue&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;IModel::QueueBind()&lt;/code&gt; to bind a queue to an exchange&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Beside the normal exchange types, two special exchanges stand out:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;em&gt;Alternate Routing Exchange:&lt;/em&gt; useful for routing messages which cannot be routed according to the predefined rules and otherwise would have been dropped.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;em&gt;Dead Letter Exchange:&lt;/em&gt;  messages that have been rejected or messages that have their TTL expired are routed here. The dead letter exhange can be used for scheduling messages at a specific time, by setting their TTL property.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Here is an example on how to declare such a topology, with a dead letter exchange (DLX) and alternate routing exchange set to the same exchange instance:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;n&quot;&gt;IModel&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...;&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;[...]&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ExchangeDeclare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName_DLX&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;ExchangeType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fanout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;durable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;autoDelete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;arguments&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
- &lt;span class=&quot;c1&quot;&gt;// to simplify the topology,
-&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// we will use the same dead letter exchange as alternative exchange in case of routing failures
-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ExchangeDeclare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-         &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-         &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ExchangeType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Direct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// change to Fanout to send to several queues
-&lt;/span&gt;         &lt;span class=&quot;n&quot;&gt;durable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// no serialization
-&lt;/span&gt;         &lt;span class=&quot;n&quot;&gt;autoDelete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-         &lt;span class=&quot;n&quot;&gt;arguments&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dictionary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;()&lt;/span&gt;
-         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-             &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;alternate-exchange&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName_DLX&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
- 
- &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;QueueDeclare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQQueueName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;durable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;exclusive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;autoDelete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;arguments&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dictionary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;()&lt;/span&gt;
-     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;x-dead-letter-exchange&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName_DLX&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
- &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;QueueDeclare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQQueueName_DLX&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;durable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;exclusive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;autoDelete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;arguments&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
- &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;QueueBind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQQueueName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;RabbitMQ_Play&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
- &lt;span class=&quot;cm&quot;&gt;/**
-  * The dead-lettering process adds an array to the header of each dead-lettered message named x - death.
-  * This array contains an entry for each dead lettering event, identified by a pair of { queue, reason}. 
-  * https://www.rabbitmq.com/dlx.html
-  */&lt;/span&gt;
-
- &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;QueueBind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;queue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQQueueName_DLX&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName_DLX&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the code above several parameters have been used to declare exchanges and queues. Here are their meaning:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;em&gt;durable: false&lt;/em&gt; : messages will not be persisted to disk. Even if set to true, each message should have the durable flag turn on for persistence&lt;/li&gt;
-  &lt;li&gt;&lt;em&gt;exclusive: false&lt;/em&gt; : if set to true, messages can only be consumed by this connection. Anyone can publish though. When set to true, this configuration is used in the RPC and scatter-gather usage patterns as reply queues.&lt;/li&gt;
-  &lt;li&gt;&lt;em&gt;autoDelete: false&lt;/em&gt; : if true, the queue is deleted when there are no more consumers. However, if there are no consumers ever on the queue, it is not deleted.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;sending-messages&quot;&gt;Sending messages&lt;/h3&gt;
-
-&lt;p&gt;We may want confirmation that the message has been received by the queue:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// for publisher to get confirmation that the message has been received by the queue: 
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ConfirmSelect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BasicAcks&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&amp;gt;&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Msg confimed {args.DeliveryTag}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BasicNacks&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Error sending message to queue {args.DeliveryTag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Then set the message properties and headers and call:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicPublish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msgProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Encoding&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UTF8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetBytes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;receiving-messages&quot;&gt;Receiving messages&lt;/h3&gt;
-
-&lt;p&gt;Inside the client, for receiving messages, one can set &lt;code class=&quot;highlighter-rouge&quot;&gt;prefetchCount&lt;/code&gt; to load multiple messages. However, if the server crashes, these will all remain unacknowledged even if processed.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cthread&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CurrentThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ManagedThreadId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Channel reused from a different thread&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicQos&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;prefetchSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// no limit
-&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;prefetchCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 1 by 1
-&lt;/span&gt;          &lt;span class=&quot;k&quot;&gt;global&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// true == set QoS for the whole connection or false only for this channel
-&lt;/span&gt;          &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicConsume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQQueueName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;noAck&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;consumer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;consumer: this&lt;/code&gt; in the listing above refers to the &lt;code class=&quot;highlighter-rouge&quot;&gt;Consumer&lt;/code&gt; class below which extends the &lt;code class=&quot;highlighter-rouge&quot;&gt;DefaultBasicConsumer&lt;/code&gt; class:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Consumer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultBasicConsumer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IDisposable&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IModel&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;    
-    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cthread&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CurrentThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ManagedThreadId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-   
-   &lt;span class=&quot;p&quot;&gt;[...]&lt;/span&gt;
-   
-    &lt;span class=&quot;c1&quot;&gt;// callback for each received message
-&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;HandleBasicDeliver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;consumerTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;ulong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;redelivered&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;[...]&lt;/span&gt;            
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Another way to go is to use the &lt;code class=&quot;highlighter-rouge&quot;&gt;QueuingBasicConsumer(model)&lt;/code&gt; and then &lt;code class=&quot;highlighter-rouge&quot;&gt;(BasicDeliveryEventArgs)consumer.Queue.Dequeue();&lt;/code&gt; for extracting the message in a loop.&lt;/p&gt;
-
-&lt;h3 id=&quot;reliability-options&quot;&gt;Reliability options&lt;/h3&gt;
-
-&lt;p&gt;&lt;em&gt;Acks&lt;/em&gt; - Rabbitmq only deletes a message from the queue when the message is acknowledged by the consumer. Can be set to off in the consumer, which means the message is deleted as soon as it is delivered. The consumer is notified if a message is redelivered by a &lt;code class=&quot;highlighter-rouge&quot;&gt;redelivered == true&lt;/code&gt; flag.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Publisher confirms&lt;/em&gt; - for the publisher to know that a message has been queued or not. In case of important messages, implement a re-send strategy for the cases when the queue is not accessible.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ConfirmSelect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BasicAcks&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Msg confimed {args.DeliveryTag}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BasicNacks&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Error sending message to queue {args.DeliveryTag}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Mandatory&lt;/em&gt; - set as a flag in &lt;code class=&quot;highlighter-rouge&quot;&gt;BasicPublish&lt;/code&gt;. If the message cannot be routed to the queue it will be sent back to the producer. By default, if the flag is not set, the message is lost. The event &lt;code class=&quot;highlighter-rouge&quot;&gt;BasicReturn&lt;/code&gt; is fired on the channel. Routing failures can be treated using the alternative exchange feature.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Reply to sender&lt;/em&gt; - producer is notified when the consumer has received the message. Use the &lt;code class=&quot;highlighter-rouge&quot;&gt;ReplyTo&lt;/code&gt; field in message properties or use &lt;code class=&quot;highlighter-rouge&quot;&gt;SimpleRpcServer&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;SimpleRpcClient&lt;/code&gt;. &lt;a href=&quot;https://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html&quot;&gt;Example here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Connection and topology recovery&lt;/em&gt; - retry in case of failure to send messages, only if the queues and exchanges are set to durable. Even if the topology is set to durable, the messages are lost if their individual flag for durability is not set.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RabbitMQ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ConnectionFactory&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;Uri&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQConnectionString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;AutomaticRecoveryEnabled&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;TopologyRecoveryEnabled&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;NetworkRecoveryInterval&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TimeSpan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;FromSeconds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;UseBackgroundThreadsForIO&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//Foreground threads keep the app alive until finished
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateConnection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;supported-routing-scenarios&quot;&gt;Supported Routing Scenarios:&lt;/h3&gt;
-
-&lt;p&gt;&lt;em&gt;Basic patterns:&lt;/em&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Simple one-way messaging (Exchange type: direct, message sent to unnamed (default queue))&lt;/li&gt;
-  &lt;li&gt;Worker queues (Exchange type: direct, several consumer listening to the same queue, reading the messages in a round-robin fashion if all are waiting)&lt;/li&gt;
-  &lt;li&gt;Publish-subscribe (Exchange type: fan-out, routing key is ignored, message is sent to all queues bound to the exchange)&lt;/li&gt;
-  &lt;li&gt;RPC (Exchange type: direct, message can be sent to default exchange with a specified routing key and response is received on a specified unique response queue, owned by the client)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;em&gt;Advanced patterns:&lt;/em&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Routing (Exchange Type: direct, message is sent to a named exchange, routing key is specified so information only reaches the queues matching the pattern)&lt;/li&gt;
-  &lt;li&gt;Topic (Exchange type: topic. Routing key is a string separated by dots and wildcards. E.g.: “ro.alexandrugris.*”.)&lt;/li&gt;
-  &lt;li&gt;Headers (Exchange type: headers. Message is sent to the queues which match the headers. Routing key should not be set. Match type should indicate if all or any header must match)&lt;/li&gt;
-  &lt;li&gt;Scatter-gather (Exchange type: can be any, routing key is optional depending on the exchange type. The sender will start by creating and polling a response queue and then dispatch its request)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;These are covered extensively in the &lt;a href=&quot;http://www.rabbitmq.com/getstarted.html&quot;&gt;RabbitMQ tutorials&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;dealing-with-errors&quot;&gt;Dealing with errors&lt;/h3&gt;
-
-&lt;p&gt;&lt;em&gt;Scenario 1: exception is caught in the consumer and &lt;code class=&quot;highlighter-rouge&quot;&gt;chan.BasicNack(resend: true)&lt;/code&gt; is sent to the queue.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;The message is then immediately redispatched to a consumer with the flag &lt;code class=&quot;highlighter-rouge&quot;&gt;redelivered == true&lt;/code&gt;. However there is no mechanism to know how many retries have occured. Thus, a better alternative is to requeue the message again.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Scenario 2: exception is caught and the message is redelivered to the queue for a number of times.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;The message is posted back at the beginning of the queue, so the retry will happen only after all other messages have been consumed. In order to keep track of the number of retries, a header is set in the properties which is decreased with each retry. After resubmitting the message back the the queue, the failed message is ACKed. When the resubmit count reaches 0, the message is rejected. If a dead letter queue is specified in the routing topology, the message is automatically directed by RabbitMQ to this queue. Otherwise it is silently dropped.&lt;/p&gt;
-
-&lt;p&gt;A strategy that is mixing both approaches is implemented in the code below:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;HandleBasicDeliver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;consumerTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;ulong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;redelivered&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;[...]&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MessageProcessedSuccessfully&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;// send ack only for this message and only if no error so far
-&lt;/span&gt;        &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicAck&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// error condition
-&lt;/span&gt;    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;redelivered&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetRetryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAX_RETRY_COUNT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;nf&quot;&gt;Requeue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;consumerTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;c1&quot;&gt;// first time simply put it back in the queue for another try
-&lt;/span&gt;            &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicNack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetRetryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// use the headers field of the message properties to keep track of 
-&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;// the number of retries
-&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Retries&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;??&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAX_RETRY_COUNT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SetRetryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;retryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;??&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dictionary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Retries&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;retryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Requeue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;consumerTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-    &lt;span class=&quot;kt&quot;&gt;ulong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-    &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-    &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-    &lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-    &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;retryCount&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetRetryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Retry count: {retryCount}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;retryCount&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;nf&quot;&gt;SetRetryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;--&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;retryCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicPublish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exchange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;routingKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;// this is slow, but we need to make sure somehow the message reaches the queue back
-&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// channel is configured with chan.ConfirmSelect()
-&lt;/span&gt;        &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WaitForConfirmsOrDie&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; 
-        &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicAck&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;// reject the message to dead letter queue.
-&lt;/span&gt;        &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicNack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deliveryTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the code above there is no control over when the retry will occur. This is generally not a good strategy because the system might have not yet recovered from the conditions that led to the error in the first place. A better approach is to set the TTL to the message and then push it to another waiting queue for which there is no consumer, but has attached this queue to its dead letter exchange. When the TTL expires, RabbitMQ automatically moves the message to the dead letter exchange (and from here routed to our queue) from which we can consume it once again.&lt;/p&gt;
-
-&lt;p&gt;Patterns to take into consideration:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Dead letter exchange (DLX): RabbitMQ moves TTL-expired messages and rejected messages to this exchange. DLX can have any type and with various queues attached for custom routing.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Routing error: alternative queue - a queue declared for messages that cannot be routed to any other queue and would otherwise be silently dropped&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Scheduled delivery / redelivery: together with the DLX, the messages have a TTL after which they are moved to the DLX&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;In my demo the producer creates the routing topology with:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;One exchange of type direct (&lt;code class=&quot;highlighter-rouge&quot;&gt;alexandrugris.1st_exchange&lt;/code&gt;)&lt;/li&gt;
-  &lt;li&gt;One one alternate exchange which is also the dead letter exchange (&lt;code class=&quot;highlighter-rouge&quot;&gt;alexandrugris.1st_exchange_dead_letter_exchnage&lt;/code&gt;)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/rabbitmq_3.png&quot; alt=&quot;Exchanges&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;And two queues:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;One queue connected to the the &lt;code class=&quot;highlighter-rouge&quot;&gt;1st_exchange&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;One connected to the dead letter exchange&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The producer dispatches roughly 99% of the messages to the right queue and 1% of the messages have a bogus routing key. Thus, if the producer is run without a consumer, we get the following:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/rabbitmq_1.png&quot; alt=&quot;Producer run without a consuming client&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;It is visible that some messages are sent to the alternate exchange queue due to failed routing.&lt;/p&gt;
-
-&lt;p&gt;The producer also sets a TTL to all the messages that are sent. Thus, after roughly a minute, we get the following:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/rabbitmq_2.png&quot; alt=&quot;Some messages moved to the DLX, some messages deleted&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Two things are worth noting:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;The main bulk of the messages that were not consumed are moved to the dead letter queue&lt;/li&gt;
-  &lt;li&gt;The messages that were already in the dead letter queue, when their TTL expires, are deleted as there is no other destination for them&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Because after the movement the TTL is reset for all messages, the situation remains stable until the server is reset.&lt;/p&gt;
-
-&lt;h3 id=&quot;message-persistence-and-serialization&quot;&gt;Message persistence and serialization&lt;/h3&gt;
-
-&lt;p&gt;Durability of a queue does not make messages that are routed to that queue automatically durable. If a broker is taken down and then brought back up, a durable queue will be re-declared during broker startup, however, only persistent messages will be recovered.&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateBasicProperties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SetPersistent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;To set properties for the message, &lt;code class=&quot;highlighter-rouge&quot;&gt;model.CreateBasicProperties()&lt;/code&gt; returns the following interface instance:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IBasicProperties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;  &lt;/span&gt; 
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UserId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;/// Message timestamp.
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AmqpTimestamp&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Timestamp&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Convenience property; parses RabbitMQ.Client.IBasicProperties.ReplyTo property
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// using RabbitMQ.Client.PublicationAddress.Parse(System.String), /// and serializes
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// it using RabbitMQ.Client.PublicationAddress.ToString.
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PublicationAddress&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ReplyToAddress&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Destination to reply to.
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ReplyTo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Message priority, 0 to 9. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Priority&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Sets RabbitMQ.Client.IBasicProperties.DeliveryMode 
-&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;// to either persistent (2) or non-persistent (1). ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Persistent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Application message Id. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MessageId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Message header field table. Is of type System.Collections.Generic.IDictionary`2.        
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IDictionary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Message expiration specification. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expiration&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Non-persistent (1) or persistent (2). ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DeliveryMode&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Application correlation identifier. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CorrelationId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// MIME content type. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ContentType&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// MIME content encoding. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ContentEncoding&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Intra-cluster routing identifier (cluster id is deprecated in AMQP 0-9-1).        
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ClusterId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Application Id. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AppId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Message type name. ///
-&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;   &lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Type&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;With the associated “Is[PropName]Present()” one can check if the property has been set.&lt;/p&gt;
-
-&lt;p&gt;Here is a usage example:&lt;/p&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msgProps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateBasicProperties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;msgProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ContentType&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;application/json&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;msgProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CorrelationId&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Guid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;NewGuid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ToString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// set a correlation id to the message
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BasicPublish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Commons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RabbitMQExchangeName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msgProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Encoding&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UTF8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetBytes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;em&gt;Serialization&lt;/em&gt;&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Convert object to byte[] array&lt;/li&gt;
-  &lt;li&gt;Indicate the message &lt;code class=&quot;highlighter-rouge&quot;&gt;IBasicProperties::Type&lt;/code&gt; (what kind of object is serialized, for instance &lt;code class=&quot;highlighter-rouge&quot;&gt;ro.alexandrugris.Person&lt;/code&gt;)&lt;/li&gt;
-  &lt;li&gt;Indicate the format of serialization and encoding, using &lt;code class=&quot;highlighter-rouge&quot;&gt;IBasicProperties::ContentType&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;IBasicProperties::ContentEncoding&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;Send the message&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;em&gt;Deserialization&lt;/em&gt;&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Receive the message&lt;/li&gt;
-  &lt;li&gt;Select deserializer based on content type and content encoding&lt;/li&gt;
-  &lt;li&gt;Workout the message type to select the deserialization target&lt;/li&gt;
-  &lt;li&gt;Deserialize the message&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Ideally the serialization should be application agnostic (for instance a fully qualified class name might not be a good solution if the message is to be consumed across tehnology boundaries) and, of course, versioning should be taken into account.&lt;/p&gt;
-
-&lt;p&gt;For binary messages, a potential encoding could be &lt;code class=&quot;highlighter-rouge&quot;&gt;Protocol Buffers&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;Apache Thrift&lt;/code&gt; which support versioning as well as multiple language bindings.&lt;/p&gt;
-
-&lt;p&gt;AMQP supports very large messages. However, if the application requires sending such messages it is better to use a separate, dedicated instance of the server in order not to impact the throughput of smaller, more frequent exchanges.&lt;/p&gt;
-
-&lt;p&gt;Approaches for sending large messages:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Buffered (small to medium files) - attention to memory performance.&lt;/li&gt;
-  &lt;li&gt;Chunked (larger files) - use headers to keep track on how to assemble back the file on the receiving end. Attention to &lt;code class=&quot;highlighter-rouge&quot;&gt;Worker Queue&lt;/code&gt; pattern where the &lt;a href=&quot;https://stackoverflow.com/questions/21363302/rabbitmq-message-order-of-delivery&quot;&gt;chunks will not all end up on the same machine&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;CreateBasicProperties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SetPersistent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ListDictionary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;FileName&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fileName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ChunkNumber&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chunkNumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;EOF&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;eof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Best though is better to avoid transferring large files.&lt;/p&gt;
-
-&lt;h3 id=&quot;notes&quot;&gt;Notes&lt;/h3&gt;
-
-&lt;p&gt;&lt;em&gt;Federation&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;RabbitMQ supports &lt;a href=&quot;https://www.cloudamqp.com/blog/2015-03-24-rabbitmq-federation.html&quot;&gt;Federation&lt;/a&gt; for scaling out to another cluster or datacenter.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;How many queues?&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Can rabbitmq be used as the infrastructure for a chat server in which each person is modelled as an actor? More precise, how many queues can a rabbitmq instance support?&lt;/p&gt;
-
-&lt;p&gt;The answer is yes, as the limit is not in the number of queues but in the number of TCP connections supported on a machine. For many connections it is better to have a rabbitmq cluster.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/22989833/rabbitmq-how-many-queues-rabbitmq-can-handle-on-a-single-server&quot;&gt;How many queues on a single server&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;http://rabbitmq.1065348.n5.nabble.com/How-many-queues-can-one-broker-support-td21539.html&quot;&gt;How many queues on a single server&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://www.rabbitmq.com/distributed.html&quot;&gt;Distributed RabbitMQ&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;em&gt;Correlation ID and Microservices&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;As each microservice is persisting its data in its own private database, with private indices, one needs a method for correlating various messages into a single logical entity. RabbitMQ provides a correlation ID property for messanges. A good value for it can be GUID.&lt;/p&gt;
-
-&lt;p&gt;Correlation ID is also used in the RPC pattern so that the caller can track for which request each answer came.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;http://jeftek.com/178/what-is-a-correlation-id-and-why-do-you-need-one/&quot;&gt;Correlation ID&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/20184755/practical-examples-of-how-correlation-id-is-used-in-messaging&quot;&gt;Practical examples for correlation IDs&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;http://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html&quot;&gt;RPC-like calls&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</content><summary type="html">A short intro into RabbitMQ and its C# client. The code which merges most of the concepts from this article can be found here.</summary></entry></feed>
+The source code associated with this article can be found here</summary></entry></feed>
