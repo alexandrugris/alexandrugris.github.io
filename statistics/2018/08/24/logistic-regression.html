@@ -248,9 +248,102 @@
 
 <p>Excel file <a href="(https://alexandrugris.github.io/assets/hypertensives.xlsx)">here</a></p>
 
-<h3 id="conclusion">Conclusion</h3>
+<h3 id="using-of-linear-regression-to-determe-the-coefficients-for-iris-dataset">Using of linear regression to determe the coefficients for Iris dataset</h3>
 
-<p>We used logistic regression to build a clasifier on the Iris dataset and to predict the probability of a person having hypertension given a set of predictors. We used two ways to compute the regression coefficients: one by maximizing directly a probability function using the gradient descent, the other by applying linear regression to the log-odds function and then computing the probabilities from it.</p>
+<p>In order to use linear regression to determine the coefficients, the data needs to be binned, put in a form from which we can extract probabilities. For the Iris dataset, I did this with the following Python script:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># -*- coding: utf-8 -*-</span>
+<span class="s">"""
+Created on Fri Aug 26 15:07:47 2018
+
+@author: alexandru gris
+"""</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span><span class="p">,</span> <span class="nb">reduce</span>
+
+<span class="c"># columns used as predictors</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="s">'sepal_length'</span><span class="p">,</span>
+ <span class="s">'sepal_width'</span><span class="p">,</span>
+ <span class="s">'petal_length'</span><span class="p">,</span>
+ <span class="s">'petal_width'</span><span class="p">]</span>
+
+<span class="c"># columns for the result on which we train the algorithm</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="p">[</span><span class="s">'setosa'</span><span class="p">,</span>
+ <span class="s">'versicolor'</span><span class="p">,</span>
+ <span class="s">'virginica'</span><span class="p">]</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"iris.csv"</span><span class="p">)[</span><span class="n">X</span> <span class="o">+</span> <span class="n">Y</span><span class="p">]</span>
+
+<span class="c"># split each dimension intro two groups, low and high</span>
+<span class="c"># each group should have a representative number of elements in it</span>
+<span class="c"># had we had more items in the dataset, we could have simply increased the group count to 3</span>
+<span class="c"># by binning, part of the information is lost but we hope to compensate through </span>
+<span class="c"># the curvy form of the logistic function</span>
+<span class="n">groups</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c"># 1e-10 below is a small hack to include the last item in the last group</span>
+<span class="c"># the split could / should have been done based on percentiles, not range</span>
+<span class="c"># we will do by range just to keep the code simple</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="p">{</span> <span class="n">x</span> <span class="p">:</span> <span class="p">{</span><span class="s">'range'</span><span class="p">:</span> <span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">,</span> <span class="s">'min'</span><span class="p">:</span> <span class="n">mn</span><span class="p">,</span> <span class="s">'grp_range'</span><span class="p">:</span> <span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span> <span class="o">/</span> <span class="n">groups</span> <span class="p">}</span> \
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mn</span> <span class="ow">in</span> <span class="p">(</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="nb">min</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="p">}</span>
+
+<span class="c"># the function which will compute the new index for grouping</span>
+<span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span> 
+    <span class="s">"""x - column. idx - current index for the row"""</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">-</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'min'</span><span class="p">])</span> <span class="o">*</span> <span class="n">groups</span> <span class="o">/</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'range'</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>  <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'grp_range'</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'min'</span><span class="p">]</span>
+    
+<span class="c"># create the summary table</span>
+<span class="n">agg</span> <span class="o">=</span> <span class="p">{</span><span class="n">y</span> <span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="nb">sum</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">}</span>
+<span class="n">x</span> <span class="o">=</span>  <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">agg</span><span class="p">)</span>
+
+<span class="c"># add the totals and the probabilities column for each vector</span>
+<span class="c"># totals:</span>
+<span class="n">x</span><span class="p">[</span><span class="s">'totals'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">:</span> <span class="n">c1</span> <span class="o">+</span> <span class="n">c2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">])</span>
+<span class="c"># probabilities for setosa, versicolor, virginica:</span>
+<span class="k">for</span> <span class="n">prob</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">((</span><span class="s">"p_"</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">prob</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="s">'totals'</span><span class="p">]</span>
+
+<span class="c"># print a csv file for further processing in excel</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"iris_processed.csv"</span><span class="p">,</span> <span class="s">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>    
+    <span class="n">pf</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="k">print</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">X</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">))]))</span>
+</code></pre>
+</div>
+
+<p>Summarized data looks like this:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/logistic_regression_9.png" alt="Summarized table" /></p>
+
+<p>The predictor rows contain the middle of the group range for that particular bin, which does not reflect the actual mean of the data inside the bin. This is highly sensitive to outliers and thus a bad choice. A better way would have been to first split each predictor in equal-sized groups, compute the median for each group, and then use this number as part of the index for each bin.</p>
+
+<p>When we compute the odds and log(odds) to use in the regression we notice 3 possible error scenarios:</p>
+<ul>
+  <li>too little data in one bin - we remove that bin from the regression</li>
+  <li>all data in a bin is in the category we want to predict - which leads to the odds being computed to infinity</li>
+  <li>all data in a bin is not in the cateogory we want to predict - which leads to the logaritm being infinite</li>
+</ul>
+
+<p>Neither of the two last scenarios account for a usable probability, but we have enough data in those bins to draw a conclusion that we cannot simply discard. I used two approaches and the results for the regression were very similar:</p>
+<ul>
+  <li>Use the beta distribution and start from an a-priori value of 50%-50% (alpha=1, beta=1), which is equivalent to saying <em>just before we started to count we have observed an opposite value</em> and adjust the probability based on this formula - this gives us an upper (or lower) bound for the probability of 1 in that particular bin.</li>
+  <li>Assume that the string of 0s or 1s was a random extraction from the all possible extractiobs but that it had a rather high probability to occur (of 50% in this case, a value which seemed right to me :) ). Thus consider <code class="highlighter-rouge">p^bin_size = 0.5</code> and compute <code class="highlighter-rouge">p=EXP(LN(0.5) / bin_size)</code>.</li>
+</ul>
+
+<p>Excel file <a href="https://alexandrugris.github.io/assets/iris_processed.xlsx">here</a></p>
+
+<p>Results for the regression at a <code class="highlighter-rouge">0.5</code> threshold were not as good as with direct maximization of the log-of-probabilities, but rasing the threshhold at <code class="highlighter-rouge">0.8</code> leads to perfect prediction. Picture below:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/logistic_regression_10.png" alt="Logistic regression" /></p>
+
+<h3 id="conclusions">Conclusions</h3>
+
+<p>We used logistic regression to build a clasifier on the Iris dataset and to predict the probability of a person having hypertension given a set of predictors. We used two ways to compute the regression coefficients: one by maximizing directly a probability function using the gradient descent, the other by applying linear regression to the log-odds function and then computing the probabilities from it. The third example was to process the Iris dataset used in the first regression and to compute the coefficients in a similar manner to that used for determining hypertensives.</p>
 
   </div>
 
