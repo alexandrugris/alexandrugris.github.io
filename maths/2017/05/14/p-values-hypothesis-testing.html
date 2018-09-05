@@ -102,6 +102,29 @@
   <li><a href="https://www.boundless.com/statistics/">OpenIntro Statistics Hub</a></li>
 </ul>
 
+<h2 id="the-maths">The maths</h2>
+
+<p>Let’s consider the following problem: a software routine is known to return the result of a complex computation in approx. 1.2 seconds. A software engineer tries to optimize the routine and obtained an average over 100 runs of 1.05 seconds, with a standard deviation of 0.5s. Has the routine been improved?</p>
+
+<p><em>Answer:</em></p>
+
+<ul>
+  <li>H0: the software performs just as it did before.</li>
+  <li>H1: the improvement had an effect (not saying wether improvement or worsening).</li>
+</ul>
+
+<p>If we assume H0, that means the mean of the sample should be close enough to the mean of the total distribution.</p>
+
+<p>We define the standard error of the mean for the population <code class="highlighter-rouge">SEM = population standard deviation / SQRT(populatin size)</code></p>
+
+<p>Since we have enough samples in our population, over 30, we can approximate to <code class="highlighter-rouge">SEM = sample standard deviation / SQRT(population size)</code> which leads to <code class="highlighter-rouge">SEM = 0.5/SQRT(100) = 0.5/10 = 0.05</code>.</p>
+
+<p>We have <code class="highlighter-rouge">Z-score = (population mean - sample mean) / SEM = (1.2 - 1.05) / 0.05 = 3</code>, which means that our result (sample mean) is 3 standard deviations from the mean of the population, which means we have a <code class="highlighter-rouge">p-value = 0.3%</code> chance to observe a result as extreme or more extreme to the one we observed, which means we can consider that the improvement worked - we considered an extreme result on both the positive and the negative side (a two-tailed test).</p>
+
+<p>Now, let’s assume the H1 were <em>the software response has improved (lowered)</em>, a one-tailed test, our p-value would have been <code class="highlighter-rouge">0.015%</code>.</p>
+
+<p>Assuming we would have had 10 samples, not 100, the sample mean would not have been normally distributed, but t-distributed and we would have had to use the <em>T-distribution with n-1 degrees of freedom</em> to find the p-values. T-score is computed exactly the same as the Z-score, but the p-values are computed based on the associated T-distribution with n-1 degrees of freedom.</p>
+
 <h2 id="code-example---unfair-coin">Code example - unfair coin</h2>
 
 <p>We are going to test if a coin is unfair (slightly biased towards the head, with a <code class="highlighter-rouge">p(head) = 0.55</code>). We are going to use two sample sizes and see how the sample size affects the results.</p>
@@ -156,16 +179,16 @@
     <span class="n">hw</span> <span class="o">=</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">sigma</span> <span class="c"># half width of intw</span>
     <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">hw</span><span class="p">,</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">hw</span>
     <span class="n">current_prob</span> <span class="o">=</span> <span class="mf">1.0</span>
-    
+
     <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current_prob</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">:</span>
         <span class="n">hw</span> <span class="o">/=</span> <span class="mi">2</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">current_prob</span><span class="p">:</span>
-            <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">=</span> <span class="n">interval_low</span> <span class="o">+</span> <span class="n">hw</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">-</span> <span class="n">hw</span>            
+            <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">=</span> <span class="n">interval_low</span> <span class="o">+</span> <span class="n">hw</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">-</span> <span class="n">hw</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">=</span> <span class="n">interval_low</span> <span class="o">-</span> <span class="n">hw</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">+</span> <span class="n">hw</span>            
+            <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">=</span> <span class="n">interval_low</span> <span class="o">-</span> <span class="n">hw</span><span class="p">,</span> <span class="n">interval_high</span> <span class="o">+</span> <span class="n">hw</span>
 
         <span class="n">current_prob</span> <span class="o">=</span> <span class="n">normal_probability_between</span><span class="p">(</span><span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
-        
+
     <span class="k">return</span> <span class="n">interval_low</span><span class="p">,</span> <span class="n">interval_high</span>
 
 <span class="k">def</span> <span class="nf">normal_upper_bound</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
@@ -175,13 +198,13 @@
     <span class="n">intw_high</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">delta</span>
     <span class="n">current_prob</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current_prob</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">:</span>
-        
+
         <span class="n">delta</span> <span class="o">/=</span> <span class="mi">2</span>
 
         <span class="k">while</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">current_prob</span><span class="p">:</span>
             <span class="n">intw_high</span> <span class="o">-=</span> <span class="n">delta</span>
             <span class="n">current_prob</span> <span class="o">=</span> <span class="n">normal_probability_below</span><span class="p">(</span><span class="n">intw_high</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
-            
+
         <span class="k">while</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="n">current_prob</span><span class="p">:</span>
             <span class="n">intw_high</span> <span class="o">+=</span> <span class="n">delta</span>
             <span class="n">current_prob</span> <span class="o">=</span> <span class="n">normal_probability_below</span><span class="p">(</span><span class="n">intw_high</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>

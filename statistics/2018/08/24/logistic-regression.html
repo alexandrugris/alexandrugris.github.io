@@ -136,7 +136,7 @@
 
 <p>which is equivalent to</p>
 
-<p><code class="highlighter-rouge">log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM( yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))</code> where <code class="highlighter-rouge">f(Xi) = 1 / (1+e^-dot(Xi,B))</code> is maximized as close as possible to 0.</p>
+<p><code class="highlighter-rouge">log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM(yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))</code> where <code class="highlighter-rouge">f(Xi) = 1 / (1+e^-dot(Xi,B))</code> is maximized as close as possible to 0.</p>
 
 <p>Now we can use gradient descent to find the vector <code class="highlighter-rouge">B</code>. Unfortunately this method might be slow for large datasets because, for every incremental change in any <code class="highlighter-rouge">B</code>, all the exponentials and the logarithms for each line in the dataset need to be recomputed.</p>
 
@@ -148,8 +148,8 @@
   <li>We split the data into trainig and test dataset.</li>
   <li>Add a new column for intercept.</li>
   <li>Add a new row for the <code class="highlighter-rouge">B</code> vector. These are the values we want to find.</li>
-  <li>Add a new column for <code class="highlighter-rouge">P(setosa)</code>, the probabilities we want as result from the logistic regression. <code class="highlighter-rouge">P(setosa) = 1/1+EXP(-SUMPRODUCT(B, X))</code></li>
-  <li>Add a new column, the log column, <code class="highlighter-rouge">log(P(yi | Xi)</code>, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is <code class="highlighter-rouge">yi *LN(P(setosa)+0.0001) + (1-yi)*LN(1-P(setosa)+0.0001)</code>. I added a <code class="highlighter-rouge">0.0001</code> correction factor because, as the maximization algorithm goes on, we might end up with <code class="highlighter-rouge">NaN</code> values due to computing <code class="highlighter-rouge">P(setosa) = 0</code> which leads to <code class="highlighter-rouge">LN(0)</code> which is <code class="highlighter-rouge">-infinity</code>.</li>
+  <li>Add a new column for <code class="highlighter-rouge">P(setosa)</code>, the probabilities we want as result from the logistic regression. <code class="highlighter-rouge">P(setosa) = 1 / (1 + EXP(-SUMPRODUCT(B, X))</code></li>
+  <li>Add a new column, the log column, <code class="highlighter-rouge">log(P(yi | Xi)</code>, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is <code class="highlighter-rouge">yi * LN(P(setosa) + 0.0001) + (1 - yi) * LN( 1 - P(setosa) + 0.0001)</code>. I added a <code class="highlighter-rouge">0.0001</code> correction factor because, as the maximization algorithm goes on, we might end up with <code class="highlighter-rouge">NaN</code> values due to computing <code class="highlighter-rouge">P(setosa) = 0</code> which leads to <code class="highlighter-rouge">LN(0)</code> which is <code class="highlighter-rouge">-infinity</code>.</li>
   <li>Add a summary value for the column at 7, as <code class="highlighter-rouge">SUM(log(P(yi | Xi)))</code>.</li>
   <li>Use Excel Solver plugin to maximize the value of this summary value to as close to 0 as possible.</li>
   <li>Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the <code class="highlighter-rouge">1/1+EXP(-SUMPRODUCT)</code> not to overflow, I added a constraint for the <code class="highlighter-rouge">-SUMPRODUCT()</code> to be less or equal to 50. This does not seem to impact the quality of the regression.</li>
@@ -167,6 +167,10 @@
 <p>In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the <code class="highlighter-rouge">log(odds)</code> vs <code class="highlighter-rouge">most important factor</code> chart, sorted by <code class="highlighter-rouge">odds = P(1) / P(0)</code>, the ratio between the probability of <code class="highlighter-rouge">1</code> and <code class="highlighter-rouge">0</code>. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_2.png" alt="Standardized Data" /></p>
+
+<p><em>Note:</em></p>
+
+<p>The factor we are minimizing, <code class="highlighter-rouge">ce = -(y * ln(p) + (1 - y) * ln(1-p))</code>, where y is the observed value (0 or 1) and <code class="highlighter-rouge">p</code> is the probability given by our model, is called <em>cross entropy</em>.</p>
 
 <h3 id="linear-regression-and-logistic-regression">Linear Regression and Logistic Regression</h3>
 

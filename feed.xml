@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2018-08-27T13:59:48+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://alexandrugris.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2018-09-05T11:33:20+03:00</updated><id>https://alexandrugris.github.io//</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Logistic Regression</title><link href="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html" rel="alternate" type="text/html" title="Logistic Regression" /><published>2018-08-24T14:15:16+03:00</published><updated>2018-08-24T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html">&lt;p&gt;While linear regression is about predicting effects given a set of causes, logistic regression predicts the probability of certain effects. This way, its main applications are classification and forecasting. Logistic regression helps find how probabilities are changed by our actions or by various changes in the factors included in the regression.&lt;/p&gt;
 
 &lt;h3 id=&quot;the-problem&quot;&gt;The problem&lt;/h3&gt;
@@ -67,7 +67,7 @@
 
 &lt;p&gt;which is equivalent to&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM( yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt; is maximized as close as possible to 0.&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM(yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt; is maximized as close as possible to 0.&lt;/p&gt;
 
 &lt;p&gt;Now we can use gradient descent to find the vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;. Unfortunately this method might be slow for large datasets because, for every incremental change in any &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;, all the exponentials and the logarithms for each line in the dataset need to be recomputed.&lt;/p&gt;
 
@@ -79,8 +79,8 @@
   &lt;li&gt;We split the data into trainig and test dataset.&lt;/li&gt;
   &lt;li&gt;Add a new column for intercept.&lt;/li&gt;
   &lt;li&gt;Add a new row for the &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; vector. These are the values we want to find.&lt;/li&gt;
-  &lt;li&gt;Add a new column for &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa)&lt;/code&gt;, the probabilities we want as result from the logistic regression. &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 1/1+EXP(-SUMPRODUCT(B, X))&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;Add a new column, the log column, &lt;code class=&quot;highlighter-rouge&quot;&gt;log(P(yi | Xi)&lt;/code&gt;, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is &lt;code class=&quot;highlighter-rouge&quot;&gt;yi *LN(P(setosa)+0.0001) + (1-yi)*LN(1-P(setosa)+0.0001)&lt;/code&gt;. I added a &lt;code class=&quot;highlighter-rouge&quot;&gt;0.0001&lt;/code&gt; correction factor because, as the maximization algorithm goes on, we might end up with &lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt; values due to computing &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 0&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(0)&lt;/code&gt; which is &lt;code class=&quot;highlighter-rouge&quot;&gt;-infinity&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Add a new column for &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa)&lt;/code&gt;, the probabilities we want as result from the logistic regression. &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 1 / (1 + EXP(-SUMPRODUCT(B, X))&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Add a new column, the log column, &lt;code class=&quot;highlighter-rouge&quot;&gt;log(P(yi | Xi)&lt;/code&gt;, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is &lt;code class=&quot;highlighter-rouge&quot;&gt;yi * LN(P(setosa) + 0.0001) + (1 - yi) * LN( 1 - P(setosa) + 0.0001)&lt;/code&gt;. I added a &lt;code class=&quot;highlighter-rouge&quot;&gt;0.0001&lt;/code&gt; correction factor because, as the maximization algorithm goes on, we might end up with &lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt; values due to computing &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 0&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(0)&lt;/code&gt; which is &lt;code class=&quot;highlighter-rouge&quot;&gt;-infinity&lt;/code&gt;.&lt;/li&gt;
   &lt;li&gt;Add a summary value for the column at 7, as &lt;code class=&quot;highlighter-rouge&quot;&gt;SUM(log(P(yi | Xi)))&lt;/code&gt;.&lt;/li&gt;
   &lt;li&gt;Use Excel Solver plugin to maximize the value of this summary value to as close to 0 as possible.&lt;/li&gt;
   &lt;li&gt;Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the &lt;code class=&quot;highlighter-rouge&quot;&gt;1/1+EXP(-SUMPRODUCT)&lt;/code&gt; not to overflow, I added a constraint for the &lt;code class=&quot;highlighter-rouge&quot;&gt;-SUMPRODUCT()&lt;/code&gt; to be less or equal to 50. This does not seem to impact the quality of the regression.&lt;/li&gt;
@@ -98,6 +98,10 @@
 &lt;p&gt;In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the &lt;code class=&quot;highlighter-rouge&quot;&gt;log(odds)&lt;/code&gt; vs &lt;code class=&quot;highlighter-rouge&quot;&gt;most important factor&lt;/code&gt; chart, sorted by &lt;code class=&quot;highlighter-rouge&quot;&gt;odds = P(1) / P(0)&lt;/code&gt;, the ratio between the probability of &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt;. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_2.png&quot; alt=&quot;Standardized Data&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The factor we are minimizing, &lt;code class=&quot;highlighter-rouge&quot;&gt;ce = -(y * ln(p) + (1 - y) * ln(1-p))&lt;/code&gt;, where y is the observed value (0 or 1) and &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; is the probability given by our model, is called &lt;em&gt;cross entropy&lt;/em&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;linear-regression-and-logistic-regression&quot;&gt;Linear Regression and Logistic Regression&lt;/h3&gt;
 
@@ -735,6 +739,10 @@ and
 &lt;p&gt;We may not want the &lt;em&gt;slope&lt;/em&gt; influence to be reflected, but only the intercept. In this case, we would only add a single binary dummy variable.&lt;/p&gt;
 
 &lt;p&gt;We can generalize this to &lt;code class=&quot;highlighter-rouge&quot;&gt;k&lt;/code&gt; categories. To avoid multicollinearity, we will introduce &lt;code class=&quot;highlighter-rouge&quot;&gt;k-1&lt;/code&gt; dummy variables for intercept and &lt;code class=&quot;highlighter-rouge&quot;&gt;k-1&lt;/code&gt; for slope, if we want to consider slope as well.&lt;/p&gt;
+
+&lt;h3 id=&quot;polynomial-regression&quot;&gt;Polynomial regression&lt;/h3&gt;
+
+&lt;p&gt;Assuming we want to fit a model that looks like &lt;code class=&quot;highlighter-rouge&quot;&gt;Y = b0 + b1 * X + b2 * X^2 + ...&lt;/code&gt;, we can simply reduce it to multiple linear regression by selecting our features as &lt;code class=&quot;highlighter-rouge&quot;&gt;X = [1, X, X^2, X^3, ...]&lt;/code&gt;. In this case, we should seriously consider scaling the features &lt;code class=&quot;highlighter-rouge&quot;&gt;[X, X^2, ..., X^n]&lt;/code&gt; if we want our model to converge sufficiently fast.&lt;/p&gt;
 
 &lt;h3 id=&quot;standard-errors-of-coefficients&quot;&gt;Standard errors of coefficients&lt;/h3&gt;
 
@@ -1526,7 +1534,7 @@ avg diff goals scored by away team = (scored by away team - received by away tea
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;The input variables for the model above are &lt;code class=&quot;highlighter-rouge&quot;&gt;scored / received by home / away team&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;number of matches considered&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;home / away average scored&lt;/code&gt; which can be obtained by looking up values on the internet, on each league page, for instance.&lt;/p&gt;
+&lt;p&gt;The input variables for the model above are &lt;code class=&quot;highlighter-rouge&quot;&gt;scored / received by home / away team&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;number of matches considered&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;home / away average scored&lt;/code&gt; which can be obtained by looking up values on the internet, on each league page, for instance. Great sites are &lt;a href=&quot;https://www.fctables.com/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;http://www.football-lineups.com/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Another model, the multiplicative model, has yet simpler formulas:&lt;/p&gt;
 
