@@ -78,7 +78,7 @@
 
 <p>For this demo I will only implement <code class="highlighter-rouge">wait-for</code> (waiting for a thread to finish) and <code class="highlighter-rouge">yield</code> (give control to the next thread). Any other operations would only make the code more complex to read but not add much clarity into the concepts. Here is my test bed:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">fn</span><span class="p">(</span><span class="n">thread_pool</span><span class="p">::</span><span class="n">thread_ctx</span> <span class="p">*</span><span class="n">ctx</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p2</span><span class="p">)</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="nf">fn</span><span class="p">(</span><span class="n">thread_pool</span><span class="p">::</span><span class="n">thread_ctx</span> <span class="p">*</span><span class="n">ctx</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p2</span><span class="p">)</span> <span class="p">{</span>
 
 	<span class="k">if</span> <span class="p">(</span><span class="n">p1</span> <span class="p">&gt;=</span> <span class="m">4</span><span class="p">)</span> <span class="p">{</span>
 		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Ended NO yields: "</span> <span class="p">&lt;&lt;</span> <span class="n">ctx</span><span class="p">-&gt;</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
@@ -126,8 +126,7 @@
 	<span class="n">pool</span><span class="p">.</span><span class="nf">call_fn</span><span class="p">(</span><span class="m">100000</span><span class="p">,</span> <span class="s">"THREAD_0"</span> <span class="p">,</span><span class="n">fn</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">);</span>	
 	<span class="k">return</span> <span class="m">0</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In <code class="highlighter-rouge">main</code> I simply call on the main thread, which I named “THREAD_0”, a procedure, <code class="highlighter-rouge">fn</code>, defined above. This is (and should be) a synchronous call. <code class="highlighter-rouge">fn</code> should wait for all spawned threads to be finished. Note: when I say “thread”, I mean a “green thread”. All my threads share the same OS thread. In this sample there is no OS multithreading involved. From the OS perspective the application is single threaded.</p>
 
@@ -147,7 +146,7 @@
 
 <p>Here is the full listing:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="cp">#define _DEBUG
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define _DEBUG
 </span>
 <span class="cp">#pragma optimize ("", off)
 </span>
@@ -171,8 +170,8 @@
 		<span class="n">thread_pool</span><span class="p">*</span> <span class="n">th_p</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 		<span class="kt">bool</span>	<span class="n">b_finished</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span>
 		
-		<span class="c1">// for when we have an out of order return from the function.
-</span>		<span class="kt">bool</span>	<span class="n">b_yielded</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span> 
+		<span class="c1">// for when we have an out of order return from the function.</span>
+		<span class="kt">bool</span>	<span class="n">b_yielded</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span> 
 
 <span class="err">#</span><span class="n">ifdef</span> <span class="n">_DEBUG</span>
 		<span class="kt">int</span> <span class="n">stack_size</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
@@ -191,8 +190,8 @@
 
 		<span class="p">~</span><span class="nf">thread_ctx</span><span class="p">()</span> <span class="p">{</span>
 			<span class="n">delete</span><span class="p">[]</span> <span class="n">stack</span><span class="p">;</span>
-			<span class="c1">// cout &lt;&lt; "Deleted: " &lt;&lt; thread_name &lt;&lt; endl;
-</span>			<span class="k">if</span><span class="p">(</span><span class="n">thread_name</span><span class="p">)</span>
+			<span class="c1">// cout &lt;&lt; "Deleted: " &lt;&lt; thread_name &lt;&lt; endl;</span>
+			<span class="k">if</span><span class="p">(</span><span class="n">thread_name</span><span class="p">)</span>
 				<span class="nf">free</span><span class="p">(</span><span class="n">thread_name</span><span class="p">);</span>
 		<span class="p">}</span>
 
@@ -213,8 +212,8 @@
 			<span class="n">b_yielded</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
 
 <span class="err">#</span><span class="n">ifdef</span> <span class="n">_DEBUG</span>
-			<span class="c1">// test we are on our stack
-</span>			<span class="nf">assert</span><span class="p">(</span> <span class="kt">int</span><span class="p">(&amp;</span><span class="n">stk_tst</span><span class="p">)</span> <span class="p">&gt;=</span> <span class="kt">int</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="kt">int</span><span class="p">(&amp;</span><span class="n">stk_tst</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">stack_size</span> <span class="p">+</span> <span class="kt">int</span><span class="p">(</span><span class="n">stack</span><span class="p">));</span>
+			<span class="c1">// test we are on our stack</span>
+			<span class="nf">assert</span><span class="p">(</span> <span class="kt">int</span><span class="p">(&amp;</span><span class="n">stk_tst</span><span class="p">)</span> <span class="p">&gt;=</span> <span class="kt">int</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="kt">int</span><span class="p">(&amp;</span><span class="n">stk_tst</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">stack_size</span> <span class="p">+</span> <span class="kt">int</span><span class="p">(</span><span class="n">stack</span><span class="p">));</span>
 <span class="cp">#endif
 </span>			
 			<span class="n">unsigned</span> <span class="kt">char</span><span class="p">**</span> <span class="n">loc_ptr</span>		<span class="p">=</span> <span class="p">&amp;</span><span class="n">continuation_location</span><span class="p">;</span>
@@ -226,41 +225,41 @@
 
 			<span class="n">auto</span> <span class="n">next_ptr</span> <span class="p">=</span> <span class="n">next</span><span class="p">.</span><span class="k">get</span><span class="p">();</span>
 
-			<span class="c1">// cout &lt;&lt; "Yield: From " &lt;&lt; this-&gt;thread_name &lt;&lt; " To " 
-</span>			<span class="c1">// &lt;&lt; next_ptr-&gt;thread_name &lt;&lt; endl;
-</span>
-			<span class="c1">// save the jump location for this thread
-</span>			<span class="n">__asm</span> <span class="p">{</span>				
+			<span class="c1">// cout &lt;&lt; "Yield: From " &lt;&lt; this-&gt;thread_name &lt;&lt; " To " </span>
+			<span class="c1">// &lt;&lt; next_ptr-&gt;thread_name &lt;&lt; endl;</span>
+
+			<span class="c1">// save the jump location for this thread</span>
+			<span class="n">__asm</span> <span class="p">{</span>				
 				<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="n">offset</span> <span class="n">continuation_code_ptr</span><span class="p">;</span>
 				<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="n">loc_ptr</span><span class="p">;</span>
 				<span class="n">mov</span> <span class="p">[</span><span class="n">ebx</span><span class="p">],</span> <span class="n">eax</span><span class="p">;</span>
 			<span class="p">}</span>
 
-			<span class="c1">// save the current stack_ptr to restore it
-</span>			<span class="n">__asm</span><span class="p">{</span>
+			<span class="c1">// save the current stack_ptr to restore it</span>
+			<span class="n">__asm</span><span class="p">{</span>
 				<span class="n">mov</span> <span class="n">ecx</span><span class="p">,</span> <span class="k">this</span><span class="p">;</span>
 				<span class="n">push</span> <span class="n">stk_tst</span><span class="p">;</span>
 				<span class="n">push</span> <span class="n">ebp</span><span class="p">;</span>
 				<span class="n">mov</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">stack_ptr</span><span class="p">],</span> <span class="n">esp</span><span class="p">;</span>
 			<span class="p">}</span>			
 			
-			<span class="c1">// do the jump to to next location,
-</span>			<span class="n">__asm</span> <span class="p">{</span>
+			<span class="c1">// do the jump to to next location,</span>
+			<span class="n">__asm</span> <span class="p">{</span>
 				<span class="n">mov</span> <span class="n">ecx</span><span class="p">,</span> <span class="n">next_ptr</span><span class="p">;</span>
-				<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">continuation_location</span><span class="p">];</span> <span class="c1">// next is in ecx
-</span>				<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">stack_ptr</span><span class="p">];</span>
+				<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">continuation_location</span><span class="p">];</span> <span class="c1">// next is in ecx</span>
+				<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">stack_ptr</span><span class="p">];</span>
 				<span class="n">jmp</span> <span class="n">ebx</span><span class="p">;</span>			
 			<span class="p">}</span>
 
-			<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// should never get here
-</span>			
-			<span class="c1">// jmp location:
-</span>			<span class="n">__asm</span>
+			<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// should never get here</span>
+			
+			<span class="c1">// jmp location:</span>
+			<span class="n">__asm</span>
 			<span class="p">{</span>
 			<span class="n">continuation_code_ptr</span><span class="p">:</span>
 				<span class="n">pop</span> <span class="n">ebp</span><span class="p">;</span>
-				<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// should be 0;
-</span>			<span class="p">}</span>
+				<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// should be 0;</span>
+			<span class="p">}</span>
 
 			<span class="nf">assert</span><span class="p">(</span><span class="n">stk_tst</span> <span class="p">==</span> <span class="m">0</span><span class="p">);</span>			
 		<span class="p">}</span>
@@ -286,11 +285,11 @@
 
 			<span class="n">unsigned</span> <span class="kt">char</span><span class="p">*</span> <span class="n">stk</span> <span class="p">=</span> <span class="n">stack_ptr</span><span class="p">;</span>	
 
-			<span class="k">if</span> <span class="p">(</span><span class="n">parent_thread</span> <span class="p">==</span> <span class="n">nullptr</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// we are on root of threads
-</span>				<span class="c1">// setup start of new thread
-</span>				<span class="n">__asm</span> <span class="p">{</span>
-					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="n">esp</span><span class="p">;</span> <span class="c1">// save old stack on new stack
-</span>					<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="n">stk</span><span class="p">;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">parent_thread</span> <span class="p">==</span> <span class="n">nullptr</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// we are on root of threads</span>
+				<span class="c1">// setup start of new thread</span>
+				<span class="n">__asm</span> <span class="p">{</span>
+					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="n">esp</span><span class="p">;</span> <span class="c1">// save old stack on new stack</span>
+					<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="n">stk</span><span class="p">;</span>
 					<span class="n">push</span> <span class="n">eax</span><span class="p">;</span>
 				<span class="p">}</span>
 
@@ -307,15 +306,15 @@
 				<span class="n">unsigned</span> <span class="kt">char</span><span class="p">**</span> <span class="n">loc_ptr</span>		<span class="p">=</span> <span class="p">&amp;</span><span class="n">parent_thread</span><span class="p">-&gt;</span><span class="n">continuation_location</span><span class="p">;</span>
 				<span class="n">unsigned</span> <span class="kt">char</span><span class="p">*</span>	<span class="n">stck_ptr</span>	<span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 				
-				<span class="c1">// save the jump location 
-</span>				<span class="n">__asm</span> <span class="p">{</span>
+				<span class="c1">// save the jump location </span>
+				<span class="n">__asm</span> <span class="p">{</span>
 					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="n">offset</span> <span class="n">continuation_code_ptr</span><span class="p">;</span>
 					<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="n">loc_ptr</span><span class="p">;</span>
 					<span class="n">mov</span><span class="p">[</span><span class="n">ebx</span><span class="p">],</span> <span class="n">eax</span><span class="p">;</span>
 				<span class="p">}</span>
 
-				<span class="c1">// save the current stack_ptr to restore it (we are on parent stack)
-</span>				<span class="n">__asm</span> <span class="p">{</span>
+				<span class="c1">// save the current stack_ptr to restore it (we are on parent stack)</span>
+				<span class="n">__asm</span> <span class="p">{</span>
 					<span class="n">push</span> <span class="n">stk_tst</span><span class="p">;</span>
 					<span class="n">push</span> <span class="n">ebp</span><span class="p">;</span>
 					<span class="n">mov</span><span class="p">[</span><span class="n">stck_ptr</span><span class="p">],</span> <span class="n">esp</span><span class="p">;</span>
@@ -323,31 +322,31 @@
 
 				<span class="n">parent_thread</span><span class="p">-&gt;</span><span class="n">stack_ptr</span> <span class="p">=</span> <span class="n">stck_ptr</span><span class="p">;</span>
 
-				<span class="c1">// switch to the new thread stack
-</span>				<span class="n">__asm</span> <span class="p">{</span>
+				<span class="c1">// switch to the new thread stack</span>
+				<span class="n">__asm</span> <span class="p">{</span>
 					<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="n">stk</span><span class="p">;</span>
-					<span class="n">push</span> <span class="n">stck_ptr</span><span class="p">;</span> <span class="c1">// these still work because we have not changed ebp
-</span>					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="k">this</span><span class="p">;</span>
+					<span class="n">push</span> <span class="n">stck_ptr</span><span class="p">;</span> <span class="c1">// these still work because we have not changed ebp</span>
+					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="k">this</span><span class="p">;</span>
 					<span class="n">push</span> <span class="n">eax</span><span class="p">;</span>
 				<span class="p">}</span>
 
 				<span class="nf">f</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">params</span><span class="p">...);</span>
 
 				<span class="n">__asm</span> <span class="p">{</span>
-					<span class="n">pop</span> <span class="n">ecx</span><span class="p">;</span> <span class="c1">// this is in ecx
-</span>					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_yielded</span><span class="p">];</span>
+					<span class="n">pop</span> <span class="n">ecx</span><span class="p">;</span> <span class="c1">// this is in ecx</span>
+					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_yielded</span><span class="p">];</span>
 					<span class="n">and</span> <span class="n">al</span><span class="p">,</span> <span class="m">1</span>
 					<span class="n">jnz</span> <span class="n">function_already_returned_once</span><span class="p">;</span>
 				<span class="p">}</span>
 
-				<span class="c1">// switch back to parent stack
-</span>				<span class="c1">// restore this
-</span>				<span class="n">__asm</span> <span class="p">{</span>
-					<span class="n">pop</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// stk_ptr
-</span>					<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// stk_ptr
-</span>					<span class="n">pop</span> <span class="n">ebp</span><span class="p">;</span>					
-					<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// here we already have the values
-</span>				<span class="p">}</span>
+				<span class="c1">// switch back to parent stack</span>
+				<span class="c1">// restore this</span>
+				<span class="n">__asm</span> <span class="p">{</span>
+					<span class="n">pop</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// stk_ptr</span>
+					<span class="n">mov</span> <span class="n">esp</span><span class="p">,</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// stk_ptr</span>
+					<span class="n">pop</span> <span class="n">ebp</span><span class="p">;</span>					
+					<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// here we already have the values</span>
+				<span class="p">}</span>
 
 				<span class="nf">assert</span><span class="p">(</span><span class="n">stk_tst</span> <span class="p">==</span> <span class="m">0</span><span class="p">);</span>
 
@@ -359,37 +358,37 @@
 				<span class="n">__asm</span> <span class="p">{</span>
 				<span class="n">function_already_returned_once</span><span class="p">:</span>
 
-					<span class="c1">// this is in ecx
-</span>					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_finished</span><span class="p">];</span>
+					<span class="c1">// this is in ecx</span>
+					<span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_finished</span><span class="p">];</span>
 					<span class="n">or</span> <span class="n">al</span><span class="p">,</span> <span class="m">1</span><span class="p">;</span>
-					<span class="n">mov</span><span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_finished</span><span class="p">],</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// set the b_finished flag to true
-</span>
-					<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="n">ecx</span><span class="p">;</span> <span class="c1">// save this temporary
-</span>					<span class="n">mov</span> <span class="n">ecx</span><span class="p">,</span> <span class="p">[</span><span class="n">ebx</span> <span class="p">+</span> <span class="n">th_p</span><span class="p">];</span>
+					<span class="n">mov</span><span class="p">[</span><span class="n">ecx</span> <span class="p">+</span> <span class="n">b_finished</span><span class="p">],</span> <span class="n">eax</span><span class="p">;</span> <span class="c1">// set the b_finished flag to true</span>
 
-					<span class="n">push</span> <span class="n">ebx</span><span class="p">;</span> <span class="c1">// once for saving, once for remove call
-</span>					<span class="n">push</span> <span class="n">ebx</span><span class="p">;</span>
+					<span class="n">mov</span> <span class="n">ebx</span><span class="p">,</span> <span class="n">ecx</span><span class="p">;</span> <span class="c1">// save this temporary</span>
+					<span class="n">mov</span> <span class="n">ecx</span><span class="p">,</span> <span class="p">[</span><span class="n">ebx</span> <span class="p">+</span> <span class="n">th_p</span><span class="p">];</span>
+
+					<span class="n">push</span> <span class="n">ebx</span><span class="p">;</span> <span class="c1">// once for saving, once for remove call</span>
+					<span class="n">push</span> <span class="n">ebx</span><span class="p">;</span>
 					<span class="n">call</span> <span class="k">remove</span><span class="p">;</span>
 
 					<span class="n">pop</span> <span class="n">ecx</span><span class="p">;</span>
 					<span class="n">call</span> <span class="k">yield</span>
 
-					<span class="c1">// TODO: set the b_finished flag and then remove the thread
-</span>					<span class="c1">// do yield
-</span>				<span class="p">}</span>
+					<span class="c1">// TODO: set the b_finished flag and then remove the thread</span>
+					<span class="c1">// do yield</span>
+				<span class="p">}</span>
 
-				<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// should never get here.
-</span>
+				<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// should never get here.</span>
+
 				<span class="n">__asm</span>
 				<span class="p">{</span>
-				<span class="n">continuation_code_ptr</span><span class="p">:</span> <span class="c1">// only for jmp code from another place
-</span>					<span class="n">pop</span> <span class="n">ebp</span><span class="p">;</span>
-					<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// should be 0;
-</span>				<span class="p">}</span>
+				<span class="n">continuation_code_ptr</span><span class="p">:</span> <span class="c1">// only for jmp code from another place</span>
+					<span class="n">pop</span> <span class="n">ebp</span><span class="p">;</span>
+					<span class="n">pop</span> <span class="n">stk_tst</span><span class="p">;</span> <span class="c1">// should be 0;</span>
+				<span class="p">}</span>
 
 				<span class="nf">assert</span><span class="p">(</span><span class="n">stk_tst</span> <span class="p">==</span> <span class="m">0</span><span class="p">);</span>
-				<span class="c1">// cout &lt;&lt; "Async return for " &lt;&lt; this-&gt;thread_name &lt;&lt; endl;
-</span>			<span class="p">}</span>
+				<span class="c1">// cout &lt;&lt; "Async return for " &lt;&lt; this-&gt;thread_name &lt;&lt; endl;</span>
+			<span class="p">}</span>
 
 		<span class="p">}</span>			
 	<span class="p">};</span>
@@ -416,8 +415,8 @@
 				<span class="n">threads</span><span class="p">.</span><span class="nf">pop_back</span><span class="p">();</span>
 				<span class="k">return</span><span class="p">;</span>
 			<span class="p">}</span>
-		<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// not found
-</span>	<span class="p">}</span>
+		<span class="nf">assert</span><span class="p">(</span><span class="m">0</span><span class="p">);</span> <span class="c1">// not found</span>
+	<span class="p">}</span>
 
 	<span class="p">~</span><span class="nf">thread_pool</span><span class="p">()</span> <span class="p">{</span>
 		<span class="k">for</span> <span class="p">(</span><span class="n">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">threads</span><span class="p">.</span><span class="nf">size</span><span class="p">();</span> <span class="n">i</span><span class="p">++)</span> <span class="p">{</span>
@@ -435,12 +434,11 @@
 		<span class="n">ctx</span><span class="p">-&gt;</span><span class="nf">assign_fn</span><span class="p">(</span><span class="n">nullptr</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="k">params</span><span class="p">...);</span>
 	<span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="explanations">Explanations:</h3>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">thread_ctx</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">thread_ctx</span> <span class="p">{</span>
 
 	<span class="k">private</span><span class="p">:</span>
 		<span class="kt">char</span><span class="p">*</span> <span class="n">thread_name</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
@@ -452,13 +450,12 @@
 
 		<span class="n">thread_pool</span><span class="p">*</span> <span class="n">th_p</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 		<span class="kt">bool</span>	<span class="n">b_finished</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span>
-		<span class="c1">// for when we have an out of order return from the function.
-</span>		<span class="kt">bool</span>	<span class="n">b_yielded</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span> 
+		<span class="c1">// for when we have an out of order return from the function.</span>
+		<span class="kt">bool</span>	<span class="n">b_yielded</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span> 
 		
 		<span class="p">...</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <ul>
   <li><code class="highlighter-rouge">thread_ctx</code> - our thread.</li>

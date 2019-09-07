@@ -72,10 +72,9 @@
 
 <p>By far the easiest and most portable way to run RabbitMQ is to use the official docker container with the management console started:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
     --name my_rabbit_mq rabbitmq:3-management
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The corresponding connetion string is <code class="highlighter-rouge">"amqp://guest:guest@localhost:5672"</code> and the management URL: <code class="highlighter-rouge">http://localhost:15672/#/ </code></p>
 
@@ -109,17 +108,16 @@
 
 <h3 id="creating-a-connection-and-then-a-channel">Creating a connection and then a channel</h3>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
 <span class="p">{</span>
 	<span class="n">Uri</span> <span class="p">=</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQConnectionString</span><span class="p">,</span>
 	<span class="p">[...]</span>
 <span class="p">};</span>
 
-<span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span> <span class="c1">// one per application
-</span><span class="na">[...]</span>
-<span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="n">conn</span><span class="p">.</span><span class="nf">CreateModel</span><span class="p">();</span> <span class="c1">// one per thread
-</span></code></pre>
-</div>
+<span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span> <span class="c1">// one per application</span>
+<span class="na">[...]</span>
+<span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="n">conn</span><span class="p">.</span><span class="nf">CreateModel</span><span class="p">();</span> <span class="c1">// one per thread</span>
+</code></pre></div></div>
 
 <h3 id="setting-up-the-routing-topology">Setting up the routing topology</h3>
 
@@ -144,7 +142,7 @@
 
 <p>Here is an example on how to declare such a topology, with a dead letter exchange (DLX) and alternate routing exchange set to the same exchange instance:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code> <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="p">...;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="p">...;</span>
  <span class="p">[...]</span>
  <span class="n">chan</span><span class="p">.</span><span class="nf">ExchangeDeclare</span><span class="p">(</span>
      <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span><span class="p">,</span>
@@ -154,13 +152,13 @@
      <span class="n">arguments</span><span class="p">:</span> <span class="k">null</span>
  <span class="p">);</span>
 
- <span class="c1">// to simplify the topology,
-</span> <span class="c1">// we will use the same dead letter exchange as alternative exchange in case of routing failures
-</span> <span class="n">chan</span><span class="p">.</span><span class="nf">ExchangeDeclare</span><span class="p">(</span>
+ <span class="c1">// to simplify the topology,</span>
+ <span class="c1">// we will use the same dead letter exchange as alternative exchange in case of routing failures</span>
+ <span class="n">chan</span><span class="p">.</span><span class="nf">ExchangeDeclare</span><span class="p">(</span>
          <span class="n">exchange</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span>
-         <span class="n">type</span><span class="p">:</span> <span class="n">ExchangeType</span><span class="p">.</span><span class="n">Direct</span><span class="p">,</span> <span class="c1">// change to Fanout to send to several queues
-</span>         <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// no serialization
-</span>         <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+         <span class="n">type</span><span class="p">:</span> <span class="n">ExchangeType</span><span class="p">.</span><span class="n">Direct</span><span class="p">,</span> <span class="c1">// change to Fanout to send to several queues</span>
+         <span class="n">durable</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// no serialization</span>
+         <span class="n">autoDelete</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
          <span class="n">arguments</span><span class="p">:</span> <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;()</span>
          <span class="p">{</span>
              <span class="p">{</span> <span class="s">"alternate-exchange"</span><span class="p">,</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span> <span class="p">}</span>
@@ -202,8 +200,7 @@
      <span class="n">exchange</span><span class="p">:</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName_DLX</span><span class="p">,</span>
      <span class="n">routingKey</span><span class="p">:</span> <span class="s">""</span>
  <span class="p">);</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In the code above several parameters have been used to declare exchanges and queues. Here are their meaning:</p>
 
@@ -217,46 +214,43 @@
 
 <p>We may want confirmation that the message has been received by the queue:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="c1">// for publisher to get confirmation that the message has been received by the queue: 
-</span><span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
-<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span>  <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Msg confimed {args.DeliveryTag}"</span><span class="p">);</span> 
-<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Error sending message to queue {args.DeliveryTag"</span><span class="p">);</span>
-</code></pre>
-</div>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// for publisher to get confirmation that the message has been received by the queue: </span>
+<span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span>  <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Msg confimed </span><span class="p">{</span><span class="n">args</span><span class="p">.</span><span class="n">DeliveryTag</span><span class="p">}</span><span class="s">"</span><span class="p">);</span> 
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Error sending message to queue </span><span class="p">{</span><span class="n">args</span><span class="p">.</span><span class="n">DeliveryTag</span><span class="s">");
+</span></code></pre></div></div>
 
 <p>Then set the message properties and headers and call:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
-</code></pre>
-</div>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
+</code></pre></div></div>
 
 <h3 id="receiving-messages">Receiving messages</h3>
 
 <p>Inside the client, for receiving messages, one can set <code class="highlighter-rouge">prefetchCount</code> to load multiple messages. However, if the server crashes, these will all remain unacknowledged even if processed.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">cthread</span> <span class="p">!=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">)</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">cthread</span> <span class="p">!=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">)</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="p">(</span><span class="s">"Channel reused from a different thread"</span><span class="p">);</span>
 
 <span class="n">chan</span><span class="p">.</span><span class="nf">BasicQos</span><span class="p">(</span>
-          <span class="n">prefetchSize</span><span class="p">:</span> <span class="m">0</span><span class="p">,</span> <span class="c1">// no limit
-</span>          <span class="n">prefetchCount</span><span class="p">:</span> <span class="m">1</span><span class="p">,</span> <span class="c1">// 1 by 1
-</span>          <span class="k">global</span><span class="p">:</span> <span class="k">false</span> <span class="c1">// true == set QoS for the whole connection or false only for this channel
-</span>          <span class="p">);</span>
+          <span class="n">prefetchSize</span><span class="p">:</span> <span class="m">0</span><span class="p">,</span> <span class="c1">// no limit</span>
+          <span class="n">prefetchCount</span><span class="p">:</span> <span class="m">1</span><span class="p">,</span> <span class="c1">// 1 by 1</span>
+          <span class="k">global</span><span class="p">:</span> <span class="k">false</span> <span class="c1">// true == set QoS for the whole connection or false only for this channel</span>
+          <span class="p">);</span>
 <span class="n">chan</span><span class="p">.</span><span class="nf">BasicConsume</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName</span><span class="p">,</span> <span class="n">noAck</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="n">consumer</span><span class="p">:</span> <span class="k">this</span><span class="p">);</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">consumer: this</code> in the listing above refers to the <code class="highlighter-rouge">Consumer</code> class below which extends the <code class="highlighter-rouge">DefaultBasicConsumer</code> class:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Consumer</span> <span class="p">:</span> <span class="n">DefaultBasicConsumer</span><span class="p">,</span> <span class="n">IDisposable</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Consumer</span> <span class="p">:</span> <span class="n">DefaultBasicConsumer</span><span class="p">,</span> <span class="n">IDisposable</span>
 <span class="p">{</span>
     <span class="k">private</span> <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="k">null</span><span class="p">;</span>    
     <span class="k">private</span> <span class="kt">int</span> <span class="n">cthread</span> <span class="p">=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">;</span>
    
    <span class="p">[...]</span>
    
-    <span class="c1">// callback for each received message
-</span>    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
+    <span class="c1">// callback for each received message</span>
+    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
         <span class="kt">ulong</span> <span class="n">deliveryTag</span><span class="p">,</span> 
         <span class="kt">bool</span> <span class="n">redelivered</span><span class="p">,</span> 
         <span class="kt">string</span> <span class="n">exchange</span><span class="p">,</span> 
@@ -266,8 +260,7 @@
     <span class="p">{</span>
         <span class="p">[...]</span>            
     <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Another way to go is to use the <code class="highlighter-rouge">QueuingBasicConsumer(model)</code> and then <code class="highlighter-rouge">(BasicDeliveryEventArgs)consumer.Queue.Dequeue();</code> for extracting the message in a loop.</p>
 
@@ -277,11 +270,10 @@
 
 <p><em>Publisher confirms</em> - for the publisher to know that a message has been queued or not. In case of important messages, implement a re-send strategy for the cases when the queue is not accessible.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
-<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Msg confimed {args.DeliveryTag}"</span><span class="p">);</span>
-<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Error sending message to queue {args.DeliveryTag}"</span><span class="p">);</span>
-</code></pre>
-</div>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">chan</span><span class="p">.</span><span class="nf">ConfirmSelect</span><span class="p">();</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicAcks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Msg confimed </span><span class="p">{</span><span class="n">args</span><span class="p">.</span><span class="n">DeliveryTag</span><span class="p">}</span><span class="s">"</span><span class="p">);</span>
+<span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Error sending message to queue </span><span class="p">{</span><span class="n">args</span><span class="p">.</span><span class="n">DeliveryTag</span><span class="p">}</span><span class="s">"</span><span class="p">);</span>
+</code></pre></div></div>
 
 <p><em>Mandatory</em> - set as a flag in <code class="highlighter-rouge">BasicPublish</code>. If the message cannot be routed to the queue it will be sent back to the producer. By default, if the flag is not set, the message is lost. The event <code class="highlighter-rouge">BasicReturn</code> is fired on the channel. Routing failures can be treated using the alternative exchange feature.</p>
 
@@ -289,18 +281,17 @@
 
 <p><em>Connection and topology recovery</em> - retry in case of failure to send messages, only if the queues and exchanges are set to durable. Even if the topology is set to durable, the messages are lost if their individual flag for durability is not set.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">cf</span> <span class="p">=</span> <span class="k">new</span> <span class="n">RabbitMQ</span><span class="p">.</span><span class="n">Client</span><span class="p">.</span><span class="n">ConnectionFactory</span>
 <span class="p">{</span>
 	<span class="n">Uri</span> <span class="p">=</span> <span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQConnectionString</span><span class="p">,</span>
 	<span class="n">AutomaticRecoveryEnabled</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
 	<span class="n">TopologyRecoveryEnabled</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
 	<span class="n">NetworkRecoveryInterval</span> <span class="p">=</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="nf">FromSeconds</span><span class="p">(</span><span class="m">5</span><span class="p">),</span>
-	<span class="n">UseBackgroundThreadsForIO</span> <span class="p">=</span> <span class="k">false</span> <span class="c1">//Foreground threads keep the app alive until finished
-</span><span class="p">};</span>
+	<span class="n">UseBackgroundThreadsForIO</span> <span class="p">=</span> <span class="k">false</span> <span class="c1">//Foreground threads keep the app alive until finished</span>
+<span class="p">};</span>
 
 <span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="supported-routing-scenarios">Supported Routing Scenarios:</h3>
 
@@ -336,7 +327,7 @@
 
 <p>A strategy that is mixing both approaches is implemented in the code below:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">HandleBasicDeliver</span><span class="p">(</span><span class="kt">string</span> <span class="n">consumerTag</span><span class="p">,</span> 
         <span class="kt">ulong</span> <span class="n">deliveryTag</span><span class="p">,</span> 
         <span class="kt">bool</span> <span class="n">redelivered</span><span class="p">,</span> 
         <span class="kt">string</span> <span class="n">exchange</span><span class="p">,</span> 
@@ -347,27 +338,27 @@
     <span class="p">[...]</span>
     <span class="k">if</span> <span class="p">([</span><span class="n">MessageProcessedSuccessfully</span><span class="p">])</span>
     <span class="p">{</span>
-        <span class="c1">// send ack only for this message and only if no error so far
-</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicAck</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
+        <span class="c1">// send ack only for this message and only if no error so far</span>
+        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicAck</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
     <span class="p">}</span>
-    <span class="k">else</span> <span class="c1">// error condition
-</span>    <span class="p">{</span>
+    <span class="k">else</span> <span class="c1">// error condition</span>
+    <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">redelivered</span> <span class="p">||</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">MAX_RETRY_COUNT</span><span class="p">)</span>
         <span class="p">{</span>
             <span class="nf">Requeue</span><span class="p">(</span><span class="n">consumerTag</span><span class="p">,</span> <span class="n">deliveryTag</span><span class="p">,</span> <span class="n">exchange</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">);</span>
         <span class="p">}</span>
         <span class="k">else</span>
         <span class="p">{</span>
-            <span class="c1">// first time simply put it back in the queue for another try
-</span>            <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
+            <span class="c1">// first time simply put it back in the queue for another try</span>
+            <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
 <span class="k">private</span> <span class="kt">int</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="c1">// use the headers field of the message properties to keep track of 
-</span>    <span class="c1">// the number of retries
-</span>    <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">?)</span><span class="n">properties</span><span class="p">.</span><span class="n">Headers</span><span class="p">?[</span><span class="s">"Retries"</span><span class="p">]</span> <span class="p">??</span> <span class="n">MAX_RETRY_COUNT</span><span class="p">;</span>
+    <span class="c1">// use the headers field of the message properties to keep track of </span>
+    <span class="c1">// the number of retries</span>
+    <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">?)</span><span class="n">properties</span><span class="p">.</span><span class="n">Headers</span><span class="p">?[</span><span class="s">"Retries"</span><span class="p">]</span> <span class="p">??</span> <span class="n">MAX_RETRY_COUNT</span><span class="p">;</span>
 <span class="p">}</span>
 <span class="k">private</span> <span class="k">void</span> <span class="nf">SetRetryCount</span><span class="p">(</span><span class="n">IBasicProperties</span> <span class="n">properties</span><span class="p">,</span> <span class="kt">int</span> <span class="n">retryCount</span><span class="p">)</span>
 <span class="p">{</span>
@@ -382,24 +373,23 @@
     <span class="kt">byte</span><span class="p">[]</span> <span class="n">body</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="kt">int</span> <span class="n">retryCount</span> <span class="p">=</span> <span class="nf">GetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">);</span>
-    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="err">$</span><span class="s">"Retry count: {retryCount}"</span><span class="p">);</span>
+    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Retry count: </span><span class="p">{</span><span class="n">retryCount</span><span class="p">}</span><span class="s">"</span><span class="p">);</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">retryCount</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span>
     <span class="p">{</span>
         <span class="nf">SetRetryCount</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="p">--</span><span class="n">retryCount</span><span class="p">);</span>
         <span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">exchange</span><span class="p">,</span> <span class="n">routingKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">);</span>
-        <span class="c1">// this is slow, but we need to make sure somehow the message reaches the queue back
-</span>        <span class="c1">// channel is configured with chan.ConfirmSelect()
-</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">WaitForConfirmsOrDie</span><span class="p">();</span> 
+        <span class="c1">// this is slow, but we need to make sure somehow the message reaches the queue back</span>
+        <span class="c1">// channel is configured with chan.ConfirmSelect()</span>
+        <span class="n">chan</span><span class="p">.</span><span class="nf">WaitForConfirmsOrDie</span><span class="p">();</span> 
         <span class="n">chan</span><span class="p">.</span><span class="nf">BasicAck</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span>
     <span class="p">}</span>
     <span class="k">else</span>
     <span class="p">{</span>
-        <span class="c1">// reject the message to dead letter queue.
-</span>        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
+        <span class="c1">// reject the message to dead letter queue.</span>
+        <span class="n">chan</span><span class="p">.</span><span class="nf">BasicNack</span><span class="p">(</span><span class="n">deliveryTag</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">false</span><span class="p">);</span> 
     <span class="p">}</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In the code above there is no control over when the retry will occur. This is generally not a good strategy because the system might have not yet recovered from the conditions that led to the error in the first place. A better approach is to set the TTL to the message and then push it to another waiting queue for which there is no consumer, but has attached this queue to its dead letter exchange. When the TTL expires, RabbitMQ automatically moves the message to the dead letter exchange (and from here routed to our queue) from which we can consume it once again.</p>
 
@@ -453,63 +443,60 @@
 
 <p>Durability of a queue does not make messages that are routed to that queue automatically durable. If a broker is taken down and then brought back up, a durable queue will be re-declared during broker startup, however, only persistent messages will be recovered.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
 <span class="n">props</span><span class="p">.</span><span class="nf">SetPersistent</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>To set properties for the message, <code class="highlighter-rouge">model.CreateBasicProperties()</code> returns the following interface instance:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">public</span> <span class="k">interface</span> <span class="n">IBasicProperties</span><span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">interface</span> <span class="nc">IBasicProperties</span><span class="p">{</span>
 <span class="err">  </span> 
 <span class="err">   </span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">/// Message timestamp.
-</span><span class="err">   </span> <span class="n">AmqpTimestamp</span> <span class="n">Timestamp</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Convenience property; parses RabbitMQ.Client.IBasicProperties.ReplyTo property
-</span><span class="err">   </span> <span class="c1">// using RabbitMQ.Client.PublicationAddress.Parse(System.String), /// and serializes
-</span><span class="err">   </span> <span class="c1">// it using RabbitMQ.Client.PublicationAddress.ToString.
-</span><span class="err">   </span> <span class="n">PublicationAddress</span> <span class="n">ReplyToAddress</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Destination to reply to.
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ReplyTo</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-    <span class="c1">// Message priority, 0 to 9. ///
-</span><span class="err">   </span> <span class="kt">byte</span> <span class="n">Priority</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Sets RabbitMQ.Client.IBasicProperties.DeliveryMode 
-</span>    <span class="c1">// to either persistent (2) or non-persistent (1). ///
-</span><span class="err">   </span> <span class="kt">bool</span> <span class="n">Persistent</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Application message Id. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">MessageId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Message header field table. Is of type System.Collections.Generic.IDictionary`2.        
-</span><span class="err">   </span> <span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">Headers</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Message expiration specification. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">Expiration</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Non-persistent (1) or persistent (2). ///
-</span><span class="err">   </span> <span class="kt">byte</span> <span class="n">DeliveryMode</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Application correlation identifier. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">CorrelationId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// MIME content type. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ContentType</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// MIME content encoding. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ContentEncoding</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Intra-cluster routing identifier (cluster id is deprecated in AMQP 0-9-1).        
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">ClusterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">   </span> <span class="c1">// Application Id. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">AppId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-<span class="err">    </span><span class="c1">// Message type name. ///
-</span><span class="err">   </span> <span class="kt">string</span> <span class="n">Type</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">/// Message timestamp.</span>
+<span class="err">   </span> <span class="n">AmqpTimestamp</span> <span class="n">Timestamp</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Convenience property; parses RabbitMQ.Client.IBasicProperties.ReplyTo property</span>
+<span class="err">   </span> <span class="c1">// using RabbitMQ.Client.PublicationAddress.Parse(System.String), /// and serializes</span>
+<span class="err">   </span> <span class="c1">// it using RabbitMQ.Client.PublicationAddress.ToString.</span>
+<span class="err">   </span> <span class="n">PublicationAddress</span> <span class="n">ReplyToAddress</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Destination to reply to.</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">ReplyTo</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="c1">// Message priority, 0 to 9. ///</span>
+<span class="err">   </span> <span class="kt">byte</span> <span class="n">Priority</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Sets RabbitMQ.Client.IBasicProperties.DeliveryMode </span>
+    <span class="c1">// to either persistent (2) or non-persistent (1). ///</span>
+<span class="err">   </span> <span class="kt">bool</span> <span class="n">Persistent</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application message Id. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">MessageId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Message header field table. Is of type System.Collections.Generic.IDictionary`2.        </span>
+<span class="err">   </span> <span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">Headers</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Message expiration specification. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">Expiration</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Non-persistent (1) or persistent (2). ///</span>
+<span class="err">   </span> <span class="kt">byte</span> <span class="n">DeliveryMode</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application correlation identifier. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">CorrelationId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// MIME content type. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">ContentType</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// MIME content encoding. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">ContentEncoding</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Intra-cluster routing identifier (cluster id is deprecated in AMQP 0-9-1).        </span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">ClusterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">   </span> <span class="c1">// Application Id. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">AppId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="err">    </span><span class="c1">// Message type name. ///</span>
+<span class="err">   </span> <span class="kt">string</span> <span class="n">Type</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>With the associated “Is[PropName]Present()” one can check if the property has been set.</p>
 
 <p>Here is a usage example:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">msgProps</span> <span class="p">=</span> <span class="n">chan</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">msgProps</span> <span class="p">=</span> <span class="n">chan</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
 <span class="n">msgProps</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">"application/json"</span><span class="p">;</span>
-<span class="n">msgProps</span><span class="p">.</span><span class="n">CorrelationId</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="nf">NewGuid</span><span class="p">().</span><span class="nf">ToString</span><span class="p">();</span> <span class="c1">// set a correlation id to the message
-</span><span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
-</code></pre>
-</div>
+<span class="n">msgProps</span><span class="p">.</span><span class="n">CorrelationId</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="nf">NewGuid</span><span class="p">().</span><span class="nf">ToString</span><span class="p">();</span> <span class="c1">// set a correlation id to the message</span>
+<span class="n">chan</span><span class="p">.</span><span class="nf">BasicPublish</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQExchangeName</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="n">msgProps</span><span class="p">,</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
+</code></pre></div></div>
 
 <p><em>Serialization</em></p>
 
@@ -542,14 +529,13 @@
   <li>Chunked (larger files) - use headers to keep track on how to assemble back the file on the receiving end. Attention to <code class="highlighter-rouge">Worker Queue</code> pattern where the <a href="https://stackoverflow.com/questions/21363302/rabbitmq-message-order-of-delivery">chunks will not all end up on the same machine</a>.</li>
 </ul>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>
 <span class="n">props</span><span class="p">.</span><span class="nf">SetPersistent</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
 <span class="n">props</span><span class="p">.</span><span class="n">Headers</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ListDictionary</span><span class="p">();</span>
 <span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"FileName"</span><span class="p">,</span> <span class="n">fileName</span><span class="p">);</span>
 <span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"ChunkNumber"</span><span class="p">,</span> <span class="n">chunkNumber</span><span class="p">);</span>
 <span class="n">props</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">"EOF"</span><span class="p">,</span> <span class="n">eof</span><span class="p">);</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>Best though is better to avoid transferring large files.</p>
 
 <h3 id="notes">Notes</h3>

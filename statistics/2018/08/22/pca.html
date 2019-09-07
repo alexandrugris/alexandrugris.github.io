@@ -109,7 +109,7 @@
 
 <p>The following Python code uses the power method together with deflation for computing the eigenvectors and eigenvalues for a <em>square</em> matrix <code class="highlighter-rouge">A</code>.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
 <span class="k">def</span> <span class="nf">vector_norm</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
@@ -159,8 +159,7 @@
        
     
     <span class="k">return</span> <span class="p">(</span><span class="n">lambdas</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Correctness is very simple to check. Do the following:</p>
 
@@ -173,7 +172,7 @@
 
 <p>Let’s setup a test bed of linear-dependent variables. We will want to predict <code class="highlighter-rouge">Y</code> based on <code class="highlighter-rouge">A</code> - see below:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="c"># 2 factors, 1000 points each</span>
@@ -184,12 +183,11 @@
 
 <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
 <span class="n">Y</span> <span class="o">=</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">2.3</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Let’s compute the covariance of and correlation of the two vectors, <code class="highlighter-rouge">a</code> and <code class="highlighter-rouge">b</code>:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">covar</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">covar</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
@@ -214,53 +212,47 @@
 <span class="c"># in our case, corr above diagonal is 0.83</span>
 <span class="c"># this can be seen also from plotting a vs b</span>
 <span class="n">Corr_AA</span> <span class="o">=</span> <span class="n">corr_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Eigenvalue decomposition is applied to the covariance matrix. So let’s do just that:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># eigen value decomposition is applied on the covariance matrix</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># eigen value decomposition is applied on the covariance matrix</span>
 <span class="n">Covar_AA</span> <span class="o">=</span> <span class="n">covar_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
 
 <span class="c"># lmbdas contain the eigenvalues and v the normalized eigenvectors</span>
 <span class="n">lmbdas</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">eigen_decomposition</span><span class="p">(</span><span class="n">Covar_AA</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We can quickly check that the two <code class="highlighter-rouge">v's</code> are perpedicular to each other, by doing</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>np.dot(v[0], v[1])
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>np.dot(v[0], v[1])
 Out[209]: -9.731923600320158e-11
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We call the following function which computes the principal factors (vector <code class="highlighter-rouge">F</code> described in the <em>PCA</em> section) based on the initial matrix <code class="highlighter-rouge">A</code> and the eigenvalues vector <code class="highlighter-rouge">v</code>.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
     <span class="c"># rough check that all vectors are normalized</span>
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
         <span class="k">assert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">vector_norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span>
 
     <span class="n">Fs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">([</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Fs</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>and then</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">Fs</span> <span class="o">=</span> <span class="n">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-</code></pre>
-</div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Fs</span> <span class="o">=</span> <span class="n">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</code></pre></div></div>
 
 <p>Now we can quickly check that, indeed, <code class="highlighter-rouge">Var(Fs[i]) == lmdas[i]</code>:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">226</span><span class="p">]:</span> <span class="n">array</span><span class="p">([</span><span class="mf">10333.05692141</span><span class="p">,</span>   <span class="mf">199.78928639</span><span class="p">])</span>
 
 <span class="n">lmbdas</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">227</span><span class="p">]:</span> <span class="p">[</span><span class="mf">10333.056921412048</span><span class="p">,</span> <span class="mf">199.78928639278513</span><span class="p">]</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This also shows that the fist factor contributes <code class="highlighter-rouge">98%</code> to the total variance, so we can use it alone in regression.</p>
 
@@ -274,10 +266,9 @@ Out[209]: -9.731923600320158e-11
 
 <p>If end up with the principal <code class="highlighter-rouge">F</code> factor explaining less of the variance any of the <code class="highlighter-rouge">X</code> initial factors, we must standardize our data. That is, from which the mean was substracted and then we divided them by their standard deviation. For our <code class="highlighter-rouge">A</code> matrix, the matrix of all <code class="highlighter-rouge">X</code> factors, the function is as follows:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">standardize</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">standardize</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We check this need by calculating the <a href="http://www.stat.yale.edu/Courses/1997-98/101/correl.htm">R^2 metric for each regression (RSQ in Excel)</a> - for the <code class="highlighter-rouge">X</code> factors and then for the <code class="highlighter-rouge">F</code> factors. Now we can safely use the covariance matrix to do PCA.</p>
 

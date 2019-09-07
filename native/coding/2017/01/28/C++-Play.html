@@ -72,15 +72,14 @@ improve compile-time issue detection and type safety. To refresh my memory and a
 
 <h2 id="improvements-to-classes---inline-initializers-for-class-members">Improvements to classes - inline initializers for class members:</h2>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Test</span><span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Test</span><span class="p">{</span>
 
-	<span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="c1">// new in C++
-</span>	<span class="kt">int</span> <span class="n">y</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="c1">// new in C++</span>
+	<span class="kt">int</span> <span class="n">y</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 
 	<span class="n">std</span><span class="p">::</span><span class="kt">string</span> <span class="n">test_str</span> <span class="p">=</span> <span class="s">"Hello World"</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="smart-pointers-in-the-standard-library">Smart pointers in the standard library</h2>
 
@@ -93,55 +92,53 @@ improve compile-time issue detection and type safety. To refresh my memory and a
 
 <p>Now smart pointers are included in the standard library and they are the preferred way of writing C++ code.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="err">#</span><span class="n">include</span> <span class="p">&lt;</span><span class="n">memory</span><span class="p">&gt;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="n">include</span> <span class="p">&lt;</span><span class="n">memory</span><span class="p">&gt;</span>
 
-<span class="c1">// ...
-</span>
+<span class="c1">// ...</span>
+
 <span class="k">class</span> <span class="nc">Test</span> <span class="p">{</span>
-<span class="c1">// ...
-</span><span class="k">public</span><span class="p">:</span>
+<span class="c1">// ...</span>
+<span class="k">public</span><span class="p">:</span>
 	<span class="nf">Test</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="p">&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span> <span class="cm">/*...*/</span> <span class="p">}</span>
 
 <span class="p">}</span>
 
 <span class="k">void</span> <span class="nf">test_shared_ptr</span><span class="p">()</span> <span class="p">{</span>
 
-	<span class="c1">// the recommended way to initialize a smart pointer because the ref-counter is
-</span>	<span class="c1">// allocated in the same call with the memory for Test
-</span>	<span class="c1">// =&gt; less memory fragmentation and better locality
-</span>	<span class="n">shared_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">pTest</span> <span class="p">=</span> <span class="n">make_shared</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;(</span><span class="m">10</span><span class="p">,</span> <span class="m">10</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
+	<span class="c1">// the recommended way to initialize a smart pointer because the ref-counter is</span>
+	<span class="c1">// allocated in the same call with the memory for Test</span>
+	<span class="c1">// =&gt; less memory fragmentation and better locality</span>
+	<span class="n">shared_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">pTest</span> <span class="p">=</span> <span class="n">make_shared</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;(</span><span class="m">10</span><span class="p">,</span> <span class="m">10</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 	<span class="n">weak_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">pwTest</span> <span class="p">=</span> <span class="n">pTest</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Another smart pointer construct is the <code class="highlighter-rouge">unique_ptr&lt; &gt;</code>, which replaces the now deprecated <code class="highlighter-rouge">auto_ptr</code> .
 I think it is worth considering using it whenever possible instead of <code class="highlighter-rouge">boost::shared_ptr&lt;&gt;</code> and <code class="highlighter-rouge">boost::weak_ptr&lt;&gt;</code>.
 I think it sends a stronger signal about ownership intent when used in new code.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="nf">source_unique_ptr</span><span class="p">()</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="nf">source_unique_ptr</span><span class="p">()</span> <span class="p">{</span>
 	<span class="k">return</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;();</span>
 <span class="p">}</span>
 
-<span class="c1">// t is received by value. In this case, this function
-// can only be called using std::move  on the pointer
-</span><span class="k">void</span> <span class="nf">test_sink</span><span class="p">(</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+<span class="c1">// t is received by value. In this case, this function</span>
+<span class="c1">// can only be called using std::move  on the pointer</span>
+<span class="k">void</span> <span class="nf">test_sink</span><span class="p">(</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">t</span><span class="p">-&gt;</span><span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="k">void</span> <span class="nf">test_func_ref_unique_ptr</span><span class="p">(</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">t</span> <span class="p">=</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;();</span> <span class="c1">// destructor will be called here
-</span>							 <span class="c1">// for the object sent by parameter
-</span>	<span class="n">t</span><span class="p">-&gt;</span><span class="n">x</span> <span class="p">=</span> <span class="m">5</span><span class="p">;</span>
+	<span class="n">t</span> <span class="p">=</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;();</span> <span class="c1">// destructor will be called here</span>
+							 <span class="c1">// for the object sent by parameter</span>
+	<span class="n">t</span><span class="p">-&gt;</span><span class="n">x</span> <span class="p">=</span> <span class="m">5</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="k">void</span> <span class="nf">test_smart_pointers</span><span class="p">()</span> <span class="p">{</span>
 	<span class="n">auto</span> <span class="n">pt</span> <span class="p">=</span> <span class="nf">source_unique_ptr</span><span class="p">();</span>
 	<span class="nf">test_func_ref_unique_ptr</span><span class="p">(</span><span class="n">pt</span><span class="p">);</span>
-	<span class="nf">test_sink</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">pt</span><span class="p">));</span> <span class="c1">// pt is now empty!
-</span><span class="p">}</span>
-</code></pre>
-</div>
+	<span class="nf">test_sink</span><span class="p">(</span><span class="nf">move</span><span class="p">(</span><span class="n">pt</span><span class="p">));</span> <span class="c1">// pt is now empty!</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p><em>Note:</em> <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. 
 If the receiving function accepts the <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> by value as parameter,
@@ -160,34 +157,34 @@ For instance, old pattern in which we push pointers to <code class="highlighter-
 
 <p>Here are some small examples:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_collections</span><span class="p">()</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_collections</span><span class="p">()</span> <span class="p">{</span>
 
 	<span class="n">vector</span><span class="p">&lt;</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;&gt;</span> <span class="n">v_Test</span><span class="p">;</span>
 
-	<span class="c1">// uses move semantics to fully change the ownership of the pointer to the collection.
-</span>	<span class="c1">// provided that we had a full type with move constructor / move assignment,
-</span>	<span class="c1">// on vector reallocation only the move operations would have been called.
-</span>	<span class="n">v_Test</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;());</span> 
+	<span class="c1">// uses move semantics to fully change the ownership of the pointer to the collection.</span>
+	<span class="c1">// provided that we had a full type with move constructor / move assignment,</span>
+	<span class="c1">// on vector reallocation only the move operations would have been called.</span>
+	<span class="n">v_Test</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;());</span> 
 
-	<span class="c1">// initializer list for vector and list
-</span>	<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">v_Int</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
+	<span class="c1">// initializer list for vector and list</span>
+	<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">v_Int</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
 
 	<span class="n">list</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="n">tst</span> <span class="p">=</span> <span class="p">{</span>
 		<span class="nf">Test</span><span class="p">()</span>
 	<span class="p">};</span>
 
-	<span class="c1">// new member function, based on variadic templates argument. 
-</span>	<span class="c1">// No copy constructor, no move. 
-</span>	<span class="c1">// Just construct the object at the end of the collection, invoking the right parameters
-</span>	<span class="c1">// Better locality as the two pointers to back and forward from the list are stored next to the 
-</span>	<span class="c1">// allocated memory for the Test object in this case.
-</span>	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="s">"Test test test"</span><span class="p">);</span> 
+	<span class="c1">// new member function, based on variadic templates argument. </span>
+	<span class="c1">// No copy constructor, no move. </span>
+	<span class="c1">// Just construct the object at the end of the collection, invoking the right parameters</span>
+	<span class="c1">// Better locality as the two pointers to back and forward from the list are stored next to the </span>
+	<span class="c1">// allocated memory for the Test object in this case.</span>
+	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="s">"Test test test"</span><span class="p">);</span> 
 <span class="p">}</span>
 
 <span class="k">void</span> <span class="nf">test_collections_priority_queue</span><span class="p">()</span> <span class="p">{</span>
 
-	<span class="c1">// deque does not do copies on increase; a little bit slower random access though
-</span>	<span class="n">priority_queue</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">,</span> <span class="n">deque</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="p">&gt;</span> <span class="n">tst</span><span class="p">;</span> 
+	<span class="c1">// deque does not do copies on increase; a little bit slower random access though</span>
+	<span class="n">priority_queue</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">,</span> <span class="n">deque</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="p">&gt;</span> <span class="n">tst</span><span class="p">;</span> 
 
 	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace</span><span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="s">"A"</span><span class="p">);</span>
 	<span class="n">tst</span><span class="p">.</span><span class="nf">emplace</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="s">"B"</span><span class="p">);</span>
@@ -202,8 +199,7 @@ For instance, old pattern in which we push pointers to <code class="highlighter-
 	<span class="p">}</span>
 	<span class="n">std</span><span class="p">::</span><span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="lambdas">Lambdas</h3>
 
@@ -213,25 +209,24 @@ All in all, lambdas are mostly syntactic sugar, but a very useful one.</p>
 
 <p><em>Returning a lambda from a function and storing a lambda in a variable</em></p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">double</span><span class="p">()&gt;</span> <span class="nf">getPIFunction</span><span class="p">()</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">double</span><span class="p">()&gt;</span> <span class="nf">getPIFunction</span><span class="p">()</span> <span class="p">{</span>
 	<span class="k">static</span> <span class="kt">double</span> <span class="n">PI</span> <span class="p">=</span> <span class="m">3.1415</span><span class="p">;</span>
 
-	<span class="k">return</span> <span class="p">[]()</span> <span class="p">{</span> <span class="c1">// because PI is declared as static, it does not need to be captured explicitly;
-</span>		<span class="k">return</span> <span class="n">PI</span><span class="p">;</span>
+	<span class="k">return</span> <span class="p">[]()</span> <span class="p">{</span> <span class="c1">// because PI is declared as static, it does not need to be captured explicitly;</span>
+		<span class="k">return</span> <span class="n">PI</span><span class="p">;</span>
 	<span class="p">};</span>
 <span class="p">}</span>
 
-<span class="c1">//....
-</span>
+<span class="c1">//....</span>
+
 <span class="n">auto</span> <span class="n">PI_func</span> <span class="p">=</span> <span class="nf">getPIFunction</span><span class="p">();</span>
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">typeid</span><span class="p">(</span><span class="n">PI_func</span><span class="p">).</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="s">": "</span> <span class="p">&lt;&lt;</span> <span class="nf">PI_func</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-<span class="c1">// output: class std::function&lt;double __cdecl(void)&gt;: 3.1415
-</span></code></pre>
-</div>
+<span class="c1">// output: class std::function&lt;double __cdecl(void)&gt;: 3.1415</span>
+</code></pre></div></div>
 
 <p><em>Using lambdas in std::algorithms - passing them as arguments</em></p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">arr</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">arr</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span> <span class="p">};</span>
 
 <span class="nf">for_each</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">arr</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="k">value</span><span class="p">)</span> <span class="p">{</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="k">value</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
@@ -239,16 +234,15 @@ All in all, lambdas are mostly syntactic sugar, but a very useful one.</p>
 
 <span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">cubes</span><span class="p">;</span>
 
-<span class="c1">// back_inserter - very useful function
-</span><span class="nf">transform</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">arr</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="nf">back_inserter</span><span class="p">(</span><span class="n">cubes</span><span class="p">),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span> 
+<span class="c1">// back_inserter - very useful function</span>
+<span class="nf">transform</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">arr</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="nf">back_inserter</span><span class="p">(</span><span class="n">cubes</span><span class="p">),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span> 
 	<span class="k">return</span> <span class="n">n</span> <span class="p">*</span> <span class="n">n</span> <span class="p">*</span> <span class="n">n</span><span class="p">;</span>
 <span class="p">});</span>
 
 <span class="nf">for_each</span><span class="p">(</span><span class="n">cubes</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">cubes</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span>  <span class="k">value</span><span class="p">)</span> <span class="p">{</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="k">value</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">});</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em>Improvements to lambdas starting with C++14</em></p>
 
@@ -261,7 +255,7 @@ all in a typesafe matter. This pattern can be applied when you want a template t
 <p>Same for lambdas, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an <code class="highlighter-rouge">int</code> and p2 is a <code class="highlighter-rouge">const char*</code>. 
 Note though, this check is performed at compile time, so it is not at all a form of dynamic invocation.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">invoke</span><span class="p">(</span><span class="k">const</span> <span class="n">Fn</span><span class="p">&amp;</span> <span class="n">fn</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;...</span> <span class="k">params</span><span class="p">){</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">invoke</span><span class="p">(</span><span class="k">const</span> <span class="n">Fn</span><span class="p">&amp;</span> <span class="n">fn</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;...</span> <span class="k">params</span><span class="p">){</span>
 	<span class="nf">fn</span><span class="p">(</span><span class="k">params</span><span class="p">...);</span>
 <span class="p">}</span>
 
@@ -269,50 +263,47 @@ Note though, this check is performed at compile time, so it is not at all a form
 
 	<span class="n">auto</span> <span class="n">ptr</span> <span class="p">=</span> <span class="n">make_unique</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;();</span>
 
-	<span class="c1">// auto parameters for lambda, initialization for capture parameters (c++14)
-</span>	<span class="nf">invoke</span><span class="p">(</span> <span class="p">[</span><span class="n">ptr</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">ptr</span><span class="p">)]</span> <span class="p">(</span><span class="n">auto</span> <span class="n">p1</span><span class="p">,</span> <span class="n">auto</span> <span class="n">p2</span><span class="p">){</span> 
+	<span class="c1">// auto parameters for lambda, initialization for capture parameters (c++14)</span>
+	<span class="nf">invoke</span><span class="p">(</span> <span class="p">[</span><span class="n">ptr</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">ptr</span><span class="p">)]</span> <span class="p">(</span><span class="n">auto</span> <span class="n">p1</span><span class="p">,</span> <span class="n">auto</span> <span class="n">p2</span><span class="p">){</span> 
 
 		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">ptr</span><span class="p">-&gt;</span><span class="n">str</span><span class="p">.</span><span class="nf">c_str</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="n">p1</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="n">p2</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 
 	<span class="p">},</span> <span class="m">2</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 
-	<span class="c1">// should be null because it was moved in the lambda initialization
-</span>	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Value of ptr:"</span> <span class="p">&lt;&lt;</span>  <span class="n">ptr</span><span class="p">.</span><span class="k">get</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
+	<span class="c1">// should be null because it was moved in the lambda initialization</span>
+	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Value of ptr:"</span> <span class="p">&lt;&lt;</span>  <span class="n">ptr</span><span class="p">.</span><span class="k">get</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
 
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>A little bit of extra explanation.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
 <span class="na">[x = x + 1]</span><span class="p">(){</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}();</span>
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This code prints <code class="highlighter-rouge">2</code> followed by <code class="highlighter-rouge">1</code>. The reason is that <code class="highlighter-rouge">x</code> in the lambda is a different variable than <code class="highlighter-rouge">x</code> in the outer function. 
 The code above is identical to the following (also running code, although <code class="highlighter-rouge">__x</code> is not specifically declared anywhere)</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
 <span class="na">[__x = x + 1]</span><span class="p">(){</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">__x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}();</span>
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em>Lambdas can also be recursive</em></p>
 
 <p>But in this case, they need to be explicily captured like in the code below. Please note the capture by reference. 
 If an attempt is made to send the lambda by value the code compiles but you get a runtime error - the lambda has been declared but not defined yet.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_recursive_lambdas</span><span class="p">()</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_recursive_lambdas</span><span class="p">()</span> <span class="p">{</span>
 
-	<span class="c1">// a redundant implementation but serves the purpose :)
-</span>	<span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">(</span><span class="kt">int</span><span class="p">)&gt;</span> <span class="n">fibonacci</span> <span class="p">=</span> <span class="p">[&amp;</span><span class="n">fibonacci</span><span class="p">](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="kt">int</span><span class="p">{</span>
+	<span class="c1">// a redundant implementation but serves the purpose :)</span>
+	<span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">(</span><span class="kt">int</span><span class="p">)&gt;</span> <span class="n">fibonacci</span> <span class="p">=</span> <span class="p">[&amp;</span><span class="n">fibonacci</span><span class="p">](</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="kt">int</span><span class="p">{</span>
 
 		<span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="p">&lt;</span> <span class="m">1</span><span class="p">)</span>
 			<span class="k">return</span> <span class="p">-</span><span class="m">1</span><span class="p">;</span>
@@ -324,60 +315,57 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 
 	<span class="n">std</span><span class="p">::</span><span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">v</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">,</span> <span class="m">9</span><span class="p">,</span> <span class="m">10</span> <span class="p">};</span>
 
-	<span class="c1">// range for; prefered to use int&amp; in order to reference elements in v
-</span>	<span class="c1">// range for is a new C++ 11 construct
-</span>	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="p">&amp;</span><span class="n">number</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> 
+	<span class="c1">// range for; prefered to use int&amp; in order to reference elements in v</span>
+	<span class="c1">// range for is a new C++ 11 construct</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="p">&amp;</span><span class="n">number</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> 
 		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="p">&lt;&lt;</span> <span class="s">"; "</span><span class="p">;</span>
 	<span class="p">}</span>
 
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em><code class="highlighter-rouge">this</code> can also be captured, like in the snipped below:</em></p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="n">CaptureThis</span><span class="p">::</span><span class="nf">CaptureThis</span><span class="p">()</span> <span class="p">{</span>
-	<span class="c1">// "this" must be in the capture list for the following to work
-</span>	<span class="nf">PrintSmth</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="p">&amp;</span> <span class="k">out</span><span class="p">)</span> <span class="p">{</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="n">CaptureThis</span><span class="p">::</span><span class="nf">CaptureThis</span><span class="p">()</span> <span class="p">{</span>
+	<span class="c1">// "this" must be in the capture list for the following to work</span>
+	<span class="nf">PrintSmth</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="p">&amp;</span> <span class="k">out</span><span class="p">)</span> <span class="p">{</span> 
 
-	<span class="k">this</span><span class="p">-&gt;</span><span class="n">x</span><span class="p">++;</span> <span class="c1">// works
-</span>	<span class="k">this</span><span class="p">-&gt;</span><span class="n">y</span><span class="p">++;</span> <span class="c1">// works
-</span>
-	<span class="n">x</span><span class="p">++;</span> <span class="c1">// works
-</span>	<span class="n">y</span><span class="p">++;</span> <span class="c1">// works
-</span>
+	<span class="k">this</span><span class="p">-&gt;</span><span class="n">x</span><span class="p">++;</span> <span class="c1">// works</span>
+	<span class="k">this</span><span class="p">-&gt;</span><span class="n">y</span><span class="p">++;</span> <span class="c1">// works</span>
+
+	<span class="n">x</span><span class="p">++;</span> <span class="c1">// works</span>
+	<span class="n">y</span><span class="p">++;</span> <span class="c1">// works</span>
+
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="k">this</span><span class="p">-&gt;</span><span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="k">this</span><span class="p">-&gt;</span><span class="n">y</span> <span class="p">&lt;&lt;</span> <span class="s">" "</span> <span class="p">&lt;&lt;</span> <span class="k">out</span><span class="p">.</span><span class="nf">c_str</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 
 	<span class="p">}</span>
 	<span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em>Changing values and mutable lambdas</em></p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code>	<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">numbers</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">,</span> <span class="m">9</span><span class="p">,</span> <span class="m">10</span> <span class="p">};</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="n">vector</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">numbers</span> <span class="p">=</span> <span class="p">{</span> <span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">,</span> <span class="m">9</span><span class="p">,</span> <span class="m">10</span> <span class="p">};</span>
 
 	<span class="kt">int</span> <span class="n">prev</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 
 	<span class="nf">for_each</span><span class="p">(</span><span class="n">numbers</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">numbers</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[</span><span class="n">prev</span><span class="p">](</span><span class="kt">int</span><span class="p">&amp;</span> <span class="k">value</span><span class="p">)</span> <span class="n">mutable</span> <span class="p">{</span> 
-		<span class="c1">// value is sent by reference, so I can modify it in place
-</span>		<span class="c1">// I send prev by value =&gt; prev does not modify in the upper scope BUT!
-</span>		<span class="c1">// because I define the function as mutable, 
-</span>		<span class="c1">// I can modify it in the scope of the lambda (in the generated class)
-</span>		<span class="n">prev</span> <span class="p">=</span> <span class="k">value</span> <span class="p">=</span> <span class="n">prev</span> <span class="p">+</span> <span class="k">value</span><span class="p">;</span>
+		<span class="c1">// value is sent by reference, so I can modify it in place</span>
+		<span class="c1">// I send prev by value =&gt; prev does not modify in the upper scope BUT!</span>
+		<span class="c1">// because I define the function as mutable, </span>
+		<span class="c1">// I can modify it in the scope of the lambda (in the generated class)</span>
+		<span class="n">prev</span> <span class="p">=</span> <span class="k">value</span> <span class="p">=</span> <span class="n">prev</span> <span class="p">+</span> <span class="k">value</span><span class="p">;</span>
 	<span class="p">});</span>
 
 	<span class="nf">for_each</span><span class="p">(</span><span class="n">numbers</span><span class="p">.</span><span class="nf">begin</span><span class="p">(),</span> <span class="n">numbers</span><span class="p">.</span><span class="nf">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">val</span><span class="p">)</span> <span class="p">{</span>
 		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">val</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 	<span class="p">});</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The output of this program is:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>1
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1
 3
 6
 10
@@ -387,8 +375,7 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 36
 45
 55
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Because the lambda was postfixed with the <code class="highlighter-rouge">mutable</code> keyword, it allows me to modify the captured values. 
 However, since the capture was not done by reference, it is not modified in the outer scope. If we were to write in pseudo-c++,
@@ -396,25 +383,23 @@ the generated lambdas are similar with the following classes:</p>
 
 <p>By-value capture without the <code class="highlighter-rouge">mutable</code> postfix:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>class Lambda{
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
 	const Type t;
 	operator() {
 		// t cannot change
 	}
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>By-value with the <code class="highlighter-rouge">mutable</code> postfix:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>class Lambda{
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
 	Type t;
 	operator () {
 		// t can change
 	}
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In the example above, since we declared the input parameter for the lambda as a reference (<code class="highlighter-rouge">int&amp;</code>), it gives me direct write access to the <code class="highlighter-rouge">vector</code> content.</p>
 
@@ -426,8 +411,8 @@ the generated lambdas are similar with the following classes:</p>
   <li>We need a way to compute at compile-time the return type of a template function.</li>
 </ol>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="c1">// starting with c++14 compiler can autodeduce return type
-</span><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T1</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T2</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T3</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T4</span><span class="p">&gt;</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// starting with c++14 compiler can autodeduce return type</span>
+<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T1</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T2</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T3</span><span class="p">,</span> <span class="n">typename</span> <span class="n">T4</span><span class="p">&gt;</span> 
 <span class="n">auto</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">T1</span> <span class="n">t1</span><span class="p">,</span> <span class="n">T2</span> <span class="n">t2</span><span class="p">,</span> <span class="n">T3</span> <span class="n">t3</span><span class="p">,</span> <span class="n">T4</span> <span class="n">t4</span><span class="p">)</span>  <span class="cm">/*-&gt; decltype (t1 * t2 * t3 * t4) */</span> <span class="p">{</span> 
 
 	<span class="n">auto</span> <span class="n">ret</span> <span class="p">=</span> <span class="n">t1</span> <span class="p">*</span> <span class="n">t2</span> <span class="p">*</span> <span class="n">t3</span> <span class="p">*</span> <span class="n">t4</span><span class="p">;</span>
@@ -437,22 +422,21 @@ the generated lambdas are similar with the following classes:</p>
 	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="c1">//...
-</span>
+<span class="c1">//...</span>
+
 <span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">5</span><span class="p">;</span>
 <span class="kt">double</span> <span class="n">y</span> <span class="p">=</span> <span class="m">5.4</span><span class="p">;</span>
 <span class="kt">float</span> <span class="n">z</span> <span class="p">=</span> <span class="m">3.1f</span><span class="p">;</span>
 <span class="kt">long</span> <span class="n">w</span> <span class="p">=</span> <span class="m">6</span><span class="p">;</span>
 
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <ol>
   <li>We have a private constructor, but we still need the type of the class:</li>
 </ol>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span> 
 	<span class="nf">A</span><span class="p">()</span> <span class="p">{}</span>
 <span class="k">public</span><span class="p">:</span>
@@ -461,13 +445,12 @@ the generated lambdas are similar with the following classes:</p>
 	<span class="p">}</span>
 <span class="p">};</span>
 
-<span class="c1">//...
-</span>
-<span class="c1">// declval can only be used where it will not be evaluated, 
-//but only checked for type - like in decltype
-</span><span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">typeid</span><span class="p">(</span><span class="nf">decltype</span><span class="p">(</span><span class="n">declval</span><span class="p">&lt;</span><span class="n">A</span><span class="p">&gt;())).</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
-</code></pre>
-</div>
+<span class="c1">//...</span>
+
+<span class="c1">// declval can only be used where it will not be evaluated, </span>
+<span class="c1">//but only checked for type - like in decltype</span>
+<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="nf">typeid</span><span class="p">(</span><span class="nf">decltype</span><span class="p">(</span><span class="n">declval</span><span class="p">&lt;</span><span class="n">A</span><span class="p">&gt;())).</span><span class="nf">name</span><span class="p">()</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> 
+</code></pre></div></div>
 
 <h3 id="variadic-templates-templates-with-a-variable-number-of-arguments">Variadic templates (templates with a variable number of arguments)</h3>
 
@@ -484,36 +467,35 @@ which shows how to:</p>
 
 <p>Let’s assume we want to write a library class which outputs CSV to a stream. We want to use it in a straight forward manner, like in the snippet below:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">Stream</span><span class="p">&gt;</span> <span class="n">auto</span> <span class="nf">createCSVPrinter</span><span class="p">(</span><span class="n">Stream</span><span class="p">&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">CSVPrinter</span><span class="p">&lt;</span><span class="n">Stream</span><span class="p">&gt;</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">Stream</span><span class="p">&gt;</span> <span class="n">auto</span> <span class="nf">createCSVPrinter</span><span class="p">(</span><span class="n">Stream</span><span class="p">&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">CSVPrinter</span><span class="p">&lt;</span><span class="n">Stream</span><span class="p">&gt;</span> <span class="p">{</span>
 	<span class="k">return</span> <span class="n">CSVPrinter</span><span class="p">&lt;</span><span class="n">Stream</span><span class="p">&gt;(</span><span class="n">s</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="k">void</span> <span class="nf">test_variadic_templates</span><span class="p">()</span> <span class="p">{</span>
 	
-	<span class="c1">// let's simply use a template function to deduce the type of cout
-</span>	<span class="n">auto</span> <span class="n">csvPrinter</span> <span class="p">=</span> <span class="nf">createCSVPrinter</span><span class="p">(</span><span class="n">cout</span><span class="p">);</span> 
+	<span class="c1">// let's simply use a template function to deduce the type of cout</span>
+	<span class="n">auto</span> <span class="n">csvPrinter</span> <span class="p">=</span> <span class="nf">createCSVPrinter</span><span class="p">(</span><span class="n">cout</span><span class="p">);</span> 
 
-	<span class="c1">// we are outputting a row or parameters of different types
-</span>	<span class="n">csvPrinter</span><span class="p">.</span><span class="nf">print_row</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="m">20</span><span class="p">,</span> <span class="m">32.5f</span><span class="p">,</span> <span class="m">22</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
+	<span class="c1">// we are outputting a row or parameters of different types</span>
+	<span class="n">csvPrinter</span><span class="p">.</span><span class="nf">print_row</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="m">20</span><span class="p">,</span> <span class="m">32.5f</span><span class="p">,</span> <span class="m">22</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 	<span class="n">csvPrinter</span><span class="p">.</span><span class="nf">print_row</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="m">20</span><span class="p">,</span> <span class="m">32.5f</span><span class="p">,</span> <span class="m">22</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 	<span class="n">csvPrinter</span><span class="p">.</span><span class="nf">print_row</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="m">20</span><span class="p">,</span> <span class="m">32.5f</span><span class="p">,</span> <span class="m">22</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 	<span class="n">csvPrinter</span><span class="p">.</span><span class="nf">print_row</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="m">20</span><span class="p">,</span> <span class="m">32.5f</span><span class="p">,</span> <span class="m">22</span><span class="p">,</span> <span class="s">"Hello World"</span><span class="p">);</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">CSVPrinter</code> class is clearly a template of type <code class="highlighter-rouge">Stream</code> which includes a method, <code class="highlighter-rouge">print_row</code> which receives a variable number of parameters of different types.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Stream</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">CSVPrinter</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Stream</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">CSVPrinter</span> <span class="p">{</span>
 
 <span class="k">private</span><span class="p">:</span>
 	<span class="kt">int</span> <span class="n">row_count</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 	<span class="n">Stream</span><span class="p">*</span> <span class="n">stream</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 
-	<span class="c1">// called for each parameter
-</span>	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="nf">validate</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span> 
-		<span class="c1">//cout &lt;&lt; typeid(T).name() &lt;&lt; endl;
-</span>		<span class="k">return</span> <span class="n">t</span><span class="p">;</span>
+	<span class="c1">// called for each parameter</span>
+	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="nf">validate</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="p">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span> 
+		<span class="c1">//cout &lt;&lt; typeid(T).name() &lt;&lt; endl;</span>
+		<span class="k">return</span> <span class="n">t</span><span class="p">;</span>
 	<span class="p">}</span>
 
 	<span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">FirstColumn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">Columns</span><span class="p">&gt;</span>  
@@ -545,12 +527,11 @@ which shows how to:</p>
 		<span class="k">if</span> <span class="p">(</span><span class="n">row_count</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span> <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">", "</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="p">}</span>		
 		<span class="n">row_count</span><span class="p">++;</span>
 
-		<span class="c1">// function validate is called for each parameter in cols
-</span>		<span class="nf">print_row_internal</span><span class="p">(</span><span class="nf">validate</span><span class="p">(</span><span class="n">cols</span><span class="p">)...);</span> 
+		<span class="c1">// function validate is called for each parameter in cols</span>
+		<span class="nf">print_row_internal</span><span class="p">(</span><span class="nf">validate</span><span class="p">(</span><span class="n">cols</span><span class="p">)...);</span> 
 	<span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Let’s look at the <code class="highlighter-rouge">print_row</code> function:</p>
 

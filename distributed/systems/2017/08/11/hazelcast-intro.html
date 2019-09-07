@@ -88,7 +88,7 @@
 
 <p>The server and the client share a very similar code, making applications symmetrical to write:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">package</span> <span class="n">ro</span><span class="o">.</span><span class="na">alexandrugris</span><span class="o">.</span><span class="na">javaplay</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">ro</span><span class="o">.</span><span class="na">alexandrugris</span><span class="o">.</span><span class="na">javaplay</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="nn">com.hazelcast.core.Hazelcast</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">com.hazelcast.core.HazelcastInstance</span><span class="o">;</span>
@@ -121,35 +121,31 @@
 
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>For the client, the only difference is the <code class="highlighter-rouge">createStorageNode()</code> method, which still returns a <code class="highlighter-rouge">HazelcastInstance</code>, but has a different content:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span> <span class="n">HazelcastInstance</span> <span class="nf">createStorageNode</span><span class="o">(){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span> <span class="n">HazelcastInstance</span> <span class="nf">createStorageNode</span><span class="o">(){</span>
         <span class="k">return</span> <span class="n">HazelcastClient</span><span class="o">.</span><span class="na">newHazelcastClient</span><span class="o">();</span>
     <span class="o">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>If we spanwn several instances of the server we notice that each of them joins the cluster automatically:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Members [3] {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Members [3] {
 	Member [192.168.1.6]:5701
 	Member [192.168.1.6]:5702
 	Member [192.168.1.6]:5703 this
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>If we kill one instance, the cluster will try a little bit to reconnect to it and then simply rebalance across the remaining nodes:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Members [2] {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Members [2] {
 	Member [192.168.1.6]:5701
 	Member [192.168.1.6]:5702 this
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The client will also automatically connect to the cluster but will not register itself as a member.</p>
 
@@ -163,7 +159,7 @@
 
 <h3 id="types-stored-in-the-distributed-map-must-implement-serializable">Types stored in the distributed map must implement <code class="highlighter-rouge">Serializable</code></h3>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="c1">// must implement the Serializable inferface</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">AddressBookEntry</span> <span class="kd">implements</span> <span class="n">Serializable</span><span class="o">{</span>
 
@@ -183,8 +179,7 @@
         <span class="k">this</span><span class="o">.</span><span class="na">streetAddress</span> <span class="o">=</span> <span class="n">streetAddress</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="adding-items-to-hazelcast-and-basic-querying">Adding items to Hazelcast and basic querying</h3>
 
@@ -196,7 +191,7 @@
 
 <p>We can add additional indexing on the fields that do not make up primary keys so that queries will run faster. For each <code class="highlighter-rouge">put</code> though, additional overhead will incur. Indexing on non-keys is not mandatory for queries, but can speed up processing for frequent operations.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
     <span class="c1">// IMap implements the java.util.Map inferface</span>
     <span class="kd">static</span> <span class="n">IMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">AddressBookEntry</span><span class="o">&gt;</span> <span class="n">addressBook</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
 
@@ -249,12 +244,11 @@
 
         
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="adding-persistant-storage-capabilities">Adding persistant storage capabilities</h3>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="c1">// persistence to a database</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1">// persistence to a database</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">MapConfig</span> <span class="nf">getMapConfig</span><span class="o">(){</span>
 
         <span class="k">return</span> <span class="k">new</span> <span class="nf">MapConfig</span><span class="o">()</span>
@@ -271,19 +265,17 @@
                 <span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="n">MAP_NAME</span><span class="o">);</span>
 
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The function above is called through the following snippet, ran only on the storage nodes:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code> <span class="k">if</span><span class="o">(!</span><span class="n">bClient</span><span class="o">)</span> <span class="c1">// configure the map to use persistence if on the server</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">if</span><span class="o">(!</span><span class="n">bClient</span><span class="o">)</span> <span class="c1">// configure the map to use persistence if on the server</span>
     <span class="n">hazelcastInstance</span><span class="o">.</span><span class="na">getConfig</span><span class="o">().</span><span class="na">addMapConfig</span><span class="o">(</span><span class="n">AddressBookEntry</span><span class="o">.</span><span class="na">getMapConfig</span><span class="o">());</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">AddressBookMapStore</code> is a straight forward implementation of the <code class="highlighter-rouge">MapStore&lt;K, V&gt;</code> interface:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code> <span class="c1">// implementation of persistence</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="c1">// implementation of persistence</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">AddressBookMapStore</span> <span class="kd">implements</span> <span class="n">MapStore</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">AddressBookEntry</span><span class="o">&gt;</span> <span class="o">{</span>
 
         <span class="kd">public</span> <span class="kd">static</span> <span class="n">AddressBookMapStore</span> <span class="n">mapStore</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AddressBookMapStore</span><span class="o">();</span>
@@ -328,14 +320,13 @@
             <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
         <span class="o">}</span>
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="indexing">Indexing</h3>
 
 <p>If we want to add indexing on a different field except the primary key, a better way than described above in the basic querying section is to modify the MapConfig as follows:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">MapConfig</span> <span class="nf">getMapConfig</span><span class="o">(){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">MapConfig</span> <span class="nf">getMapConfig</span><span class="o">(){</span>
 
         <span class="k">return</span> <span class="k">new</span> <span class="nf">MapConfig</span><span class="o">()</span>
 
@@ -355,8 +346,7 @@
                 <span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="n">MAP_NAME</span><span class="o">);</span>
     <span class="o">}</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Link to docs <a href="http://docs.hazelcast.org/docs/3.3-EA2/manual/html-single/hazelcast-documentation.html#indexing">here</a>.</p>
 
@@ -369,7 +359,7 @@
   <li>A better way is to use entry processors (next chapter)</li>
 </ul>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span>  <span class="kt">boolean</span> <span class="nf">updateWithLock</span><span class="o">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">map</span><span class="o">,</span> <span class="n">K</span> <span class="n">k</span><span class="o">,</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">V</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">func</span><span class="o">){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">static</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span>  <span class="kt">boolean</span> <span class="nf">updateWithLock</span><span class="o">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">map</span><span class="o">,</span> <span class="n">K</span> <span class="n">k</span><span class="o">,</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">V</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">func</span><span class="o">){</span>
 
         <span class="k">try</span><span class="o">{</span>
             <span class="k">if</span><span class="o">(!</span><span class="n">map</span><span class="o">.</span><span class="na">tryLock</span><span class="o">(</span><span class="n">k</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">SECONDS</span><span class="o">))</span> <span class="o">{</span>
@@ -389,8 +379,7 @@
             <span class="n">map</span><span class="o">.</span><span class="na">unlock</span><span class="o">(</span><span class="n">k</span><span class="o">);</span>
         <span class="o">}</span>
     <span class="o">}</span>    
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="entry-processors">Entry processors</h3>
 
@@ -407,7 +396,7 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
 
 <p>Below is the code:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">interface</span> <span class="nc">SerializedConsumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;,</span> <span class="n">Serializable</span><span class="o">{</span> <span class="o">}</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">interface</span> <span class="nc">SerializedConsumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;,</span> <span class="n">Serializable</span><span class="o">{</span> <span class="o">}</span>
 
     <span class="kd">public</span> <span class="kd">static</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="kt">boolean</span> <span class="nf">updateWithEntryProcessor</span><span class="o">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">map</span><span class="o">,</span> <span class="n">K</span> <span class="n">k</span><span class="o">,</span> <span class="n">SerializedConsumer</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">func</span><span class="o">){</span>
 
@@ -434,16 +423,14 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
 
         <span class="k">return</span> <span class="o">(</span><span class="kt">boolean</span><span class="o">)</span><span class="n">map</span><span class="o">.</span><span class="na">executeOnKey</span><span class="o">(</span><span class="n">k</span><span class="o">,</span> <span class="n">ep</span><span class="o">);</span> <span class="c1">// can be used with several keys</span>
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Invoked as:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code> <span class="k">if</span><span class="o">(!</span><span class="n">updateWithEntryProcessor</span><span class="o">(</span><span class="n">addressBook</span><span class="o">,</span> <span class="s">"OM"</span><span class="o">,</span>  <span class="n">v</span> <span class="o">-&gt;</span> <span class="n">v</span><span class="o">.</span><span class="na">emailAddress</span> <span class="o">=</span> <span class="s">"om@om.ro"</span><span class="o">)){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">if</span><span class="o">(!</span><span class="n">updateWithEntryProcessor</span><span class="o">(</span><span class="n">addressBook</span><span class="o">,</span> <span class="s">"OM"</span><span class="o">,</span>  <span class="n">v</span> <span class="o">-&gt;</span> <span class="n">v</span><span class="o">.</span><span class="na">emailAddress</span> <span class="o">=</span> <span class="s">"om@om.ro"</span><span class="o">)){</span>
     <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Could not modify with EntryProcessor"</span><span class="o">);</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>As said before, the invocation happens on the client, while the breakpoint set in <code class="highlighter-rouge">EntryProcessor::process</code> is hit on the storage node:</p>
 
@@ -473,7 +460,7 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
 
 <p>Here is an example usage:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SupplierFunc</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">,</span> <span class="n">R</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Serializable</span><span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SupplierFunc</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">,</span> <span class="n">R</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Serializable</span><span class="o">{</span>
         <span class="n">R</span> <span class="nf">apply</span><span class="o">(</span><span class="n">K</span> <span class="n">k</span><span class="o">,</span> <span class="n">V</span> <span class="n">v</span><span class="o">);</span>
     <span class="o">}</span>
 
@@ -489,12 +476,11 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
         <span class="o">},</span> <span class="n">aggregation</span><span class="o">);</span>
 
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>being called as:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// a basic aggregator which counts all letters from the email address (dummy, just for tests)</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// a basic aggregator which counts all letters from the email address (dummy, just for tests)</span>
 <span class="kt">long</span> <span class="n">countOfAllLettersInEmailAddresses</span> <span class="o">=</span>
 
     <span class="n">processAllEntriesWithAggregators</span><span class="o">(</span>
@@ -503,8 +489,7 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
         <span class="n">Aggregations</span><span class="o">.</span><span class="na">longSum</span><span class="o">());</span>
 
 <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"All email addresses added letters amount to: "</span> <span class="o">+</span> <span class="n">countOfAllLettersInEmailAddresses</span><span class="o">);</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We used here:</p>
 <ul>
@@ -520,7 +505,7 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
 
 <p>This is not enough, however. We also need to create an <code class="highlighter-rouge">EntryProcessor</code> and, additionally, implement  the <code class="highlighter-rouge">HazelcastInstanceAware</code> interface. This interface will set the Hazelcast instance when the entry processor is run so that we can query the instance for other local maps.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">JoinLikeEntryProcessor</span> <span class="kd">implements</span> 
         <span class="n">Serializable</span><span class="o">,</span> 
         <span class="n">EntryProcessor</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">,</span> <span class="n">Customer</span><span class="o">&gt;,</span>
@@ -543,8 +528,7 @@ we can implement <code class="highlighter-rouge">EntryProcessor</code> directly 
                 <span class="n">hi</span> <span class="o">=</span> <span class="n">_hi</span><span class="o">;</span>
             <span class="o">}</span>
         <span class="o">}</span> 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="notes-on-other-data-structures">Notes On Other Data Structures</h3>
 

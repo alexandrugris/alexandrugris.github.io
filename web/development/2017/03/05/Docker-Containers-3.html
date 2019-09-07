@@ -70,9 +70,8 @@
 
 <h3 id="cleaning-up-the-system">Cleaning up the system:</h3>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker system prune 
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker system prune 
+</code></pre></div></div>
 
 <blockquote>
   <p>WARNING! This will remove:</p>
@@ -86,18 +85,16 @@ Are you sure you want to continue? [y/N] y</li>
 
 <h3 id="running-sql-server-express-in-docker">Running SQL Server Express in Docker</h3>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker pull microsoft/mssql-server-windows-express
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker pull microsoft/mssql-server-windows-express
 c:&gt;docker run -d --name SQLServer_AGris 
     --env sa_password="QAZxsw1234" 
     --env ACCEPT_EULA=y microsoft/mssql-server-windows-express
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Because starting the server can take a long time, it is recommended in another window to do:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker logs --follow SQLServer_AGris
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker logs --follow SQLServer_AGris
+</code></pre></div></div>
 
 <p>Other useful flags:</p>
 
@@ -108,9 +105,8 @@ c:&gt;docker run -d --name SQLServer_AGris
 
 <p>Then get the IP Address (I have installed the Unix tools in Windows):</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker inspect SQLServer_AGris | grep IPAddress | awk "/[0-9]/ { print $2 }" | sed "s/\",*//g"
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker inspect SQLServer_AGris | grep IPAddress | awk "/[0-9]/ { print $2 }" | sed "s/\",*//g"
+</code></pre></div></div>
 
 <p>And connect using the SQL Server Management Studio:</p>
 
@@ -118,15 +114,13 @@ c:&gt;docker run -d --name SQLServer_AGris
 
 <h3 id="play-with-volumes---persistent-data-between-containers-start--stop--remove">Play with volumes - persistent data between containers start / stop / remove</h3>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>-v my_home:/home/agris
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-v my_home:/home/agris
+</code></pre></div></div>
 
 <p>will create a persistent volume called <code class="highlighter-rouge">my_home</code> which will be mounted in <code class="highlighter-rouge">/home/agris</code> in the container. Everytime a container is started with <code class="highlighter-rouge">-v my_home:...</code> the same volume will be mounted.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker volumes ls
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker volumes ls
+</code></pre></div></div>
 
 <p>will display both the named volumes and the unnamed ones.</p>
 
@@ -135,33 +129,28 @@ For example, in the mysql Dockerfile we find <code class="highlighter-rouge">VOL
 
 <p>Start myslq with volume mounted:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run --rm --name my_sql_agris -p 3306:3306 -e MYSQL_ROOT_PASSWORD=QAZxsw123 -d -v agris_data:/var/lib/mysql mysql
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run --rm --name my_sql_agris -p 3306:3306 -e MYSQL_ROOT_PASSWORD=QAZxsw123 -d -v agris_data:/var/lib/mysql mysql
+</code></pre></div></div>
 
 <p>Check logs to see that everything is fine:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker logs my_sql_agris
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker logs my_sql_agris
+</code></pre></div></div>
 
 <p>List the volumes:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker volume ls
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker volume ls
+</code></pre></div></div>
 
 <p>Start the mysql client to create a database:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker exec -it my_sql_agris mysql --user=root --password=QAZxsw123
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker exec -it my_sql_agris mysql --user=root --password=QAZxsw123
+</code></pre></div></div>
 
 <p>Stop the server container:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker stop my_sql_agris
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker stop my_sql_agris
+</code></pre></div></div>
 
 <p>Run again the server and the mysql client to verify the database still exists. In this case it was called “test”.</p>
 
@@ -171,13 +160,12 @@ For example, in the mysql Dockerfile we find <code class="highlighter-rouge">VOL
 
 <p>First thing, some cleanup:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker ps -a -q | xargs docker rm -f
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker ps -a -q | xargs docker rm -f
+</code></pre></div></div>
 
 <p>docker-compose.yml general structure:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>version: '3'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
 
 services:
     mysql_agris:
@@ -192,20 +180,17 @@ services:
 volumes:
     agris_data:
         external: true
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Run</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker-compose up
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker-compose up
+</code></pre></div></div>
 
 <p>Connect to the instance:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run -it mysql mysql --user=root --password=QAZxsw123 --host=172.22.96.1
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it mysql mysql --user=root --password=QAZxsw123 --host=172.22.96.1
+</code></pre></div></div>
 
 <p>Note: <code class="highlighter-rouge">--host=172.22.96.1</code> comes from running <code class="highlighter-rouge">ipconfig</code>:</p>
 
@@ -225,25 +210,22 @@ Please create the volume manually using <code class="highlighter-rouge">docker v
 
 <p>so:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker volume create --name=agris_data
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker volume create --name=agris_data
 c:&gt;docker-compose up -d
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>If we want to scale one service, we can simply add:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker-compose scale service_name=2
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker-compose scale service_name=2
+</code></pre></div></div>
 
 <p>In this case, <code class="highlighter-rouge">service_name</code> would receive another instance. Of course, services scaled like this cannot have ports exposed to host.</p>
 
 <h3 id="networks">Networks:</h3>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker network ls
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker network ls
 c:&gt;docker network inspect cppplaylinux_default
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/docker_3_5.png" alt="docker network inspect" /></p>
 
@@ -267,29 +249,26 @@ c:&gt;docker network inspect cppplaylinux_default
 
 <p>All user-defined networks have a embedded DNS server. Thus, assuming we add another container to the network, from that container we can simply do <code class="highlighter-rouge">ping mysql_agris</code> and it will work.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker run -it --rm --name ash --network cppplaylinux_default alpine-ssh sh
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --rm --name ash --network cppplaylinux_default alpine-ssh sh
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/docker_3_6.png" alt="ping" /></p>
 
 <p>In the end:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker-compose down
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker-compose down
+</code></pre></div></div>
 
 <p>to tear everything down.</p>
 
 <p>If we want to keep the network, just do:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>c:&gt;docker-compose rm
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker-compose rm
+</code></pre></div></div>
 
 <p>Speaking of docker-compose, it can be integrated directly with a Dockerfile instead of an existing image. So, instead of doing <code class="highlighter-rouge">docker build -t img_name .</code> we can simply add to the <code class="highlighter-rouge">docker-compose.yml</code> the following:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>version: '3'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
 
 services:
     web_layer:
@@ -301,8 +280,7 @@ services:
         environment:
             - db_conn_str=...
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>A useful parameter is <code class="highlighter-rouge">depends_on:</code> which instructs docker to only start the container after the dependecies are statisfied. <a href="https://docs.docker.com/compose/compose-file/#dependson">docker</a></p>
 

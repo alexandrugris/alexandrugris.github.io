@@ -75,95 +75,88 @@ The source code associated with this article can be found <a href="https://githu
 
 <p><em>To run a single instance of Kafka on the localhost, with ports exposed to localhost:</em></p>
 
-<div class="language-yml highlighter-rouge"><pre class="highlight"><code><span class="s">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
 
 <span class="c1"># based on https://github.com/wurstmeister/kafka-docker</span>
 
-<span class="s">services</span><span class="pi">:</span>
-  <span class="s">zookeeper</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
-    <span class="s">ports</span><span class="pi">:</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">zookeeper</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">2181:2181"</span>
 
-  <span class="s">kafka</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
+  <span class="na">kafka</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
 
-    <span class="s">ports</span><span class="pi">:</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">9092:9092"</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">1099:1099"</span> <span class="c1"># for JMX - not needed unless we want to monitor the service</span>
 
-    <span class="s">environment</span><span class="pi">:</span>
-      <span class="s">KAFKA_ADVERTISED_HOST_NAME</span><span class="pi">:</span> <span class="s">127.0.0.1</span>
-      <span class="s">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
-      <span class="s">KAFKA_JMX_OPTS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-Dcom.sun.management.jmxremote</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.authenticate=false</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.ssl=false</span><span class="nv"> </span><span class="s">-Djava.rmi.server.hostname=127.0.0.1</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.rmi.port=1099"</span>
-      <span class="s">JMX_PORT</span><span class="pi">:</span> <span class="s">1099</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="na">KAFKA_ADVERTISED_HOST_NAME</span><span class="pi">:</span> <span class="s">127.0.0.1</span>
+      <span class="na">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
+      <span class="na">KAFKA_JMX_OPTS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-Dcom.sun.management.jmxremote</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.authenticate=false</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.ssl=false</span><span class="nv"> </span><span class="s">-Djava.rmi.server.hostname=127.0.0.1</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.rmi.port=1099"</span>
+      <span class="na">JMX_PORT</span><span class="pi">:</span> <span class="s">1099</span>
 
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em>Another option, if we want to scale the Kafka cluster is to run:</em></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker-compose up -d
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose up -d
+</code></pre></div></div>
 
 <p>and then</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker-compose scale kafka=2
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose scale kafka=2
+</code></pre></div></div>
 
 <p>However, in order for this to run, we need to make some changes to our docker-compose file:</p>
 
-<div class="language-yml highlighter-rouge"><pre class="highlight"><code><span class="s">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
 
 <span class="c1"># based on https://github.com/wurstmeister/kafka-docker</span>
 
-<span class="s">services</span><span class="pi">:</span>
-  <span class="s">zookeeper</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
-    <span class="s">ports</span><span class="pi">:</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">zookeeper</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">2181"</span>
 
-  <span class="s">kafka</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
+  <span class="na">kafka</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
 
-    <span class="s">ports</span><span class="pi">:</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">9092"</span> <span class="c1"># we do not publish these ports anymore to host</span>
       
-    <span class="s">environment</span><span class="pi">:</span>
+    <span class="na">environment</span><span class="pi">:</span>
       <span class="c1"># we remove the KAFKA_ADVERTISED_HOST_NAME property</span>
-      <span class="s">HOSTNAME_COMMAND</span><span class="pi">:</span> <span class="s2">"</span><span class="s">route</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">'/UG[</span><span class="nv"> </span><span class="se">\t</span><span class="s">]/{print</span><span class="nv"> </span><span class="s">$$2}'"</span>
-      <span class="s">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
+      <span class="na">HOSTNAME_COMMAND</span><span class="pi">:</span> <span class="s2">"</span><span class="s">route</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">'/UG[</span><span class="nv"> </span><span class="se">\t</span><span class="s">]/{print</span><span class="nv"> </span><span class="s">$$2}'"</span>
+      <span class="na">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
       <span class="c1"># we drop completely the JMX part</span>
 
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In this docker image, Kafka is installed in <code class="highlighter-rouge">/opt/kafka</code>, thus running</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker exec testkafka_kafka_2 ls /opt/kafka/bin
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec testkafka_kafka_2 ls /opt/kafka/bin
+</code></pre></div></div>
 
 <p>will get get us the list of all Kafka binaries. Let’s connect to one of the two Kafka instances.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker exec -it testkafka_kafka_2 bash
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec -it testkafka_kafka_2 bash
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_1.png" alt="Kafka Connection" /></p>
 
 <p>However, if JMX is still specified, the <code class="highlighter-rouge">JMX_PORT</code> is already set and in use by the Kafka daemon, so in order to run commands to Kafka we need to make a little hack:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>$&gt;JMX_PORT=1100
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;JMX_PORT=1100
 $&gt;KAFKA_JMX_OPTS=""
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Then we can play:</p>
 
@@ -171,15 +164,13 @@ $&gt;KAFKA_JMX_OPTS=""
 
 <p>To produce messages to <code class="highlighter-rouge">my_topic</code>:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>bash-4.3# ./kafka-console-producer.sh --topic my_topic --broker-list testkafka_kafka_1:9092
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-producer.sh --topic my_topic --broker-list testkafka_kafka_1:9092
+</code></pre></div></div>
 
 <p>To read messages from <code class="highlighter-rouge">my_topic</code>:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>bash-4.3# ./kafka-console-consumer.sh --topic my_topic --zookeeper zookeeper:2181 --from-beginning
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-consumer.sh --topic my_topic --zookeeper zookeeper:2181 --from-beginning
+</code></pre></div></div>
 
 <h3 id="basic-concepts">Basic Concepts</h3>
 
@@ -222,23 +213,21 @@ $&gt;KAFKA_JMX_OPTS=""
 
 <p>In the image above, <code class="highlighter-rouge">ISR</code> means in-sync replicas. If we decide to kill one docker container, we get:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
 Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         Topic: my_topic Partition: 0    Leader: 1001    Replicas: 1002,1001     Isr: 1001
         Topic: my_topic Partition: 1    Leader: 1001    Replicas: 1001,1002     Isr: 1001
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The cluster has readjusted itself. Leader for partition 0 has been assigned 1001 (instead of 1002 which was previously), we still have two replicas, but ISR is only 1001.</p>
 
 <p>If we start the stopped container again, we get:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
 Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         Topic: my_topic Partition: 0    Leader: 1001    Replicas: 1002,1001     Isr: 1001,1002
         Topic: my_topic Partition: 1    Leader: 1001    Replicas: 1001,1002     Isr: 1001,1002
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Leader for both partitions stay the same, but this time ISR are both 1001 and 1002.</p>
 
@@ -254,49 +243,48 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <p>However, there is another one, slightly more complex but more rewarding as one can scale as many brokers as he/she wishes. This requires the creation of another service in the docker compose file which runs the Java application to debug, because it is needed that this app runs in the same docker network as the rest of the cluster. It also requires remote debugging enabled and mapping of the project directory in a volume in the docker container that runs the app. Here is the updated <code class="highlighter-rouge">docker-compose.yml</code> as it is configured on my machine.</p>
 
-<div class="language-yml highlighter-rouge"><pre class="highlight"><code><span class="s">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
 
 <span class="c1"># based on https://github.com/wurstmeister/kafka-docker</span>
 
-<span class="s">services</span><span class="pi">:</span>
-  <span class="s">zookeeper</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
-    <span class="s">ports</span><span class="pi">:</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">zookeeper</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/zookeeper</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">2181"</span>
 
-  <span class="s">kafka_client_app</span><span class="pi">:</span> <span class="c1"># the container to which my java client connects to</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">openjdk</span>
+  <span class="na">kafka_client_app</span><span class="pi">:</span> <span class="c1"># the container to which my java client connects to</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">openjdk</span>
 
-    <span class="s">ports</span><span class="pi">:</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">8000:8000"</span> <span class="c1"># expose the debugger port to localhost</span>
 
-    <span class="s">depends_on</span><span class="pi">:</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
      <span class="pi">-</span> <span class="s">kafka</span>
 
-    <span class="s">command</span><span class="pi">:</span> <span class="s">java -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y -Dbootstrap.servers=kafka:9092 -cp /myapp/out/production/TestKafka:/myapp/lib/* ro.alexandrugris.BasicKafkaProducer</span> <span class="c1"># wait for debugger in suspend mode</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="s">java -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y -Dbootstrap.servers=kafka:9092 -cp /myapp/out/production/TestKafka:/myapp/lib/* ro.alexandrugris.BasicKafkaProducer</span> <span class="c1"># wait for debugger in suspend mode</span>
 
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">C:\Users\alexa\IdeaProjects\TestKafka:/myapp</span> <span class="c1"># map the project to the container</span>
 
-  <span class="s">kafka</span><span class="pi">:</span> <span class="c1"># for scale</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
-    <span class="s">depends_on</span><span class="pi">:</span>
+  <span class="na">kafka</span><span class="pi">:</span> <span class="c1"># for scale</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">wurstmeister/kafka</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">zookeeper</span>
 
-    <span class="s">ports</span><span class="pi">:</span>
+    <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">9092"</span>
 
-    <span class="s">environment</span><span class="pi">:</span>
-      <span class="s">HOSTNAME_COMMAND</span><span class="pi">:</span> <span class="s2">"</span><span class="s">route</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">'/UG[</span><span class="nv"> </span><span class="se">\t</span><span class="s">]/{print</span><span class="nv"> </span><span class="s">$$2}'"</span>
-      <span class="s">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="na">HOSTNAME_COMMAND</span><span class="pi">:</span> <span class="s2">"</span><span class="s">route</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">'/UG[</span><span class="nv"> </span><span class="se">\t</span><span class="s">]/{print</span><span class="nv"> </span><span class="s">$$2}'"</span>
+      <span class="na">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
 
       <span class="c1"># create a topic on start</span>
-      <span class="s">KAFKA_CREATE_TOPICS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">alexandrugris.my_topic:5:2:compact"</span> <span class="c1"># 5 partitions, 2 replicas</span>
+      <span class="na">KAFKA_CREATE_TOPICS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">alexandrugris.my_topic:5:2:compact"</span> <span class="c1"># 5 partitions, 2 replicas</span>
 
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>And some screenshots:</p>
 
@@ -331,7 +319,7 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <p>The following snippet is the producer code initialized with a by-first-letter partitioner:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">BasicKafkaProducer</span><span class="o">(</span><span class="n">Properties</span> <span class="n">props</span><span class="o">){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">BasicKafkaProducer</span><span class="o">(</span><span class="n">Properties</span> <span class="n">props</span><span class="o">){</span>
     <span class="n">props</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"partitioner.class"</span><span class="o">,</span> <span class="s">"ro.alexandrugris.ByDestinationPartitioner"</span><span class="o">);</span>
     <span class="n">myProducer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">KafkaProducer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">MyMessage</span><span class="o">&gt;(</span>
             <span class="n">props</span><span class="o">,</span>
@@ -378,8 +366,7 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         <span class="k">try</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="na">wait</span><span class="o">();</span> <span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">Exception</span> <span class="n">exx</span><span class="o">){}</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The producer is thread safe and should generally be shared among all threads for best performance. 
 The producer manages a single background thread that does I/O as well as a TCP connection to each of the brokers it needs to communicate with. Failure to close the producer after use will leak these resources. Apache kafka is optimized for high throughput and, therefore, uses microbatching in its producer and consumer clients (<code class="highlighter-rouge">RecordAccumulator</code> low level class). For each topic-partition combination, internally a <code class="highlighter-rouge">RecordBatch</code> keeps track of these messages.</p>
@@ -409,9 +396,8 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 <p>The result of the per-first-letter partitioner when run:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>$&gt;/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic alexandrugris.my_topic --partition 0 --from-beginning
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic alexandrugris.my_topic --partition 0 --from-beginning
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_9.png" alt="Messages" /></p>
 
@@ -434,9 +420,8 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 <p>Kafka keeps track of consumer offsets in a Kafka topic named <code class="highlighter-rouge">__consumer_offsets</code>, which is partitioned across 50 partitions.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code> bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic __consumer_offsets
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic __consumer_offsets
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">KafkaConsumer</code> API has functions to manually retreive and / or reset the position in the stream on a per topic/partition basis. This allows true manual cursor movement, very similar to working with a file. It has also options to pause / resume a subscribed topic when there are higher priority messages to consider.</p>
 
@@ -456,7 +441,7 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 <p><em>Rebalance listeners:</em></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// subscribe to all partitions in a topic</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// subscribe to all partitions in a topic</span>
 <span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="n">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()),</span> <span class="k">new</span> <span class="n">ConsumerRebalanceListener</span><span class="o">()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPartitionsRevoked</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">TopicPartition</span><span class="o">&gt;</span> <span class="n">partitions</span><span class="o">)</span> <span class="o">{</span>
@@ -469,8 +454,7 @@ The producer manages a single background thread that does I/O as well as a TCP c
         <span class="c1">// do something here</span>
     <span class="o">}</span>
 <span class="o">});</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>If we set the <code class="highlighter-rouge">enable.auto.commit=false</code> we need to use one of the two API functions <code class="highlighter-rouge">commitSync()</code> or <code class="highlighter-rouge">commitAsync()</code> to advance the last known committed offset. <code class="highlighter-rouge">commitSync</code> retries in case of failure. The retry is controlled by the
 <code class="highlighter-rouge">retries.backoff.ms</code> setting. In case of unrecoverable error, a <code class="highlighter-rouge">CommitFailedException</code> is thrown.  <code class="highlighter-rouge">commitAsync</code> receives a callback as parameter for the calling application to know when the commit has occured. It does not automatically retry.</p>
@@ -501,13 +485,12 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 <p>This means we need to change the client as follows:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code> <span class="c1">// subscribe to all partitions in a topic -&gt; uncomment the line below if part of a consumer group</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="c1">// subscribe to all partitions in a topic -&gt; uncomment the line below if part of a consumer group</span>
 <span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="n">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()));</span>
 
 <span class="c1">// subscribe to specific partitions -&gt; comment the line below if part of a consumer group</span>
 <span class="c1">// consumer.assign(topicPatterns.stream().map( TopicPattern::getPartition).collect(Collectors.toList()));</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_10.png" alt="With subscribe not assign" /></p>
 

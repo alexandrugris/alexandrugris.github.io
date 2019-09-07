@@ -185,7 +185,7 @@ As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code
 
 <p>The example below is from a hypothetical DDD snack machine application implementation. Please note the type of code each class contains. Low level algorthms in Value Objects and higher level orchestration in the Entity. Entities can be uniquely identified and restored from the database. A lot of logic is stored inside Value Objects like, for instance, the management of banknotes and coins inside the machine.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{</span>
 
     <span class="c1">// these properties need to be serialized,</span>
     <span class="c1">// so in case of a crash the system restores to its normal function.</span>
@@ -233,12 +233,11 @@ As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code
         <span class="k">return</span> <span class="n">UUID</span><span class="o">.</span><span class="na">randomUUID</span><span class="o">();</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>A simple type, a value object, immutable. It is a part of the intrinsic types of the system, so it does not make sense to persit it in its own table:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Money</span><span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Money</span><span class="o">{</span>
 
     <span class="n">TEN_CENTS</span>   <span class="o">(</span><span class="mi">10</span><span class="o">),</span>
     <span class="n">FIFTY_CENTS</span> <span class="o">(</span><span class="mi">50</span><span class="o">),</span>
@@ -259,12 +258,11 @@ As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code
         <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">count</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Here is another value object. It does not have life of its own outside the snack machine, it has a fixed structure, and can be expressed as a set of immutable operations - see the discussion below. Lots of business functionality is stored within the value object itself.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MoneyCollection</span><span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MoneyCollection</span><span class="o">{</span>
 
     <span class="cm">/** A set with the count of each type of coins in the machine */</span>
     <span class="kd">private</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">moneyDeposit</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">Money</span><span class="o">.</span><span class="na">values</span><span class="o">().</span><span class="na">length</span><span class="o">];</span>
@@ -326,19 +324,17 @@ As Martin Flowler notes in his wiki, CQRS complicates the  architecture and code
         <span class="k">return</span> <span class="n">ret</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>At first look, the <code class="highlighter-rouge">MoneyCollection</code> object does not seem at all immutable, which violates the core characteristic of a value object. However, if you look at its methods they can be expressed as:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>MoneyCollection a, b, c;
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MoneyCollection a, b, c;
 int d;
 
 a = a + b; // MoneyCollection::transferFrom
 a = a + d; // MoneyCollection::addMoney
 a = a - d; // MoneyCollection::substract
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In such cases, a decision must be taken: do we refactor to keep the value object immutable, in this case paying the price of a small array allocation and copy, or do we hide the dirty details behind a clean facade? Beside the (small) perfomance hit, here is also visible a certain mismatch between a theoretical concept and the comfort with which it can be expressed in our programming language.</p>
 
@@ -362,7 +358,7 @@ a = a - d; // MoneyCollection::substract
 
 <p>In our example, let’s consider that each <code class="highlighter-rouge">SnackMachine</code> has a set of slots that are filled with products. The user selects the slot (1-10, let’s say) and the product that is topmost is returned. This introduces two new abstractions: <code class="highlighter-rouge">Slot</code> and <code class="highlighter-rouge">Product</code>. Unlike <code class="highlighter-rouge">MoneyCollection</code>, each machine can have a different number of slots and in each slot several products:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span><span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span><span class="o">{</span>
 <span class="o">}</span>
 
 <span class="kd">class</span> <span class="nc">Slot</span> <span class="o">{</span>
@@ -372,24 +368,21 @@ a = a - d; // MoneyCollection::substract
 <span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;{</span>
     <span class="n">List</span><span class="o">&lt;</span><span class="n">Slot</span><span class="o">&gt;</span> <span class="n">slots</span><span class="o">;</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This setup leads pretty quickly to the idea that while the slot is an integral part of the <code class="highlighter-rouge">SnackMachine</code>, it requires its own separate serialization to the database. However, a slot by itself does cannot exist in vacuum, so when a snack machine is deleted its associated slots must be deleted as well. Just the same, each <code class="highlighter-rouge">SnackMachine</code> knows well how many slots it has, so it can enforce this invariant. For implementation, it is good to have a marker abstract class, <code class="highlighter-rouge">AggregateRoot</code>, which inherits from <code class="highlighter-rouge">Entity</code> and helps clarify the aggregate boundaries. Thus, the declarations above become:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AggregateRoot</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="o">{}</span> 
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AggregateRoot</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
 <span class="kd">class</span> <span class="nc">Slot</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
 <span class="kd">class</span> <span class="nc">SnackMachine</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">Product</code> abstraction has a life of its own, outside the <code class="highlighter-rouge">SnackMachine</code>. Therefore, it cannot be part of the <code class="highlighter-rouge">SnackMachine</code> aggregate, so it makes sense to have it as aggregate root by itself.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{}</span> 
-</code></pre>
-</div>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Product</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="o">{}</span> 
+</code></pre></div></div>
 
 <h3 id="repositories">Repositories</h3>
 
@@ -406,7 +399,7 @@ a = a - d; // MoneyCollection::substract
 
 <p>Do not return partially initialized entities from the repository, because this would break the invariants and this is a great source of bugs. A better approach, for methods that do not require full data, is to create separate DTOs. An example below:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Repository</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">T</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;&gt;</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Repository</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">T</span> <span class="kd">extends</span> <span class="n">AggregateRoot</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;&gt;</span> <span class="o">{</span>
     <span class="kd">public</span> <span class="kd">abstract</span> <span class="n">T</span> <span class="nf">getByID</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">);</span>
     <span class="kd">public</span> <span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">save</span><span class="o">(</span><span class="n">T</span> <span class="n">obj</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">PersistenceException</span><span class="o">;</span>
 <span class="o">}</span>
@@ -429,14 +422,13 @@ a = a - d; // MoneyCollection::substract
     <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">&gt;</span> <span class="nf">getEmptySnackMachinesIDs</span><span class="o">()</span> <span class="o">{}</span> 
 
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In a CQRS application, there would be two repositories. One for handling commands (changes to the state of the system) and one for handling reads (read-only). These two repositories might reference two different undelying databases, each modelled so that it does its job best (updates vs reads).</p>
 
 <p>Below you can see an example of a splitted repository:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachineCommandsRepository</span> <span class="kd">extends</span> <span class="n">Repository</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">,</span> <span class="n">SnackMachine</span><span class="o">&gt;{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SnackMachineCommandsRepository</span> <span class="kd">extends</span> <span class="n">Repository</span><span class="o">&lt;</span><span class="n">UUID</span><span class="o">,</span> <span class="n">SnackMachine</span><span class="o">&gt;{</span>
 
     <span class="c1">// returns read / write entities, suitable for handing commands</span>
     <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">SnackMachine</span><span class="o">&gt;</span> <span class="nf">getEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
@@ -449,8 +441,7 @@ a = a - d; // MoneyCollection::substract
    <span class="c1">// These could be used directly as view models</span>
     <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MoneyInSnackMachineDTO</span><span class="o">&gt;</span> <span class="nf">getMoneyInEmptySnackMachines</span><span class="o">()</span> <span class="o">{}</span> 
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="bounded-contexts">Bounded Contexts</h3>
 
@@ -502,7 +493,7 @@ a = a - d; // MoneyCollection::substract
 
 <p>A bad example:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;{</span>
     <span class="kt">long</span> <span class="n">ID</span><span class="o">;</span>
     <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
     <span class="n">String</span> <span class="n">surname</span><span class="o">;</span>
@@ -512,12 +503,11 @@ a = a - d; // MoneyCollection::substract
 <span class="kd">class</span> <span class="nc">PersonChangedEvent</span> <span class="o">{</span> <span class="c1">// Not specific: what exactly has changed?</span>
     <span class="n">Person</span> <span class="n">person</span><span class="o">;</span> <span class="c1">// Introduces a dependecy on this bounded context. </span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>A better example:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span> <span class="o">{}</span> 
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Person</span> <span class="kd">extends</span> <span class="n">Entity</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span> <span class="o">{}</span> 
 
 <span class="c1">// specific</span>
 <span class="c1">// passes only the relevat information</span>
@@ -531,8 +521,7 @@ a = a - d; // MoneyCollection::substract
     <span class="n">Date</span> <span class="nf">getOldBirthday</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">oldBirthday</span><span class="o">;</span> <span class="o">}</span>
     <span class="n">Date</span> <span class="nf">getNewBirthday</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">newBirthday</span><span class="o">;</span> <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Including the <code class="highlighter-rouge">ID</code> is debatable: can the <code class="highlighter-rouge">Person</code> be reteived by its ID by the downstream consumer? Is this event intended for the local bounded context or for consumption in another bounded context? If the answer is the latter, we may want to include different identification information in the event.</p>
 
@@ -542,7 +531,7 @@ a = a - d; // MoneyCollection::substract
 
 <p>Implementation, a simple, in memory, transport:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// marker interface</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// marker interface</span>
 <span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">DomainEvent</span><span class="o">{}</span>
 
 <span class="c1">// event handler</span>
@@ -600,12 +589,11 @@ a = a - d; // MoneyCollection::substract
         <span class="n">refList</span><span class="o">.</span><span class="na">forEach</span> <span class="o">(</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="o">((</span><span class="n">IHandler</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;)</span><span class="n">t</span><span class="o">).</span><span class="na">handleEvent</span> <span class="o">(</span><span class="n">event</span><span class="o">));</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>And, of course, an example usage:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">domain.DomainEvent</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">domain.DomainEvent</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">domain.DomainEvents</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">domain.IHandler</span><span class="o">;</span>
 
@@ -636,8 +624,7 @@ a = a - d; // MoneyCollection::substract
 
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="the-unit-of-work-problem">The Unit Of Work Problem</h3>
 

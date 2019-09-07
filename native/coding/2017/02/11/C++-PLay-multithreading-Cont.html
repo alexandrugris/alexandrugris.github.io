@@ -83,31 +83,29 @@ For short operations they should be faster, but speed comes also at a price: the
 <p>I would like to be able to use <code class="highlighter-rouge">std::unique_lock</code> with my library as it might make my code usable with already existing templates which receive the lock as a template parameter. 
 In my code I played with various types of mutexes to test performance, so <code class="highlighter-rouge">MutexType</code> below is a template parameter. I am going to use the following constructs:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">MutexType</span> <span class="n">mtx</span><span class="p">;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">MutexType</span> <span class="n">mtx</span><span class="p">;</span>
 
-<span class="c1">// write lock
-</span><span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">write_mutex</span><span class="p">&gt;</span> <span class="nf">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
-</code></pre>
-</div>
+<span class="c1">// write lock</span>
+<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">write_mutex</span><span class="p">&gt;</span> <span class="nf">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+</code></pre></div></div>
 
 <p>and</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">MutexType</span> <span class="n">mtx</span><span class="p">;</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">MutexType</span> <span class="n">mtx</span><span class="p">;</span>
 
-<span class="c1">// read lock
-</span><span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">read_mutex</span><span class="p">&gt;</span> <span class="nf">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
-</code></pre>
-</div>
+<span class="c1">// read lock</span>
+<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">read_mutex</span><span class="p">&gt;</span> <span class="nf">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+</code></pre></div></div>
 
 <p>In order to build my mutex I need two base classes: <code class="highlighter-rouge">read_mutex</code> and <code class="highlighter-rouge">write_mutex</code> from which to derive and static cast later.</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">read_lockable</span><span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">read_lockable</span><span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
     
     <span class="n">typedef</span> <span class="n">read_lockable</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span> <span class="n">read_mutex</span><span class="p">;</span>
     
-    <span class="c1">// these methods are called by unique_lock
-</span>    <span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="k">this</span><span class="p">)-&gt;</span><span class="nf">lock_read</span><span class="p">();</span> <span class="p">}</span>
+    <span class="c1">// these methods are called by unique_lock</span>
+    <span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="k">this</span><span class="p">)-&gt;</span><span class="nf">lock_read</span><span class="p">();</span> <span class="p">}</span>
     <span class="k">void</span> <span class="nf">unlock</span><span class="p">()</span> <span class="p">{</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="k">this</span><span class="p">)-&gt;</span><span class="nf">unlock_read</span><span class="p">();</span> <span class="p">}</span>
 <span class="p">};</span>
 
@@ -119,12 +117,11 @@ In my code I played with various types of mutexes to test performance, so <code 
     <span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="k">this</span><span class="p">)-&gt;</span><span class="nf">lock_write</span><span class="p">();</span> <span class="p">}</span>
     <span class="k">void</span> <span class="nf">unlock</span><span class="p">()</span> <span class="p">{</span> <span class="n">static_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="k">this</span><span class="p">)-&gt;</span><span class="nf">unlock_write</span><span class="p">();</span> <span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="first-implementation---pure-cas-non-blocking">First implementation - pure CAS, non-blocking:</h3>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">rw_spinlock</span> <span class="p">:</span> <span class="k">public</span> <span class="n">read_lockable</span><span class="p">&lt;</span><span class="n">rw_spinlock</span><span class="p">&gt;,</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">rw_spinlock</span> <span class="p">:</span> <span class="k">public</span> <span class="n">read_lockable</span><span class="p">&lt;</span><span class="n">rw_spinlock</span><span class="p">&gt;,</span> 
 					<span class="k">public</span> <span class="n">write_lockable</span><span class="p">&lt;</span><span class="n">rw_spinlock</span><span class="p">&gt;{</span>    
 <span class="k">public</span><span class="p">:</span>
         
@@ -140,11 +137,11 @@ In my code I played with various types of mutexes to test performance, so <code 
 
 <span class="k">private</span><span class="p">:</span>
 
-    <span class="c1">// this is completely from me. I don't know if it makes sense
-</span>    <span class="c1">// it basically tries to spin for a number of cycles in tight loop before it
-</span>    <span class="c1">// attempts to call into the kernel for the next thread to be scheduled
-</span>    <span class="c1">// TODO: IF production code, add performance counters and play around with variables
-</span>	<span class="k">const</span> <span class="kt">int</span> <span class="n">SPIN_COUNT_MAX</span> <span class="p">=</span> <span class="m">15000</span><span class="p">;</span>
+    <span class="c1">// this is completely from me. I don't know if it makes sense</span>
+    <span class="c1">// it basically tries to spin for a number of cycles in tight loop before it</span>
+    <span class="c1">// attempts to call into the kernel for the next thread to be scheduled</span>
+    <span class="c1">// TODO: IF production code, add performance counters and play around with variables</span>
+	<span class="k">const</span> <span class="kt">int</span> <span class="n">SPIN_COUNT_MAX</span> <span class="p">=</span> <span class="m">15000</span><span class="p">;</span>
 	<span class="k">void</span> <span class="nf">spin</span><span class="p">(</span><span class="kt">int</span> <span class="p">&amp;</span> <span class="n">spn</span><span class="p">)</span> <span class="p">{</span>
 		<span class="k">if</span> <span class="p">(--</span><span class="n">spn</span> <span class="p">&lt;=</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
 			<span class="n">std</span><span class="p">::</span><span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
@@ -157,8 +154,8 @@ In my code I played with various types of mutexes to test performance, so <code 
     <span class="k">void</span> <span class="nf">lock_read</span><span class="p">(){</span>
 		<span class="kt">int</span> <span class="n">spn</span> <span class="p">=</span> <span class="n">SPIN_COUNT_MAX</span><span class="p">;</span>
 
-        <span class="c1">// wait for writesto finish	
-</span>        <span class="kt">int</span> <span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+        <span class="c1">// wait for writesto finish	</span>
+        <span class="kt">int</span> <span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
         <span class="k">while</span><span class="p">(!</span><span class="n">writes</span><span class="p">.</span><span class="nf">compare_exchange_weak</span><span class="p">(</span><span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">,</span> <span class="m">1</span><span class="p">)){</span>
 			<span class="nf">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
         <span class="p">}</span>
@@ -169,14 +166,14 @@ In my code I played with various types of mutexes to test performance, so <code 
     <span class="k">void</span> <span class="nf">lock_write</span><span class="p">(){</span>
 		<span class="kt">int</span> <span class="n">spn</span> <span class="p">=</span> <span class="n">SPIN_COUNT_MAX</span><span class="p">;</span>
         
-        <span class="c1">// acquire the writes lock first
-</span>        <span class="c1">// so that no new reads or writes can enter the loop
-</span>        <span class="kt">int</span> <span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+        <span class="c1">// acquire the writes lock first</span>
+        <span class="c1">// so that no new reads or writes can enter the loop</span>
+        <span class="kt">int</span> <span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
         <span class="k">while</span><span class="p">(!</span><span class="n">writes</span><span class="p">.</span><span class="nf">compare_exchange_weak</span><span class="p">(</span><span class="n">wr</span> <span class="p">=</span> <span class="m">0</span><span class="p">,</span> <span class="m">1</span><span class="p">)){</span>
 			<span class="nf">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
         <span class="p">}</span>
-        <span class="c1">// wait for finishing the reads
-</span>        <span class="kt">int</span> <span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+        <span class="c1">// wait for finishing the reads</span>
+        <span class="kt">int</span> <span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
         <span class="k">while</span><span class="p">(!</span><span class="n">reads</span><span class="p">.</span><span class="nf">compare_exchange_weak</span><span class="p">(</span><span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">)){</span>
 			<span class="nf">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
 		<span class="p">}</span>
@@ -199,12 +196,11 @@ In my code I played with various types of mutexes to test performance, so <code 
     <span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">reads</span><span class="p">;</span>
     <span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">writes</span><span class="p">;</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="second-implementation---cas-only-on-read-block-with-mutex-the-writes">Second implementation - CAS only on read, block with mutex the writes:</h3>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">rw_mutex</span> <span class="p">:</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">rw_mutex</span> <span class="p">:</span>
     <span class="k">public</span> <span class="n">read_lockable</span><span class="p">&lt;</span><span class="n">rw_mutex</span><span class="p">&lt;</span><span class="n">count_locks</span><span class="p">&gt;&gt;,</span>
     <span class="k">public</span> <span class="n">write_lockable</span><span class="p">&lt;</span><span class="n">rw_mutex</span><span class="p">&lt;</span><span class="n">count_locks</span><span class="p">&gt;&gt;,</span>
    <span class="p">{</span>
@@ -231,10 +227,10 @@ In my code I played with various types of mutexes to test performance, so <code 
     <span class="k">void</span> <span class="nf">lock_write</span><span class="p">(){</span>
 
 		<span class="n">mtx</span><span class="p">.</span><span class="k">lock</span><span class="p">();</span>
-		<span class="n">writes</span><span class="p">++;</span> <span class="c1">// stop accepting the reads
-</span>
-		<span class="c1">// wait for all reads to finish
-</span>		<span class="kt">int</span> <span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+		<span class="n">writes</span><span class="p">++;</span> <span class="c1">// stop accepting the reads</span>
+
+		<span class="c1">// wait for all reads to finish</span>
+		<span class="kt">int</span> <span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 		<span class="k">while</span> <span class="p">(!</span><span class="n">reads</span><span class="p">.</span><span class="nf">compare_exchange_weak</span><span class="p">(</span><span class="n">rd</span> <span class="p">=</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">))</span> <span class="p">{</span>
 			<span class="n">std</span><span class="p">::</span><span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
 		<span class="p">}</span>
@@ -256,8 +252,7 @@ In my code I played with various types of mutexes to test performance, so <code 
 	<span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">reads</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 <span class="p">};</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="cas-operations-used">CAS operations used:</h3>
 

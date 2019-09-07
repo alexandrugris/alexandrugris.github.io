@@ -114,14 +114,14 @@
 
 <p>Code below:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="s">"""
 The following code assumes a series of independent matches, each modeled as a tuple (p_loss, loss, won), with p_won assumed to be 1-p_loss. Each event is a Bernoulli trial.
 """</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">import</span> <span class="nn">statistics</span> <span class="kn">as</span> <span class="nn">stats</span>
+<span class="kn">import</span> <span class="nn">statistics</span> <span class="k">as</span> <span class="n">stats</span>
 
 
 <span class="k">def</span> <span class="nf">prob_tree</span><span class="p">(</span><span class="n">risks</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
@@ -216,8 +216,7 @@ The following code assumes a series of independent matches, each modeled as a tu
 
     <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/risk_1.png" alt="Risk simulation" /></p>
 
@@ -279,8 +278,8 @@ The following code assumes a series of independent matches, each modeled as a tu
 
 <p>And the python code:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'stock-indices.csv'</span><span class="p">)</span>
 
@@ -307,14 +306,13 @@ The following code assumes a series of independent matches, each modeled as a tu
 <span class="c"># for computing the covariance matrix I have another blog post</span>
 <span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span><span class="o">*</span><span class="mi">100</span>
 <span class="k">print</span><span class="p">(</span><span class="s">"Historical variance: {}</span><span class="si">%</span><span class="s">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variance</span><span class="p">))</span> <span class="c"># similar to excel</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <ul>
   <li><em>Create a systemic factor model based on S&amp;P500 and FVX</em>:</li>
 </ul>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># we do the factor analysis for  F1 = S&amp;P and F2 = FXV</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># we do the factor analysis for  F1 = S&amp;P and F2 = FXV</span>
 <span class="c"># Yi = A + B1 * F1 + B2 * F2, with Y = return of stock Yi</span>
 <span class="c"># returns[stocks] = A + returns["^S&amp;P500"] + returns["^FVX"]</span>
 
@@ -386,8 +384,7 @@ The following code assumes a series of independent matches, each modeled as a tu
 <span class="n">f_based_variance</span> <span class="o">=</span>  <span class="n">systemic_var</span> <span class="o">+</span> <span class="n">idiosync_var</span>
 
 <span class="k">print</span><span class="p">(</span><span class="s">"Factor based variance: {}</span><span class="si">%</span><span class="s">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f_based_variance</span><span class="p">))</span> <span class="c"># rather similar to historic risk</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <ul>
   <li><em>Compute a stress test based portfolio variance</em>. The process is described below:</li>
@@ -407,10 +404,10 @@ The following code assumes a series of independent matches, each modeled as a tu
   <li><em>Compute and interpret VaR</em></li>
 </ul>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="k">def</span> <span class="nf">value_at_risk</span><span class="p">(</span><span class="n">portfolio_sum</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">confidence_level</span><span class="p">,</span> <span class="n">no_of_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
 
-    <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">st</span>
+    <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="n">st</span>
     <span class="n">zscore</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">confidence_level</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">portfolio_sum</span> <span class="o">*</span> <span class="n">zscore</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">no_of_periods</span><span class="p">))</span>
@@ -420,8 +417,7 @@ The following code assumes a series of independent matches, each modeled as a tu
 <span class="n">portfolio_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">s</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
 <span class="n">var99</span> <span class="o">=</span> <span class="n">value_at_risk</span><span class="p">(</span><span class="n">portfolio_sum</span><span class="p">,</span> <span class="n">f_based_variance</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># / 100 because it was in percentage</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">var99</code> number tells us that the probability to lose a value equal to <code class="highlighter-rouge">var99</code> or greater in the following period is <code class="highlighter-rouge">1%</code>. With our numbers, the <code class="highlighter-rouge">var99</code> value is <code class="highlighter-rouge">28.68</code>, with a total portfolio sum equal to <code class="highlighter-rouge">345</code>.</p>
 
@@ -435,10 +431,9 @@ The following code assumes a series of independent matches, each modeled as a tu
   <li>Accept bets</li>
 </ol>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">overround</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">overround</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">odds</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/risk_4.png" alt="Computing the profit based on total sakes and overround" /></p>
 
@@ -470,7 +465,7 @@ etc.</li>
 
 <p>Some code snippets for placing and managing bets. As usual, we start by analysing usage. Throught our model, we will use this custom dictionary class to hold related objects.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CustomDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CustomDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CustomDict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -483,12 +478,11 @@ etc.</li>
             <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
 
         <span class="k">return</span> <span class="n">ret</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The object model follows an implementation pattern like the following:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Sportsbook</span><span class="p">:</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Sportsbook</span><span class="p">:</span>
     <span class="s">""" Main class for the application. Allows placing bets, updating odds, settling bets, computing risk """</span>
 
     <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">"disciplines"</span><span class="p">]</span>
@@ -511,10 +505,9 @@ etc.</li>
         <span class="s">""" returns a function! the reason is that for each match, each market will be created specifically. 
         do not mistake market for market template"""</span>    
         <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">Market</span><span class="p">(</span><span class="s">'1x2'</span><span class="p">),</span> <span class="n">Market</span><span class="p">(</span><span class="s">'OverUnder-1.5'</span><span class="p">),</span> <span class="n">Market</span><span class="p">(</span><span class="s">'CorrectScore-0-0'</span><span class="p">)]</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
 
     <span class="n">sportsbook</span> <span class="o">=</span> <span class="n">Sportsbook</span><span class="p">()</span>
 
@@ -560,12 +553,11 @@ etc.</li>
     <span class="k">print</span><span class="p">(</span><span class="s">"Market risk: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">get_market</span><span class="p">(</span><span class="s">'steaua'</span><span class="p">,</span> <span class="s">'dinamo'</span><span class="p">,</span> <span class="s">"1x2"</span><span class="p">)</span><span class="o">.</span><span class="n">market_risk</span><span class="p">()))</span>
 
     <span class="k">print</span><span class="p">(</span><span class="s">"Football risk: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">discipline</span><span class="o">.</span><span class="n">discipline_risk</span><span class="p">()))</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Also, since we touched the bet placement topic, here are the place bet methods (single, multiple, system):</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">generate_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">generate_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="s">""" Generates an n-way system bet based on the selections list """</span>
 
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -613,8 +605,7 @@ etc.</li>
 
 <span class="k">def</span> <span class="nf">place_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selections</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">stake</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n_way_system</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">place_bet</span><span class="p">(</span><span class="n">selections</span><span class="p">,</span> <span class="n">stake</span><span class="p">,</span> <span class="n">n_way_system</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="risk-at-match-and-market-level">Risk at match and market level</h3>
 
@@ -652,7 +643,7 @@ interpretation of the parameters of a bivariate Poisson model is that <code clas
 
 <p>Now that we have a basic mathematical understanding on how to simulate probabilities, the remaining question is how to draw the input data, the expected goals. Both models here have two factors: the systemic factor (the league overall characteristic, which is strongly underlined in both models) and the idiosyncratic factor (how each team performs by itself).</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>home expected number of goals = (expected total goals scored per this game + expected difference in favor of home) / 2
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>home expected number of goals = (expected total goals scored per this game + expected difference in favor of home) / 2
 away expected number of goals = (expected total goals scored per this game - expected difference in favor of home) / 2
 
 where:
@@ -670,21 +661,19 @@ league home advantage = home average scored  - away average scored, for all matc
 and:
 avg diff goals scored by home team = (scored by home team - received by home team) / number of matches considered
 avg diff goals scored by away team = (scored by away team - received by away team) / number of matches considered
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The input variables for the model above are <code class="highlighter-rouge">scored / received by home / away team</code>, <code class="highlighter-rouge">number of matches considered</code> and <code class="highlighter-rouge">home / away average scored</code> which can be obtained by looking up values on the internet, on each league page, for instance. Great sites are <a href="https://www.fctables.com/">here</a> and <a href="http://www.football-lineups.com/">here</a></p>
 
 <p>Another model, the multiplicative model, has yet simpler formulas:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>goals for home = home team attack strength * away team defence strength * average league home goals
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>goals for home = home team attack strength * away team defence strength * average league home goals
 goals for away = away team attack strength * home team defence strength * average league away goals
 
 wehere:
 attack strength = goal scored / average league goal scored #higher means stronger
 defence strength = goals conceded / average league goals conceded #lower means stronger
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Again, numbers can be found by seaching on Internet, for example <a href="https://en.wikipedia.org/wiki/2017–18_Premier_League">here</a>
 Similar formulas are used by bookmakers to set starting odds as well as by punters to seach for value bets. The beauty of Poisson-based models is that they can be used even during a match. Since we know the rate of goals for each team, we can compute the odds for each team to score an additional 1-2-…-n goals for the remainder of the match, at any given moment.</p>
@@ -703,7 +692,7 @@ Similar formulas are used by bookmakers to set starting odds as well as by punte
 
 <p>I have written some code to validate my assumptions about risk distribution. I used also the “Expected Risk” notion introduced earlier to see how the risk distribution compares to this value. Results are underwhelming. Here is the simulation code, together with some charts.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">max_loss</span><span class="p">(</span><span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">max_loss</span><span class="p">(</span><span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
     <span class="c"># filter out those with probability 0</span>
     <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">,</span> <span class="n">matches</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
@@ -800,8 +789,7 @@ Similar formulas are used by bookmakers to set starting odds as well as by punte
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Results show high variability of the distribution of risk vs wins, even for the same simulation parameters (each line). See the code above for parameters.</p>
 

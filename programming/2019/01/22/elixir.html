@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Elixir Intro</title>
+  <meta name="description" content="Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succint language. I hope, Elixir, someday we will meet for an ...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/programming/2019/01/22/elixir.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Elixir Intro</h1>
+    <p class="post-meta"><time datetime="2019-01-22T13:15:16+02:00" itemprop="datePublished">Jan 22, 2019</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succint language. I hope, Elixir, someday we will meet for an exciting project together.</p>
+
+<h1 id="the-basics">The Basics</h1>
+
+<p>Starting the REPL</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;iex
+</code></pre></div></div>
+
+<p>Atoms are type in Elixir for which their value as string is also their representation in code. E.g. <code class="highlighter-rouge">:test</code> has the string value of <code class="highlighter-rouge">test</code>.</p>
+
+<p>All atoms are true except <code class="highlighter-rouge">:false</code> and <code class="highlighter-rouge">:nil</code>. Operator <code class="highlighter-rouge">||</code> will return the first true value. For example, the expression <code class="highlighter-rouge">false || :helloworld || true</code> will return <code class="highlighter-rouge">:helloworld</code>. Comparing atoms is fast and space efficient. They are similar to comparing enum values in other programming languages.</p>
+
+<p>All strings are UTF encoded. <code class="highlighter-rouge">String.length()</code> - length of the string, <code class="highlighter-rouge">&lt;&gt;</code> - concatenation operator. String interpolation is built in, with the syntax <code class="highlighter-rouge">"Hello #{name}"</code></p>
+
+<p>Tuples are defined with the syntax <code class="highlighter-rouge">t = {:ok, "Hello world"}</code>. Items in a tuple are accessed with <code class="highlighter-rouge">elem(t, 0)</code>. To change a value in a tuple one can use <code class="highlighter-rouge">put_elem(t, 1, "Hello Alexandru")</code>, but this will create a new tuple, as the data is immutable. Elixir supports deconstructing tuples with the syntax <code class="highlighter-rouge">{returncode, message} = t</code>.</p>
+
+<p>Lists are composed of heads and tails. <code class="highlighter-rouge">l = [1, 2, 3]</code> and then <code class="highlighter-rouge">hd(l)</code> will return 1 while <code class="highlighter-rouge">tl(l)</code> will return <code class="highlighter-rouge">[2, 3]</code>. Deconstructing works with lists as well <code class="highlighter-rouge">[h | t] = l</code>.</p>
+
+<blockquote>
+  <p>When counting the elements in a data structure, Elixir also abides by a simple rule: the function is named size
+if the operation is in constant time (i.e. the value is pre-calculated) or length if the operation is linear 
+(i.e. calculating the length gets slower as the input grows). As a mnemonic, both “length” and “linear” start 
+with “l”. (Elixir Tutorial)</p>
+</blockquote>
+
+<p>Keyword lists are defined as <code class="highlighter-rouge">l = [{:k, :v}]</code> or using the shorthand notation <code class="highlighter-rouge">l = [k: :v]</code>. Elements can be accesses as <code class="highlighter-rouge">l[:k]</code>.</p>
+
+<p>Maps are defined as follows: <code class="highlighter-rouge">m = %{:first_key =&gt; "this is the value"}</code>. Keys and values can be anything and, if they are atoms, they can be accessed with shortcut notation <code class="highlighter-rouge">m.first_key</code>.</p>
+
+<p>Modules are defined as follows:</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">ModuleHello</span> <span class="k">do</span>
+    <span class="k">def</span> <span class="n">say_hello</span> <span class="k">do</span>
+        <span class="no">IO</span><span class="o">.</span><span class="n">puts</span> <span class="sd">"</span><span class="s2">Hello"</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>and are reloaded in the REPL with <code class="highlighter-rouge">r(ModuleHello)</code>.</p>
+
+<p>Functions and pattern matching</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">PatternMatching</span> <span class="k">do</span>
+
+    <span class="k">def</span> <span class="n">first</span><span class="p">([])</span> <span class="k">do</span><span class="p">:</span> <span class="n">nill</span>
+    <span class="k">def</span> <span class="n">first</span><span class="p">(</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">_</span><span class="p">])</span> <span class="k">do</span><span class="p">:</span> <span class="n">head</span>
+
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Invoked as <code class="highlighter-rouge">PatternMatching.first([])</code> or <code class="highlighter-rouge">PatternMatching.first([1, 2, 3])</code></p>
+
+<p>An alternative way</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyCalendar</span> <span class="k">do</span>
+
+    <span class="k">def</span> <span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span> <span class="ow">when</span> <span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="m">400</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span> <span class="no">true</span>
+    <span class="k">def</span> <span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span> <span class="ow">when</span> <span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="m">100</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span> <span class="no">false</span>
+    <span class="k">def</span> <span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span> <span class="ow">when</span> <span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="m">4</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span> <span class="no">true</span>
+    <span class="k">def</span> <span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span> <span class="no">false</span>
+
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Elixir also supports default parameters using the <code class="highlighter-rouge">val \\ default_val</code> syntax, private functions, defined with <code class="highlighter-rouge">defp</code> instead of def or discarding parameters which are not used using the <code class="highlighter-rouge">_</code> placeholder.</p>
+
+<p>Function address is taken by using the <code class="highlighter-rouge">&amp;</code> operator, for instance when sent as a parameter to another function. Anonymous functions are also supported, e.g. <code class="highlighter-rouge">Enum.map([1, 2, 3, 4], fn(n) -&gt; n * n end)</code>. Another shorthand notation is the capture-style anonymous function, specified as <code class="highlighter-rouge">Enum.reduce([1, 2, 3, 4], 0, &amp;(&amp;1 + &amp;2))</code>. When submitted as a parameter, the syntax for invoking a function is <code class="highlighter-rouge">f.(params)</code>.</p>
+
+<p>The <code class="highlighter-rouge">cond</code> block:</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyCalendar</span> <span class="k">do</span>
+    <span class="k">def</span> <span class="n">day_abbr</span><span class="p">(</span><span class="n">day</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span>
+        <span class="k">cond</span> <span class="k">do</span><span class="p">:</span>
+            <span class="n">day</span> <span class="o">==</span> <span class="ss">:Monday</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Mon"</span>
+            <span class="n">day</span> <span class="o">==</span> <span class="ss">:Tuesday</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Tue
+            true -&gt; "</span><span class="no">Neither</span> <span class="no">Mon</span> <span class="n">nor</span> <span class="no">Tue</span><span class="sd">"</span><span class="s2">
+    end
+end
+</span></code></pre></div></div>
+
+<p>Using pattern matching do execute parts of code:</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyCalnedar</span> <span class="k">do</span>
+
+    <span class="k">def</span> <span class="n">describe_date</span><span class="p">(</span><span class="n">date</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span>
+
+        <span class="k">case</span> <span class="n">date</span> <span class="k">do</span><span class="p">:</span>
+            <span class="p">{</span><span class="m">1</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">First day of the month!"</span>
+            <span class="p">{</span><span class="m">25</span><span class="p">,</span> <span class="m">12</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Merry Christmas!"</span>
+            <span class="p">{</span><span class="m">25</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Only </span><span class="si">#{</span><span class="m">12</span> <span class="o">-</span> <span class="n">month</span><span class="si">}</span><span class="s2"> months until Christmas"</span>
+            <span class="p">{</span><span class="m">31</span><span class="p">,</span> <span class="m">10</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Happy Helloween!"</span>
+            <span class="p">{</span><span class="n">_</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="ow">when</span> <span class="n">month</span> <span class="o">&lt;=</span> <span class="m">12</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Just an average day"</span>
+            <span class="p">{</span><span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="sd">"</span><span class="s2">Invalid month"</span>
+        <span class="k">end</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Another useful example of <code class="highlighter-rouge">case</code> and pattern matching is handling errors from functions:</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="n">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span>
+    <span class="k">case</span> <span class="no">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span><span class="p">:</span>
+        <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">data</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="n">process_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="n">err</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="no">IO</span><span class="o">.</span><span class="n">puts</span> <span class="sd">"</span><span class="s2">Cannot open file"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>To start observing the Erlang VM type <code class="highlighter-rouge">iex&gt;  :observer.start()</code></p>
+
+<p>ASCII code of a letter is given by the <code class="highlighter-rouge">?</code> prefix, e.g. <code class="highlighter-rouge">?a</code>.</p>
+
+<h1 id="pattern-matching">Pattern matching</h1>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;&lt;</span><span class="sd">"</span><span class="s2">alexandru"</span><span class="p">,</span> <span class="n">x</span><span class="p">::</span><span class="n">binary</span><span class="o">&gt;&gt;</span> <span class="o">=</span> <span class="sd">"</span><span class="s2">alexandru gris"</span>
+<span class="sd">"</span><span class="s2">alexandru "</span> <span class="o">&lt;&gt;</span> <span class="n">gris</span> <span class="o">=</span> <span class="sd">"</span><span class="s2">alexandru gris"</span>
+</code></pre></div></div>
+
+<h1 id="a-binary-search-tree">A Binary Search Tree</h1>
+
+<p>A slightly more involved example of pattern matching, a binary search tree example:</p>
+
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Tree</span> <span class="k">do</span>
+
+  <span class="k">def</span> <span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span> <span class="no">nil</span><span class="p">},</span> <span class="n">nv</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">nv</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">v</span><span class="p">},</span> <span class="n">nv</span><span class="p">)</span> <span class="ow">when</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">nv</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">nv</span><span class="p">},</span> <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="no">nil</span><span class="p">}}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">v</span><span class="p">},</span> <span class="n">nv</span><span class="p">)</span> <span class="ow">when</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">nv</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="no">nil</span><span class="p">},</span> <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">nv</span><span class="p">}}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">insert</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">},</span> <span class="n">nv</span><span class="p">)</span> <span class="ow">when</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">nv</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">insert</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">nv</span><span class="p">),</span> <span class="n">right</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">insert</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">},</span> <span class="n">nv</span><span class="p">)</span> <span class="ow">when</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">nv</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">insert</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">nv</span><span class="p">)}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">to_list</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span> <span class="no">nil</span><span class="p">})</span> <span class="k">do</span>
+    <span class="p">[]</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">to_list</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span> <span class="n">v</span><span class="p">})</span> <span class="k">do</span>
+    <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">to_list</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">})</span> <span class="k">do</span>
+    <span class="n">to_list</span><span class="p">(</span><span class="n">left</span><span class="p">)</span> <span class="o">++</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">++</span> <span class="n">to_list</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">create</span><span class="p">()</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span> <span class="no">nil</span><span class="p">}</span>
+  <span class="k">end</span>
+
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Interesting to note how succint the code is.</p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

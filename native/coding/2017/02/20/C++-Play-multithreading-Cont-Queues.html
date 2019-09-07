@@ -82,11 +82,11 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>For the <code class="highlighter-rouge">TestType</code> I am going to keep the type as simple as possible, with only move enabled, just to make sure all unnecessary copies are kept under control - deep copy errors will be found at compile time. Here is the definition:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TestType</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TestType</span> <span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
 
-	<span class="kt">int</span> <span class="n">arr</span><span class="p">[</span><span class="m">50</span><span class="p">];</span> <span class="c1">// put some weight into the object
-</span>
+	<span class="kt">int</span> <span class="n">arr</span><span class="p">[</span><span class="m">50</span><span class="p">];</span> <span class="c1">// put some weight into the object</span>
+
 	<span class="nf">TestType</span><span class="p">()</span> <span class="p">{</span>		
 		<span class="nf">iota</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">arr</span> <span class="p">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="p">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span> <span class="m">0</span><span class="p">);</span>
 	<span class="p">}</span>
@@ -109,8 +109,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="s">"Yeey, not null?: "</span> <span class="p">&lt;&lt;</span> <span class="n">hex</span> <span class="p">&lt;&lt;</span> <span class="k">this</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 	<span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="the-most-basic-queue">The most basic queue:</h3>
 
@@ -122,7 +121,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
   <li>I wanted a very straight-forward interface, encapsulating all the behavior.</li>
 </ul>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">blocking_queue</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">blocking_queue</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span>
 	<span class="n">std</span><span class="p">::</span><span class="n">deque</span><span class="p">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">my_allocator</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;&gt;</span> <span class="n">_deque</span><span class="p">;</span>
 	<span class="n">mtx_type</span> <span class="n">mtx</span><span class="p">;</span>
@@ -180,8 +179,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 	<span class="p">}</span>
   
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Design considerations:</p>
 
@@ -197,7 +195,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
   <li>Very basic tests, just to make sure data isn’t lost on transfer between the callers and the queue.</li>
 </ol>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_basic_bq</span><span class="p">()</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="nf">test_basic_bq</span><span class="p">()</span> <span class="p">{</span>
 
 	<span class="n">typedef</span> <span class="n">blocking_queue</span><span class="p">&lt;</span><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">TestType</span><span class="p">&gt;,</span> 
 			<span class="n">std</span><span class="p">::</span><span class="n">mutex</span><span class="p">,</span> 
@@ -221,8 +219,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="n">MutexBlockingQueue</span> <span class="n">bq</span> <span class="p">=</span> <span class="nf">move</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
 	<span class="p">}</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <ol>
   <li>Multithreading tests:</li>
@@ -230,7 +227,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>Aim is to combine in a simple manner various parameters. Here is an example of a possible <code class="highlighter-rouge">main</code> function:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
 
 	<span class="nf">test_basic_bq</span><span class="p">();</span>
@@ -243,8 +240,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 	<span class="k">return</span> <span class="m">0</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>I am instatiating the <code class="highlighter-rouge">test_mt_bq</code> with various parameters:</p>
 
@@ -257,7 +253,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>Below is the test function:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span><span class="err">...&gt;</span> <span class="nc">class</span> <span class="n">QueueType</span><span class="p">,</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span><span class="err">...&gt;</span> <span class="nc">class</span> <span class="n">QueueType</span><span class="p">,</span> 
 			<span class="n">typename</span> <span class="n">TT</span><span class="p">,</span> 
 			<span class="n">typename</span> <span class="n">mtx_type</span> <span class="p">=</span> <span class="n">critical_section_win</span><span class="p">,</span> 
 			<span class="n">typename</span> <span class="n">cond_variable_type</span> <span class="p">=</span> <span class="n">condition_variable_win</span><span class="p">,</span> 
@@ -297,8 +293,8 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="p">}));</span>
 	<span class="p">}</span>
 
-	<span class="c1">// watchdog
-</span>	<span class="n">running_threads</span><span class="p">++;</span>
+	<span class="c1">// watchdog</span>
+	<span class="n">running_threads</span><span class="p">++;</span>
 	<span class="n">threads</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="nf">thread</span><span class="p">([&amp;]()</span> <span class="p">{</span>
 
 		<span class="k">while</span> <span class="p">(</span><span class="n">running_threads</span><span class="p">.</span><span class="nf">load</span><span class="p">()</span> <span class="p">&gt;</span> <span class="m">1</span><span class="p">)</span> <span class="p">{</span>
@@ -330,14 +326,13 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="n">th</span><span class="p">.</span><span class="k">join</span><span class="p">();</span>
 	<span class="p">});</span>
 
-	<span class="c1">// just make sure there is at least one element to consume, so the thread above does not block.
-</span>
+	<span class="c1">// just make sure there is at least one element to consume, so the thread above does not block.</span>
+
 	<span class="n">elems</span><span class="p">++;</span>
 	<span class="n">queue</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nf">TT_ctor</span><span class="p">()());</span>
 	<span class="n">last_consumer</span><span class="p">.</span><span class="k">join</span><span class="p">();</span>
 <span class="p">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This functio has several parts:</p>
 <ul>
@@ -358,7 +353,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>Here is the Windows <code class="highlighter-rouge">CRITIAL_SECTION</code> and <code class="highlighter-rouge">CONDITION_VARIABLE</code> implementation of the synchronization interface:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">critical_section_win</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">critical_section_win</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span>
 	<span class="n">CRITICAL_SECTION</span> <span class="n">cs</span><span class="p">;</span>
 <span class="k">public</span><span class="p">:</span>
@@ -368,17 +363,17 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <span class="k">public</span><span class="p">:</span>
 
 	<span class="nf">critical_section_win</span><span class="p">()</span> <span class="p">{</span>
-		<span class="c1">// ::InitializeCriticalSectionAndSpinCount(&amp;cs, 0); 
-</span>		<span class="p">::</span><span class="nf">InitializeCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span> <span class="c1">// leave the spin count as it is; test the defaults
-</span>	<span class="p">}</span>
+		<span class="c1">// ::InitializeCriticalSectionAndSpinCount(&amp;cs, 0); </span>
+		<span class="p">::</span><span class="nf">InitializeCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span> <span class="c1">// leave the spin count as it is; test the defaults</span>
+	<span class="p">}</span>
 
 	<span class="p">~</span><span class="nf">critical_section_win</span><span class="p">()</span> <span class="p">{</span>
 		<span class="p">::</span><span class="nf">DeleteCriticalSection</span><span class="p">(&amp;</span><span class="n">cs</span><span class="p">);</span>
 	<span class="p">}</span>
 
 	<span class="nf">critical_section_win</span><span class="p">(</span><span class="k">const</span> <span class="n">critical_section_win</span><span class="p">&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
-	<span class="nf">critical_section_win</span><span class="p">(</span><span class="n">critical_section_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move
-</span>
+	<span class="nf">critical_section_win</span><span class="p">(</span><span class="n">critical_section_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move</span>
+
 	<span class="kt">bool</span> <span class="nf">try_lock</span><span class="p">()</span> <span class="p">{</span>
 
 		<span class="kt">int</span> <span class="n">k</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
@@ -414,11 +409,11 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 	<span class="p">}</span>
 
 	<span class="nf">condition_variable_win</span><span class="p">(</span><span class="k">const</span> <span class="n">condition_variable_win</span><span class="p">&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span>
-	<span class="nf">condition_variable_win</span><span class="p">(</span><span class="n">condition_variable_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move
-</span>
+	<span class="nf">condition_variable_win</span><span class="p">(</span><span class="n">condition_variable_win</span><span class="p">&amp;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">=</span> <span class="n">delete</span><span class="p">;</span> <span class="c1">// TODO: move</span>
+
 	<span class="p">~</span><span class="nf">condition_variable_win</span><span class="p">()</span> <span class="p">{</span>
-		<span class="c1">// TODO: defensive programming - test for locked threads
-</span>	<span class="p">}</span>
+		<span class="c1">// TODO: defensive programming - test for locked threads</span>
+	<span class="p">}</span>
 
 	<span class="k">void</span> <span class="nf">notify_all</span><span class="p">()</span> <span class="p">{</span>
 		<span class="nf">WakeAllConditionVariable</span><span class="p">(&amp;</span><span class="n">cv</span><span class="p">);</span>
@@ -446,8 +441,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="k">return</span> <span class="n">cv_status</span><span class="p">::</span><span class="n">no_timeout</span><span class="p">;</span>
 	<span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="multi-queue-blocking-queue">Multi-queue blocking queue:</h3>
 
@@ -455,7 +449,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>Here is the code:</p>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> 
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">T</span><span class="p">,</span> <span class="n">typename</span> <span class="n">mtx_type</span><span class="p">,</span> <span class="n">typename</span> <span class="n">cond_variable_type</span><span class="p">&gt;</span> 
 <span class="k">class</span> <span class="nc">multi_blocking_queue</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span>
 
@@ -471,9 +465,9 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 	<span class="nf">multi_blocking_queue</span><span class="p">()</span> <span class="p">{}</span>
 
-	<span class="c1">// round robin for better filling of queues - 
-</span>	<span class="c1">// do not allow elements to remain for too long in one queue	
-</span>	<span class="kt">int</span> <span class="nf">get_next_queue</span><span class="p">()</span> <span class="p">{</span>		
+	<span class="c1">// round robin for better filling of queues - </span>
+	<span class="c1">// do not allow elements to remain for too long in one queue	</span>
+	<span class="kt">int</span> <span class="nf">get_next_queue</span><span class="p">()</span> <span class="p">{</span>		
 		<span class="k">static</span> <span class="n">thread_local</span> <span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
 		<span class="k">return</span> <span class="n">i</span> <span class="p">=</span> <span class="p">((</span><span class="n">i</span><span class="p">++)</span> <span class="p">%</span> <span class="n">QUEUES</span><span class="p">);</span> 
 	<span class="p">}</span>
@@ -495,8 +489,8 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 	<span class="n">T</span> <span class="k">get</span><span class="p">()</span> <span class="p">{</span>
 
 		<span class="kt">char</span> <span class="n">stack_alloc</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)];</span>
-		<span class="c1">// do not call constructor here.
-</span>		<span class="n">T</span><span class="p">*</span> <span class="n">ret</span> <span class="p">=</span> <span class="n">reinterpret_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="n">stack_alloc</span><span class="p">);</span> 
+		<span class="c1">// do not call constructor here.</span>
+		<span class="n">T</span><span class="p">*</span> <span class="n">ret</span> <span class="p">=</span> <span class="n">reinterpret_cast</span><span class="p">&lt;</span><span class="n">T</span><span class="p">*&gt;(</span><span class="n">stack_alloc</span><span class="p">);</span> 
 
 		<span class="k">while</span> <span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="p">{</span>
 			<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">sp</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">sp</span> <span class="p">&lt;</span> <span class="n">SPIN_COUNT</span><span class="p">;</span> <span class="n">sp</span><span class="p">++)</span>
@@ -545,8 +539,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 		<span class="p">}</span>
 	<span class="p">}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Notes on the implementation:</p>
 
@@ -554,7 +547,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
   <li>To keep the <code class="highlighter-rouge">try_lock</code> semantic as described for the <code class="highlighter-rouge">blocking_queue</code>, I had to trick the underlying <code class="highlighter-rouge">blocking_queues</code> into no locking. For this specific purpose I have created two clases:</li>
 </ul>
 
-<div class="language-csharp highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">no_lock_mtx</span> <span class="p">{</span>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">no_lock_mtx</span> <span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
 	<span class="k">void</span> <span class="k">lock</span><span class="p">()</span> <span class="p">{}</span>
 	<span class="k">void</span> <span class="nf">unlock</span><span class="p">()</span> <span class="p">{}</span>
@@ -566,8 +559,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 	<span class="k">void</span> <span class="nf">notify_one</span><span class="p">()</span> <span class="p">{}</span>
 	<span class="k">void</span> <span class="nf">wait</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">critical_section_win</span><span class="p">&gt;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">{}</span>
 <span class="p">};</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>and passed them as synchronization primitives to the underlying <code class="highlighter-rouge">blocking_queues</code>. As mentioned before, this was a design choice, to keep <code class="highlighter-rouge">try_get</code> method return <code class="highlighter-rouge">false</code> only if the size of the underlying <code class="highlighter-rouge">std::deque</code> is 0.</p>
 
 <ul>

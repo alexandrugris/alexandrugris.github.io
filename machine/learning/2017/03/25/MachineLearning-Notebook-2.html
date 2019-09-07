@@ -80,7 +80,7 @@
 
 <p>We consider sets of <code class="highlighter-rouge">y</code>s and <code class="highlighter-rouge">x</code>s, derived from experiments. Assuming that <code class="highlighter-rouge">y = ax + b</code>,  what value for <code class="highlighter-rouge">a</code> and <code class="highlighter-rouge">b</code> minimize the error of <code class="highlighter-rouge">sum ((yi-(axi + b))^2)</code>? <code class="highlighter-rouge">b</code> is called intercept and <code class="highlighter-rouge">a</code> is the slope.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">".</span><span class="se">\\</span><span class="s">Data</span><span class="se">\\</span><span class="s">Salary_Data.csv"</span><span class="p">)</span>
 
 <span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
@@ -95,7 +95,7 @@
 
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="c"># scatter plot</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"pink"</span><span class="p">)</span>
@@ -110,14 +110,13 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">"Salary"</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_3_1.png" alt="Results" /></p>
 
 <p>The implementation of a simple linear regressor using the ordinary least squares method is straight forward:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
 <span class="k">def</span>  <span class="nf">ols_train_predict</span><span class="p">(</span><span class="n">_X_train</span><span class="p">,</span> <span class="n">_Y_train</span><span class="p">,</span> <span class="n">_X_test</span><span class="p">):</span>
     <span class="s">"""
@@ -150,8 +149,7 @@
 
 <span class="c"># line plot</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The basic idea for all least squares methods is that the function <code class="highlighter-rouge">S=sum((yi-f(xi, B))^2)</code> should be minimized, where <code class="highlighter-rouge">B</code> is a vector of variables we need to identify. In the particular case of linear regression, <code class="highlighter-rouge">B = [a, b]</code> and <code class="highlighter-rouge">f(xi, B) = axi + b</code>. Minimized means the conditions <code class="highlighter-rouge">dS / dB[i] = 0</code>. In the case above, we have a system of two equations with two unknowns, <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/da = 0</code> and <code class="highlighter-rouge">d(sum ((yi-(axi + b))^2))/db = 0</code>.</p>
 
@@ -169,7 +167,7 @@
 
 <p>Here is the python code:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="c"># 50 points, x between 10, 100, a = 2, b = 126, variation of y = 20</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">generate_noisy_linear_data</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">126</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
@@ -192,8 +190,7 @@
 <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Giving very close results for <code class="highlighter-rouge">corellation=0.994670853834</code>, <code class="highlighter-rouge">a = 2.01623520593</code> and <code class="highlighter-rouge">b = 125.614041068</code>.</p>
 
@@ -275,9 +272,9 @@
 
 <p>Preparing the data:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="c"># load data</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">".</span><span class="se">\\</span><span class="s">Data</span><span class="se">\\</span><span class="s">50_Startups.csv"</span><span class="p">)</span>
@@ -302,8 +299,7 @@
 <span class="c"># split data into training and test</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
 <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>And the output:</p>
 
@@ -311,30 +307,28 @@
 
 <p>For the actual regression:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
 <span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
 <span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><em>** Backward Elimination **</em></p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">statsmodels.formula.api</span> <span class="kn">as</span> <span class="nn">sm</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">statsmodels.formula.api</span> <span class="k">as</span> <span class="n">sm</span>
 <span class="c"># add a 1 column to X. our formula for linear regression is </span>
 <span class="c"># y = b0 + b1 * x1 + b2 * x2 ... &lt;=&gt; y = b0 * x0 + b1 * x1 + ... where x0 == [1, ..]</span>
 <span class="c"># we add the column in the beginning so it is easier to interpret the result</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_3_4.png" alt="New X" /></p>
 
 <p>To remember: the lower the P-value, the more statistically relevant the independent variable is going to be in our regression model.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># the optimum matrix of features that contains the </span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># the optimum matrix of features that contains the </span>
 <span class="c"># optimum set of variables to predict the outcome - setatistically significant</span>
 <span class="c"># initially add all columns, all rows</span>
 <span class="n">X_opt</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
@@ -342,12 +336,11 @@
 <span class="c"># use the ordinary least squares algorithm</span>
 <span class="n">regressor_ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">endog</span> <span class="o">=</span> <span class="n">y</span><span class="p">,</span> <span class="n">exog</span> <span class="o">=</span> <span class="n">X_opt</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="n">regressor_ols</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We get the following table, with the P-values in the P&gt;t column. <code class="highlighter-rouge">const, x1, ... x5</code> are the coefficients <code class="highlighter-rouge">b0, b1, .. b5</code> specified above.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>|         |       coef|    std err|          t|        P&gt;t|      [95.0% Conf. Int.]|
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|         |       coef|    std err|          t|        P&gt;t|      [95.0% Conf. Int.]|
 |----------------------------------------------------------------------------------|
 |const    |  5.013e+04|   6884.820|      7.281|      0.000|      3.62e+04   6.4e+04|
 |x1       |   198.7888|   3371.007|      0.059|      0.953|     -6595.030  6992.607|
@@ -355,8 +348,7 @@
 |x3       |     0.8060|      0.046|     17.369|      0.000|         0.712     0.900|
 |x4       |    -0.0270|      0.052|     -0.517|      0.608|        -0.132     0.078|
 |x5       |     0.0270|      0.017|      1.574|      0.123|        -0.008     0.062|
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>According to algorithm, we remove x2 and redo the ordinary least square fit.</p>
 
@@ -370,7 +362,7 @@
 
 <p>We are going to do precisely this. The <a href="https://en.wikipedia.org/wiki/Covariance">covariation</a> between two vectors is expressed through the following function:</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">####################################</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">####################################</span>
 <span class="c">### multiple regression</span>
 <span class="c"># y = b0 + x1 * b1 + x2 * b2 + x3 * b3 ...</span>
 <span class="c"># line has the form</span>
@@ -390,12 +382,11 @@
     <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>However, we are not going to use it, but rather use directly numpy’s matrices for faster computation.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">cov_matrix</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">_x</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">cov_matrix</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">_x</span><span class="p">):</span>
     
     <span class="k">if</span> <span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Shapes do not match"</span><span class="p">)</span>
@@ -431,19 +422,17 @@
 <span class="n">ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)))</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">compute_b0_bn</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>In order to test my function, I have compared its results with the results of algorithm from the library. They are identical.</p>
 
-<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
 <span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
 <span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="n">coef</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">coef_</span>
 <span class="n">intercept</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">intercept_</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_3_6.png" alt="Identical results between library and own function" /></p>
 
