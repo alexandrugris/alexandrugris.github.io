@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2019-09-08T19:25:01+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2019-09-08T22:30:05+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Streaming Architecture Using Apache Kafka And Redis</title><link href="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html" rel="alternate" type="text/html" title="Streaming Architecture Using Apache Kafka And Redis" /><published>2019-09-04T14:15:16+03:00</published><updated>2019-09-04T14:15:16+03:00</updated><id>https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html">&lt;p&gt;This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems.  It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.&lt;/p&gt;
 
 &lt;p&gt;Examples might include the following:&lt;/p&gt;
@@ -346,7 +346,7 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 &lt;p&gt;Disclaimer: I know that I am making an error here, because I am including in the source data set the same match that I am trying to predict, which leads to a circular relationship. In a production-ready analysis, at least this match should have been excluded from the source.&lt;/p&gt;
 
-&lt;p&gt;The last 3 columns expand for further analysis the actual match result. These results look nice, but let’s compare them to the Bet Brain HDA average index for these odds. Unfortunately, there is quite a bit of a difference. A good place to start betting is to have a look at those odds which, in our model, are higher than the bookmakers odds. Bookmaker odds might be skewed down by their risk management so we might find and edge there.&lt;/p&gt;
+&lt;p&gt;The last 3 columns expand for further analysis the actual match result. These results look nice, but let’s compare them to the Bet Brain HDA average index for these odds. There is quite a bit of a difference. A good place to start betting is to have a look at those odds which, in our model, are lower than the bookmaker’s. Despite the margin embedded in them, the bookmaker’s odds might still be skewed up by their risk management systems, so there is a chance we might find and edge.&lt;/p&gt;
 
 &lt;p&gt;Here are the distribution of probabilities:&lt;/p&gt;
 
@@ -387,8 +387,8 @@ plt.scatter(1/expected_goals['AOdds'], 1/expected_goals['BbAvA'])
 &lt;ul&gt;
   &lt;li&gt;There is a strong correlation between our model and the bookmakers models.&lt;/li&gt;
   &lt;li&gt;Our predicted probability tends to grow slightly faster than the bookmaker predicted probability.&lt;/li&gt;
-  &lt;li&gt;We can transform now our model through this function to predict what the bookmakers might say. Where our transformed odds are still higher than the bookmaker’s, we can be pretty sure it is worth investigating further if we don’t have a value bet.&lt;/li&gt;
-  &lt;li&gt;For other applications, we can predict the bookmaker’s value to fill in the blanks for missing data-points in scraped data, if we wish to rely on such a thing.&lt;/li&gt;
+  &lt;li&gt;We can transform now our model through this function to predict what the bookmakers might say, to fill in the blanks for missing data-points in scraped data, if our application relies on such a thing.&lt;/li&gt;
+  &lt;li&gt;Where our odds are lower than the bookmaker’s, it is worth investigating further if we might have a have a value bet.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h3 id=&quot;predicting-home-draw-away-odds-based-on-estimated-spread&quot;&gt;Predicting Home Draw Away Odds Based On Estimated Spread&lt;/h3&gt;
@@ -423,7 +423,7 @@ plt.scatter(1/expected_goals['AOdds'], 1/expected_goals['BbAvA'])
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_4.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Second step is to do regression analysis. We have chosen as predictor variables the atack and defece strengths of our opponent teams.&lt;/p&gt;
+&lt;p&gt;Second step is to do regression analysis. We have chosen as predictor variables the attack and defece strengths of our opponent teams.&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;X_train&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'AtkH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'AtkA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;Y_train&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Spread'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
