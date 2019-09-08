@@ -309,6 +309,48 @@ dtype: float64
 
 <p>Which basically means a rather similar quality model to the Poisson based.</p>
 
+<h3 id="which-method-fares-better">Which Method Fares Better?</h3>
+
+<p>We are going to compute a score for each method, as follows: the winner is the system for which the probability of observing the very set of events that occurred in real life is the highest. For instance, a system that would predict 100% accurate the results would have a maximum probability of 1.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>P(realization of the observed result) = product(p(each individual_result)) is max &lt;=&gt;
+log() = log(product) is max &lt;=&gt;
+log() = sum(p(1) * result + p(0) * (1 - result)) is max
+</code></pre></div></div>
+
+<p>The code that implements it is shown below:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">expected_goals</span><span class="p">[</span><span class="s">'Spread Home Prob'</span><span class="p">]</span> <span class="o">=</span> <span class="n">atk_def_spread</span><span class="p">[</span><span class="s">'Computed Home Prob'</span><span class="p">]</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'Poisson Prob'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">expected_goals</span><span class="p">[</span><span class="s">'HOdds'</span><span class="p">]</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'Bkmkrs Prob'</span><span class="p">]</span> <span class="o">=</span>  <span class="mi">1</span><span class="o">/</span><span class="n">expected_goals</span><span class="p">[</span><span class="s">'BbAvH'</span><span class="p">]</span>
+
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'SHP_cost'</span><span class="p">]</span> <span class="o">=</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Spread Home Prob'</span><span class="p">]</span> <span class="o">*</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Spread Home Prob'</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">])</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'PP_cost'</span><span class="p">]</span> <span class="o">=</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Poisson Prob'</span><span class="p">]</span> <span class="o">*</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Poisson Prob'</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">])</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'BP_cost'</span><span class="p">]</span> <span class="o">=</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Bkmkrs Prob'</span><span class="p">]</span> <span class="o">*</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'Bkmkrs Prob'</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">expected_goals</span><span class="p">[</span><span class="s">'H'</span><span class="p">])</span>
+
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'SHP_cost'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'PP_cost'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+<span class="n">expected_goals</span><span class="p">[</span><span class="s">'BP_cost'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>with results</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>expected_goals['SHP_cost'].sum()
+Out[7]: 234.6733604254918
+
+expected_goals['PP_cost'].sum()
+Out[8]: 236.14378560943433
+
+expected_goals['BP_cost'].sum()
+Out[9]: 228.83717303756742
+</code></pre></div></div>
+
+<p>So, in theory, the bookmakers are able to predict with lesser accuracy the probability of winnings. However, we don’t have much data to support the extreme event cases, thus I’d expect the bookmakers to have corrected for the lack of data.</p>
+
+<p>In the computation above I have not included the correction factors resulted from regression. When I introduce the factors manually, the results are impressively close:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/odds_and_models_9.png" alt="odds_models" /></p>
+
 
   </div>
 
