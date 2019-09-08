@@ -276,11 +276,13 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 <p><em>The simple scenario: the user wants to subscribe to changes to a single market</em></p>
 
-<p>1/ Subscriber issues a “subscribe” command to the REST control API and he is issued a unique channel ID (for example, a GUID)
-2/ The subscribe command is issued further to all the reducers through a fan-out mechanism (command topic).
-3/ The subscriber opens a websocket to the Stream Publisher and requests that its connection is mapped to the channel id. The Stream Publisher subscribes to the Redis PUB-SUB channel with that specific connection-id. So far no data has been published to the Redis PUB-SUB.
-4/ Once the subscribed receives ACK that the connection has been established, it issues another command, “begin stream” to the command API. This is done to instruct the reducers to compute the initial state and send it through the pub-sub after the subscriber has opened the connection, so no updates are lost.
-5/ Reducers maintain two maps: market ids to chanel id and channel ids to markets, so that for each incoming market it is directed to its subscribing channels and the disconnects are managed properly without leaving memory leaks behind.</p>
+<ol>
+  <li>Subscriber issues a “subscribe” command to the REST control API and he is issued a unique channel ID (for example, a GUID)</li>
+  <li>The subscribe command is issued further to all the reducers through a fan-out mechanism (command topic).</li>
+  <li>The subscriber opens a websocket to the Stream Publisher and requests that its connection is mapped to the channel id. The Stream Publisher subscribes to the Redis PUB-SUB channel with that specific connection-id. So far no data has been published to the Redis PUB-SUB.</li>
+  <li>Once the subscribed receives ACK that the connection has been established, it issues another command, “begin stream” to the command API. This is done to instruct the reducers to compute the initial state and send it through the pub-sub after the subscriber has opened the connection, so no updates are lost.</li>
+  <li>Reducers maintain two maps: market ids to chanel id and channel ids to markets, so that for each incoming market it is directed to its subscribing channels and the disconnects are managed properly without leaving memory leaks behind.</li>
+</ol>
 
 <p>Reducers might maintain a copy of the market values updated in memory for fast access and in-process cache, but for each subscribed market, its value must also be saved in an out-of-process Redis HA cluster or sharded MongoDB. On subscription, if the market is not already in the memory of the reducer, that is no other subscriber has subscribed to it yet, it must be looked up first in the shared Redis or Mongo. On new incoming market updates from the Kafka topic, Redis / Mongo must be updated first. If updates cannot be skipped, the offsets are committed only after the Redis / Mongo write succeeds. Subscriptions are also saved in Redis / Mongo to account reducer restarts, scaling up or down.</p>
 
