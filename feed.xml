@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2019-09-08T15:55:40+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2019-09-08T18:01:48+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Streaming Architecture Using Apache Kafka And Redis</title><link href="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html" rel="alternate" type="text/html" title="Streaming Architecture Using Apache Kafka And Redis" /><published>2019-09-04T14:15:16+03:00</published><updated>2019-09-04T14:15:16+03:00</updated><id>https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html">&lt;p&gt;This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems.  It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.&lt;/p&gt;
 
 &lt;p&gt;Examples might include the following:&lt;/p&gt;
@@ -239,7 +239,7 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 &lt;p&gt;An alternative approach that can be used for prototyping and a relatively solid MVP is to use something like MongoDB Streams (or Firebase, or RethinkDB) to listen to changes to a collection where the states are stored and modified in place. Each document is the atomic unit of change. A customer can subscribe to one to many documents.  All changes are propagated to all publishers and the publisher decides which are the correct recipients.&lt;/p&gt;
 
-&lt;p&gt;This take on the architecture allows a simpler model where the developers are freed from managing complex problems, like persistence, synchronization and restores, while reducing the number of dependencies and simplifying operations.&lt;/p&gt;</content><author><name></name></author><summary type="html">This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems. It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.</summary></entry><entry><title type="html">Odds And Models</title><link href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html" rel="alternate" type="text/html" title="Odds And Models" /><published>2019-07-26T14:15:16+03:00</published><updated>2019-07-26T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">&lt;p&gt;Experiments with sports prediction models.&lt;/p&gt;
+&lt;p&gt;This take on the architecture allows a simpler model where the developers are freed from managing complex problems, like persistence, synchronization and restores, while reducing the number of dependencies and simplifying operations.&lt;/p&gt;</content><author><name></name></author><summary type="html">This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems. It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.</summary></entry><entry><title type="html">Odds And Models</title><link href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html" rel="alternate" type="text/html" title="Odds And Models" /><published>2019-07-26T14:15:16+03:00</published><updated>2019-07-26T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">&lt;p&gt;Experiments with sports prediction models. It starts from a multiplicative expected goals model, then it computes the odds for home draw away markets in two different ways, and then compare the performance of these odds to the bookmakers’ odds.&lt;/p&gt;
 
 &lt;h3 id=&quot;analyzing-premier-league-2018-2019-matches&quot;&gt;Analyzing Premier League 2018-2019 Matches&lt;/h3&gt;
 
@@ -301,6 +301,8 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;In this case, the result would be: &lt;code class=&quot;highlighter-rouge&quot;&gt;xGA=1.7696721143296168&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;xGH=0.7235778121818841&lt;/code&gt;. While this model is crude, it is a good starting point into our data exploration.&lt;/p&gt;
+
+&lt;h3 id=&quot;predicting-odds-based-on-the-poisson-distribution&quot;&gt;Predicting Odds Based on The Poisson Distribution&lt;/h3&gt;
 
 &lt;p&gt;We are going to use now the observation that goals in a football match are roughly Poisson distributed, to compute any goal-based markets. In our case, we are going to look at the Home Draw Away markets. The same approach can be used to reverse engineer the expected goals from existing bookmakers odds, the Home Draw Away and Over Under markets.&lt;/p&gt;
 
@@ -380,14 +382,105 @@ plt.scatter(1/expected_goals['AOdds'], 1/expected_goals['BbAvA'])
 
 &lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_3.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
 
-&lt;h3 id=&quot;conclusions-to-our-first-model&quot;&gt;Conclusions to our first model&lt;/h3&gt;
+&lt;h3 id=&quot;conclusions-to-our-first-model&quot;&gt;Conclusions To Our First Model&lt;/h3&gt;
 
 &lt;ul&gt;
   &lt;li&gt;There is a strong correlation between our model and the bookmakers models.&lt;/li&gt;
   &lt;li&gt;Our predicted probability tends to grow slightly faster than the bookmaker predicted probability.&lt;/li&gt;
   &lt;li&gt;We can transform now our model through this function to predict what the bookmakers might say. Where our transformed odds are still higher than the bookmaker’s, we can be pretty sure it is worth investigating further if we don’t have a value bet.&lt;/li&gt;
   &lt;li&gt;For other applications, we can predict the bookmaker’s value to fill in the blanks for missing data-points in scraped data, if we wish to rely on such a thing.&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><summary type="html">Experiments with sports prediction models.</summary></entry><entry><title type="html">Elixir Intro</title><link href="https://alexandrugris.github.io/programming/2019/01/22/elixir.html" rel="alternate" type="text/html" title="Elixir Intro" /><published>2019-01-22T13:15:16+02:00</published><updated>2019-01-22T13:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2019/01/22/elixir</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/01/22/elixir.html">&lt;p&gt;Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succinct language. I hope, Elixir, someday we will meet for an exciting project together.&lt;/p&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;predicting-home-draw-away-odds-based-on-estimated-spread&quot;&gt;Predicting Home Draw Away Odds Based On Estimated Spread&lt;/h3&gt;
+
+&lt;p&gt;The knowledge that in football games goals are Poisson distributed is awesome! It allows us to compute the probability for any number of goals, thus it allows us to calculate any market we want. We can apply the same distribution, with more or less accurate results to red cards and yellow cards, assists, shots, shots on target.&lt;/p&gt;
+
+&lt;p&gt;But what if we didn’t have this knowledge? What if the the Poisson-based model returns questionable results?&lt;/p&gt;
+
+&lt;p&gt;We are going to use a different approach now which aims to estimate the spread (home - away goals difference) by regressing against the actual past match results and then use the distribution of residuals to estimate the probability of one team winning over the other.&lt;/p&gt;
+
+&lt;p&gt;The spread estimation is still based on the expected goals computed earlier, so we are reusing the same data.&lt;/p&gt;
+
+&lt;p&gt;First step is to prepare the data.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;attack_defence_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;hm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'HomeTeam'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;aw&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'AwayTeam'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;hmg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'FTHG'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;awg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'FTAG'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;atk_h&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;def_h&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attack_defence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;atk_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;def_a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attack_defence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;spread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hmg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;awg&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_h&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;def_h&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;def_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+
+&lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;apply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;attack_defence_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result_type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'expand'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Home'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'Away'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'AtkH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'AtkA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'Spread'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_4.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Second step is to do regression analysis. We have chosen as predictor variables the atack and defece strengths of our opponent teams.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;X_train&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'AtkH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefH'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'AtkA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'DefA'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Y_train&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Spread'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;regressor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LinearRegression&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;regressor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X_train&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y_train&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# check R^2&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;regressor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X_train&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y_train&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# check residuals&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;y_pred&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;regressor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;predict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X_train&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y_train&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y_pred&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When we analyse the residuals we are happy to notice they look very much normally distributed around the 0 value:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [62]: e.mean()
+Out[62]: 
+Spread    1.168656e-17
+dtype: float64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_5.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;However, the results of the regression are a little bit counter intuitive:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_6.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we are going to do the last step of this analysis and we are going to compute the odds of home draw away based on the residuals. We are going to use cumulative distribution function in this case which, by definition, is &lt;code class=&quot;highlighter-rouge&quot;&gt;p(A &amp;lt;= x) = cdf(x)&lt;/code&gt;. Since our distribution of residuals is normal, we will use the &lt;code class=&quot;highlighter-rouge&quot;&gt;norm.cdf&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Predicted Spread'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y_pred&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# for eyeballing our predicted spread&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;scipy.stats&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;norm&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;norm&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Predicted Spread'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y_pred&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;## compute prob of winning&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;atk_def_spread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Computed Home Prob'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;norm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cdf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;loc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y_pred&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_7.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;comparing-new-odds-to-bookmakers-odds&quot;&gt;Comparing New Odds to Bookmaker’s Odds&lt;/h3&gt;
+
+&lt;p&gt;The scatter plot:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/odds_and_models_8.png&quot; alt=&quot;odds_models&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The regression parameters:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;'intercept': -0.021273267737595025&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;'slope': 0.8639928039354018&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;'score': 0.8632736293163973&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Which basically means a rather similar quality model to the Poisson based.&lt;/p&gt;</content><author><name></name></author><summary type="html">Experiments with sports prediction models. It starts from a multiplicative expected goals model, then it computes the odds for home draw away markets in two different ways, and then compare the performance of these odds to the bookmakers’ odds.</summary></entry><entry><title type="html">Elixir Intro</title><link href="https://alexandrugris.github.io/programming/2019/01/22/elixir.html" rel="alternate" type="text/html" title="Elixir Intro" /><published>2019-01-22T13:15:16+02:00</published><updated>2019-01-22T13:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2019/01/22/elixir</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/01/22/elixir.html">&lt;p&gt;Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succinct language. I hope, Elixir, someday we will meet for an exciting project together.&lt;/p&gt;
 
 &lt;h1 id=&quot;the-basics&quot;&gt;The Basics&lt;/h1&gt;
 
