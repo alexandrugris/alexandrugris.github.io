@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Odds And Models</title>
+  <meta name="description" content="Experiments with sports prediction models.">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Odds And Models</h1>
+    <p class="post-meta"><time datetime="2019-07-26T14:15:16+03:00" itemprop="datePublished">Jul 26, 2019</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Experiments with sports prediction models.</p>
+
+<h3 id="analyzing-premier-league-2018-2019-matches">Analyzing Premier League 2018-2019 Matches</h3>
+
+<p>We are going to use publicly available data, downloaded from <a href="https://datahub.io/sports-data/english-premier-league#readme">here</a>. In case the link disappears, here is a <a href="https://alexandrugris.github.io/assets/season-1819_csv.csv">local copy</a> of the csv file used for this analysis. The explanation for the columns can be found [here]<a href="https://alexandrugris.github.io/assets/data_explanation.txt">local copy</a></p>
+
+<h3 id="expected-goals---multiplicative-model">Expected Goals - Multiplicative Model</h3>
+
+<p>In the first part of the analysis we are going to use a simple multiplicative model and the Poisson distribution to compute:</p>
+
+<ul>
+  <li>Expected goals</li>
+  <li>Home Draw Away odds for the match and compare our results to the bookmakers odds</li>
+</ul>
+
+<p>Another way to have looked at this analysis is to reverse engineer the expected goals by looking at the bookmakers odds for HDA and OU and use gradient descent to minimize the function <code class="highlighter-rouge">(h_predicted - h_bkmkr)^2 + (d_predicted - d_bkmkr)^2 + (a_predicted - a_bkmkr)^2  + (o_predicted - o_bkmkr)^2 + (u_predicted - u_bkmkr)^2</code>.</p>
+
+<p>The principle behind this model is to compute an attack and a defence score for each team relative to the season averages. The home team advantage is embedded in the model by applying the factors to the home and away means, respectively. These are the relevant lines:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">xGH</span> <span class="o">=</span> <span class="n">h_attack</span> <span class="o">*</span> <span class="n">a_defence</span> <span class="o">*</span> <span class="n">home</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">xGA</span> <span class="o">=</span> <span class="n">a_attack</span> <span class="o">*</span> <span class="n">h_defence</span> <span class="o">*</span> <span class="n">away</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Below is the full code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="c"># https://datahub.io/sports-data/english-premier-league#readme</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1718_csv.csv"</span><span class="p">)</span> <span class="c"># todo: add index on team names!</span>
+
+<span class="n">rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">teams</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">home</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="c"># full time home goals series</span>
+<span class="n">away</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span> <span class="c"># full time away goals series</span>
+
+<span class="n">avg_goals_scored</span> <span class="o">=</span> <span class="p">(</span><span class="n">home</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">away</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="k">def</span> <span class="nf">attack_defence</span><span class="p">(</span><span class="n">team</span><span class="p">):</span>
+    <span class="n">attack</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]</span> <span class="o">==</span> <span class="n">team</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]</span> <span class="o">==</span> <span class="n">team</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">avg_goals_scored</span><span class="p">)</span>
+    <span class="n">defence</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]</span> <span class="o">==</span> <span class="n">team</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]</span> <span class="o">==</span> <span class="n">team</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">avg_goals_scored</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">attack</span><span class="p">,</span> <span class="n">defence</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">xg</span><span class="p">(</span><span class="n">home_</span><span class="p">,</span> <span class="n">away_</span><span class="p">):</span>
+
+    <span class="n">h_attack</span><span class="p">,</span> <span class="n">h_defence</span> <span class="o">=</span> <span class="n">attack_defence</span><span class="p">(</span><span class="n">home_</span><span class="p">)</span>
+    <span class="n">a_attack</span><span class="p">,</span> <span class="n">a_defence</span> <span class="o">=</span> <span class="n">attack_defence</span><span class="p">(</span><span class="n">away_</span><span class="p">)</span>
+    
+    <span class="n">xGH</span> <span class="o">=</span> <span class="n">h_attack</span> <span class="o">*</span> <span class="n">a_defence</span> <span class="o">*</span> <span class="n">home</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">xGA</span> <span class="o">=</span> <span class="n">a_attack</span> <span class="o">*</span> <span class="n">h_defence</span> <span class="o">*</span> <span class="n">away</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">)</span>
+     
+<span class="c"># compute the expected goals for each team</span>
+<span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span> <span class="o">=</span> <span class="n">xg</span><span class="p">(</span><span class="s">'Brighton'</span><span class="p">,</span> <span class="s">'Tottenham'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In this case, the result would be: <code class="highlighter-rouge">xGA=1.7696721143296168</code> and <code class="highlighter-rouge">xGH=0.7235778121818841</code>. While this model is crude, it is a good starting point into our data exploration.</p>
+
+<p>We are going to use now the observation that goals in a football match are roughly Poisson distributed, to compute any goal-based markets. In our case, we are going to look at the Home Draw Away markets. The same approach can be used to reverse engineer the expected goals from existing bookmakers odds, the Home Draw Away and Over Under markets.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">poisson</span>
+
+<span class="k">def</span> <span class="nf">hda</span><span class="p">(</span><span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">):</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGH</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGA</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+    
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">expected_goal_odds</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+    
+    <span class="n">hm</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]</span>
+    <span class="n">aw</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]</span>
+    <span class="n">hmg</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span>
+    <span class="n">awg</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span>
+    
+    <span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span> <span class="o">=</span> <span class="n">xg</span><span class="p">(</span><span class="n">hm</span><span class="p">,</span> <span class="n">aw</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">hda</span><span class="p">(</span><span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">hm</span><span class="p">,</span> <span class="n">aw</span><span class="p">,</span> <span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s">'FTR'</span><span class="p">],</span> <span class="n">hmg</span> <span class="o">&gt;</span> <span class="n">awg</span><span class="p">,</span> <span class="n">hmg</span> <span class="o">==</span> <span class="n">awg</span><span class="p">,</span> <span class="n">hmg</span> <span class="o">&lt;</span> <span class="n">awg</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s">'BbAvH'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s">'BbAvD'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s">'BbAvA'</span><span class="p">])</span>
+
+<span class="n">expected_goals</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">expected_goal_odds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">result_type</span><span class="o">=</span><span class="s">'expand'</span><span class="p">)</span> 
+<span class="n">expected_goals</span><span class="o">.</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">,</span> <span class="s">'AwayTeam'</span><span class="p">,</span> <span class="s">'xGH'</span><span class="p">,</span> <span class="s">'xGA'</span><span class="p">,</span> <span class="s">'HOdds'</span><span class="p">,</span> <span class="s">'DOdds'</span><span class="p">,</span> <span class="s">'AOdds'</span><span class="p">,</span> <span class="s">'Result'</span> <span class="p">,</span><span class="s">'H'</span><span class="p">,</span> <span class="s">'D'</span><span class="p">,</span> <span class="s">'A'</span><span class="p">,</span> <span class="s">'BbAvH'</span><span class="p">,</span><span class="s">'BbAvD'</span><span class="p">,</span><span class="s">'BbAvA'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>What we get is this:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/odds_and_models_1.png" alt="odds_models" /></p>
+
+<p>Disclaimer: I know that I am making an error here, because I am including in the source data set the same match that I am trying to predict, which leads to a circular relationship. In a production-ready analysis, at least this match should have been excluded from the source.</p>
+
+<p>The last 3 columns expand for further analysis the actual match result. These results look nice, but let’s compare them to the Bet Brain HDA average index for these odds. Unfortunately, there is quite a bit of a difference. A good place to start betting is to have a look at those odds which, in our model, are higher than the bookmakers odds. Bookmaker odds might be skewed down by their risk management so we might find and edge there.</p>
+
+<p>Here are the distribution of probabilities:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>plt.scatter(1/expected_goals['HOdds'], 1/expected_goals['BbAvH'])
+plt.scatter(1/expected_goals['DOdds'], 1/expected_goals['BbAvD'])
+plt.scatter(1/expected_goals['AOdds'], 1/expected_goals['BbAvA'])
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/odds_and_models_2.png" alt="odds_models" /></p>
+
+<p>Doing linear regression between our values and the bookmakers values we get:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s">'H'</span><span class="p">,</span> <span class="s">'D'</span><span class="p">,</span> <span class="s">'A'</span><span class="p">]:</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">expected_goals</span><span class="p">[</span><span class="n">s</span> <span class="o">+</span> <span class="s">'Odds'</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">expected_goals</span><span class="p">[</span><span class="s">'BbAv'</span> <span class="o">+</span> <span class="n">s</span><span class="p">]</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">linear_regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>  <span class="c"># create object for the class</span>
+    <span class="n">linear_regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c"># perform linear regression</span>
+    
+    <span class="n">scores</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">'intercept'</span> <span class="p">:</span> <span class="n">linear_regressor</span><span class="o">.</span><span class="n">intercept_</span><span class="p">,</span>
+            <span class="s">'slope'</span> <span class="p">:</span> <span class="n">linear_regressor</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s">'score'</span> <span class="p">:</span> <span class="n">linear_regressor</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="p">}</span> 
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/odds_and_models_3.png" alt="odds_models" /></p>
+
+<h3 id="conclusions-to-our-first-model">Conclusions to our first model</h3>
+
+<ul>
+  <li>There is a strong correlation between our model and the bookmakers models.</li>
+  <li>Our predicted probability tends to grow slightly faster than the bookmaker predicted probability.</li>
+  <li>We can transform now our model through this function to predict what the bookmakers might say. Where our transformed odds are still higher than the bookmaker’s, we can be pretty sure it is worth investigating further if we don’t have a value bet.</li>
+  <li>For other applications, we can predict the bookmaker’s value to fill in the blanks for missing data-points in scraped data, if we wish to rely on such a thing.</li>
+</ul>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
