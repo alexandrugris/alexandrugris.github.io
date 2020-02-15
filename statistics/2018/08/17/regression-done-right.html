@@ -194,19 +194,25 @@ Thus, when X is increased by 5%, i.e., multiplied by a factor of <code class="hi
 
 <p>Results inspection:</p>
 
-<p>Low <code class="highlighter-rouge">R^2</code>, lag 1 autocorrelation of only <code class="highlighter-rouge">0.08</code>, highly independent of X, seem rather normally distributed:
-<img src="https://alexandrugris.github.io/assets/regression_7.png" alt="Log residuals" /></p>
+<p>Low <code class="highlighter-rouge">R^2</code>, lag 1 autocorrelation of only <code class="highlighter-rouge">0.08</code>, highly independent of X, seem rather normally distributed:</p>
 
-<p>Reverting to initial scale (before the percentage returns transformation), residuals show a tendency to accumulate errors towards the right extreme.
-<img src="https://alexandrugris.github.io/assets/regression_11.png" alt="Final residuals" /></p>
+<p><img src="https://alexandrugris.github.io/assets/regression_7.png" alt="Log residuals" /></p>
 
-<p>Plots of originally observed Y vs X and regressed Y vs X show good capture of the fundamental <code class="highlighter-rouge">X^2</code> coefficient as well as a good fit
-<img src="https://alexandrugris.github.io/assets/regression_8.png" alt="Observed data" />
-and
-<img src="https://alexandrugris.github.io/assets/regression_10.png" alt="Regressed data" /></p>
+<p>Reverting to initial scale (before the percentage returns transformation), residuals show a tendency to accumulate errors towards the right extreme.</p>
 
-<p>And finally, observed Y vs Y regressed show a strong linear relatinon of slope almost 1, but with visibly increasing errors towards the right extreme:
-<img src="https://alexandrugris.github.io/assets/regression_9.png" alt="Y observed vs Y regressed" /></p>
+<p><img src="https://alexandrugris.github.io/assets/regression_11.png" alt="Final residuals" /></p>
+
+<p>Plots of originally observed Y vs X and regressed Y vs X show good capture of the fundamental <code class="highlighter-rouge">X^2</code> coefficient as well as a good fit:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/regression_8.png" alt="Observed data" /></p>
+
+<p>and</p>
+
+<p><img src="https://alexandrugris.github.io/assets/regression_10.png" alt="Regressed data" /></p>
+
+<p>And finally, observed Y vs Y regressed show a strong linear relatinon of slope almost 1, but with visibly increasing errors towards the right extreme:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/regression_9.png" alt="Y observed vs Y regressed" /></p>
 
 <h3 id="conclusions---simple-linear-regression">Conclusions - simple linear regression</h3>
 
@@ -235,6 +241,23 @@ and
   <li>Standard errors of coefficients</li>
 </ul>
 
+<p>Here is how to compute adjusted R^2 for a multiple regression:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+<span class="n">lr</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c"># sample size</span>
+<span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="c"># number of explanatory variables</span>
+<span class="n">adj_r2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"r2={r2}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"adjusted r2={adj_r2}"</span><span class="p">)</span>
+</code></pre></div></div>
+
 <h3 id="dummy-variables-for-categorical-data">Dummy variables for categorical data</h3>
 
 <p>Let’s consider a 2-category model, let’s say male and female. For this we introduce two dummy variables (c1 and c2), one for intercept and one for slope. The variable for intercept (c1) will be <code class="highlighter-rouge">0</code> if male and <code class="highlighter-rouge">1</code> if female, while the variable for slope will be <code class="highlighter-rouge">0</code> if male and <code class="highlighter-rouge">x</code> if female. If we want do to a regression, the regression line would look like:</p>
@@ -261,11 +284,42 @@ and
 
 <p>To answer the question above we compute what is called <em>the t-statistic</em>. <code class="highlighter-rouge">t-statistic(ci) = ci / SE(ci)</code>. The <code class="highlighter-rouge">t-statistic</code> measures how many standard errors we are away from the mean if the mean were 0, that is if the <code class="highlighter-rouge">ci</code> coefficient for the entire population were 0.</p>
 
+<p>Here is an example on <a href="http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis">how to compute</a> the <code class="highlighter-rouge">SE</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.formula.api</span> <span class="kn">import</span> <span class="n">ols</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="n">sm</span>
+
+<span class="c"># add the intercept</span>
+<span class="n">X_</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X_</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="s">"""
+We will consider to compute the t-test for income
+H0: income has no predictive power on the outcome of the regression
+
+Given ci as the coefficients of the regression, 
+t-statistic(ci) = ci / SE(ci)
+
+and 
+SE(ci) = sqrt(residuals_sigma^2 * diagonal((X.T * X)^-1))
+"""</span>
+
+<span class="n">X_arr</span> <span class="o">=</span> <span class="n">X_</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">SE_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">resid</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_arr</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X_arr</span><span class="p">))</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+<span class="n">SE</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">SE_arr</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">X_</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">t_statistic</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">'income'</span><span class="p">]</span> <span class="o">/</span> <span class="n">SE</span><span class="p">[</span><span class="s">'income'</span><span class="p">]</span>
+
+<span class="c"># t-statistic is the same in both the library implementation and or implementation</span>
+</code></pre></div></div>
+
 <p>From this we extract the following rule of thumb:</p>
 
 <p><em>The value of each coefficient divided by its standard error should ideally be greater than 3. If the ratio slips below 1, we should remove the variable from the regression. <a href="https://en.wikipedia.org/wiki/Simple_linear_regression#Confidence_intervals">Wikipedia 1</a> and <a href="https://en.wikipedia.org/wiki/Simple_linear_regression#Numerical_example">Wikipedia 2</a></em></p>
 
-<p>Closely related to the <em>t-statistic</em> is the <em>p-value</em> which quantifies the probability that we obtain for <code class="highlighter-rouge">ci</code> a value greater or equal to what we obtained through regression, provided that <code class="highlighter-rouge">ci</code> were actually 0. That means, we look for a very low <em>p-value</em> which corresponds to a high <em>t-statistic</em> in order to determine the relevance of this particular factor in the model. Equivalent to a <em>t-statistic</em> of 3 is a <em>p-value</em> of roughly <code class="highlighter-rouge">0.05%</code> (3 deviations from the mean, two-sided p-value).</p>
+<p>From the <em>t-statistic</em> we compute the <em>p-value</em>, which quantifies the probability that we obtain for <code class="highlighter-rouge">ci</code> a value greater or equal to what we obtained through regression, provided that <code class="highlighter-rouge">ci</code> were actually 0. That means, we look for a very low <em>p-value</em> which corresponds to a high <em>t-statistic</em> in order to determine the relevance of this particular factor in the model. Equivalent to a <em>t-statistic</em> of 3 is a <em>p-value</em> of roughly <code class="highlighter-rouge">0.05%</code> (3 deviations from the mean, two-sided p-value).</p>
 
 <h3 id="the-f-statistic">The F-statistic</h3>
 
@@ -280,13 +334,45 @@ Basically, the f-test compares your model with zero predictor variables (the int
 
 <p>If all <code class="highlighter-rouge">ci == 0</code>, then the total variance of the residuals in this case would be the total variance of Y, which is the absolute maximum variance the model can have.  If our model were to bring value, then the variance of the residuals would be much lower than the total variance of Y. Just like the <em>t-statistic</em>, the <em>f-statistic</em> measures how far from the maximum variance our residual variance is, that is how far <code class="highlighter-rouge">Var(Residuals) / Var(Y)</code> is from 1.</p>
 
+<h3 id="stepwise-selection-for-model-features">Stepwise selection for model features</h3>
+
+<p>We use the tests before to get which model coefficients are truly relevant for our model. The actual model determined gradually, starting from all features available (usually) and reducing one by one the features which don’t have enough relevance. In the example below we also plot the Akaike Information Criterion (AIC) to show how it evolves while features are gradually pruned.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># stepwise selection</span>
+
+<span class="n">all_coefs_are_relevant</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">X_</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">to_plot</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">all_coefs_are_relevant</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X_</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+    
+    <span class="n">all_coefs_are_relevant</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">0.05</span>
+    
+    <span class="n">to_plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">aic</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">'Iteration AIC={results.aic}, continue={not all_coefs_are_relevant}'</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_coefs_are_relevant</span><span class="p">:</span>
+        <span class="n">X_</span> <span class="o">=</span> <span class="n">X_</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">pvalues</span> <span class="o">&lt;</span> <span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="o">.</span><span class="nb">max</span><span class="p">()]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+    
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">to_plot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>In Python, another way to perform feature selection is by employing this class from <a href="https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html">SKLearn</a>. It has options for selecting features for both regression and classification tasks.</p>
+
 <h3 id="worked-example">Worked example</h3>
 
 <p>I have generated some data to create a regression model <a href="https://alexandrugris.github.io/assets/task-data.xlsx">here</a>. The data assumes a team of 3 people working on a software module, with 3 types of tasks: front-end, backend and data. As time passes, the complexity of the code base increase thus also estimations tend to increase. The data includes a measure for code complexity, the type of task, initial estimation given by each developer, which developer worked on each task (there is an affinity for developers for task types, but not 100%) and what was the final duration. We want a model which aims to predict the final duration of a new task.</p>
 
 <p>The data is chosen in such a way that it presents multicollinearity and categorical components.</p>
 
-<p>First step is to see if maybe a simple regresion based on the average estimation given by developers is enough. We notice than, while the trend in task duration correlates with both average estimation and the code complexity, neither are good predictors - rather low R^2 in both cases as well as two divergent trends in the first chart. Both elements hint towards more factors needed to be included in the regression.</p>
+<p>First step is to see if maybe a simple regression based on the average estimation given by developers is enough. We notice than, while the trend in task duration correlates with both average estimation and the code complexity, neither are good predictors - rather low R^2 in both cases as well as two divergent trends in the first chart. Both elements hint towards more factors needed to be included in the regression.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/regression_12.png" alt="Exploratory analysis - regression against one variable" /></p>
 
@@ -310,7 +396,7 @@ Basically, the f-test compares your model with zero predictor variables (the int
   <li>Number of incidents</li>
 </ul>
 
-<p>we don’t include also the <code class="highlighter-rouge">Worked R, D</code> slope dummy because they highly lag 1 autorrelate to <code class="highlighter-rouge">Frontend task</code> and <code class="highlighter-rouge">Backend task</code>.</p>
+<p>we don’t include also the <code class="highlighter-rouge">Worked R, D</code> slope dummy because they highly lag 1 autocorrelate to <code class="highlighter-rouge">Frontend task</code> and <code class="highlighter-rouge">Backend task</code>.</p>
 
 <h3 id="python-code">Python code</h3>
 
@@ -426,7 +512,7 @@ Basically, the f-test compares your model with zero predictor variables (the int
 
 <p>Coefficients are a little bit strange though: <code class="highlighter-rouge">17.674954 -0.244873 -1.934692  0.933654  0.383172 -0.031911 -1.19284</code>. A high intercept and a negative correlation with the number of incidents. The number of incidents is selected to be Poisson distributed with a mean of 5, no matter the code complexity. This, together with a high margin of error in the way the Inverse Poisson  was computed in Excel which leads to a predisposition towards lower numbers, might be interpreted as “as the code complexity increases, the team becomes less confident in its ability, but still finishes faster than their too pessimistic estimates”. The extra average added by the incidents is included in the intercept, while the predisposition for lower numbers is included in the negative factor for the incidents.</p>
 
-<p>The next steps would be:</p>
+<p>The next steps are:</p>
 
 <ul>
   <li>Compute the SE for the coefficients</li>
