@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Decision Trees</title>
+  <meta name="description" content="A short introduction to decision trees (CART).">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/machine/learning/2019/12/01/decision-trees.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Decision Trees</h1>
+    <p class="post-meta"><time datetime="2019-12-01T13:15:16+02:00" itemprop="datePublished">Dec 1, 2019</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>A short introduction to decision trees (CART).</p>
+
+<h3 id="what-are-decision-trees">What are decision trees</h3>
+
+<p>Decision trees are a supervised machine learning technique used for classification and regression problems. Since the launch of XGBoost, it has been the preferred way of tackling problems at machine learning competitions and not only, because of easy setup, learning speed, straightforward tuning parameters, easy to reason about results and, above all, very good results. Arguably, with current implementations, decision trees outperform many of the other machine learning techniques.</p>
+
+<p>As with every other supervised learning techniques, the input to the algorithm in its learning phase is a set of predictors, <code class="highlighter-rouge">Xij</code>, and a set of predicted variables <code class="highlighter-rouge">Yj</code>, with <code class="highlighter-rouge">i</code> between <code class="highlighter-rouge">0</code> and <code class="highlighter-rouge">K</code>, the features, and <code class="highlighter-rouge">j</code> between <code class="highlighter-rouge">0</code> and <code class="highlighter-rouge">N</code>, the number of points in the training set. If the problem is one of classification the <code class="highlighter-rouge">Yj</code> labels, with <code class="highlighter-rouge">Yj</code> belonging to a finite set of labels, <code class="highlighter-rouge">L</code>, with <code class="highlighter-rouge">size(L) &lt;&lt; N</code>.  If the problem is a regression, then <code class="highlighter-rouge">Yj</code> are  numeric values. The output is a decision tree which, for a new input vector, <code class="highlighter-rouge">X'</code> will predict its class (or the regressed value), <code class="highlighter-rouge">Y'</code>. If the problem is one of classification, the label predicted will be the label obtained by the majority vote from the points contained in one of its leafs. If the problem is one of regression, the value predicted will be the average values <code class="highlighter-rouge">Yj</code> of the points contained in the un-split set at one of its leafs.</p>
+
+<h3 id="principles">Principles</h3>
+
+<p>A decision tree is, as the name implies, a tree. Since in the large majority of the cases this tree is binary, we will consider only the binary case in this post.</p>
+
+<p>When parsing the tree, at every node a decision is taken on whether to go right and or left. Each leaf represents the decision to which class that particular path belongs to. In the case of regression trees, it represents the predicted value for the specified set of parameters.</p>
+
+<p>The algorithm works by splitting the nodes based on the value of one of its predictor variables. The algorithm stops usually after some conditions, like the depth of the tree, or the number of leafs, or the number of nodes in a leaf has been been reached, or when all the elements in the leaf belong to a single class. Obviously, the decision trees are very prone either to overfitting by splitting too much, or to underfitting, by taking the decision to stop splitting too early.</p>
+
+<p>These model parameters, which influence when to stop splitting, are tackled by hyperparameter tuning methods, which train trees with various parameters and then pick the most successful ones.</p>
+
+<p>The bias to given by the training set selection (bagging) or feature choices are tackled by ensemble methods, like random forest or gradient boosted trees, which build several trees based on the input data to query from and then use voting to select the most accurate results.</p>
+
+<p>Below is a very basic example of how to build such a decision tree, together with its visualization:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.tree</span> <span class="kn">import</span> <span class="n">DecisionTreeRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.tree</span> <span class="kn">import</span> <span class="n">plot_tree</span>
+
+<span class="n">dt</span> <span class="o">=</span> <span class="n">DecisionTreeRegressor</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">min_samples_leaf</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">min_samples_split</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">dt</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="n">plot_tree</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</code></pre></div></div>
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_1.png" alt="Decision Tree Visualization" /></p>
+
+<p>The tree above is a regression tree, inputted with numeric features.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">X[n]</code> - the feature based on which the split has been made</li>
+  <li><code class="highlighter-rouge">mse</code> - mean squared error in the node</li>
+  <li><code class="highlighter-rouge">samples</code> - number of samples contained in the node before splitting the node further</li>
+  <li><code class="highlighter-rouge">value</code> - the mean value predicted for the node</li>
+</ul>
+
+<p>In our case, we can see the Sum of Squared Error (SSE) is improved with every split. Taking the first node, for instance, we observe:</p>
+
+<ul>
+  <li>First step: <code class="highlighter-rouge">MSE = 455 =&gt; SSE_before_the_split = 455 * 1000</code></li>
+  <li>After split we have: <code class="highlighter-rouge">SSE_after_the_split = 199 * 565 + 202 * 435 = 200305 &lt; SSE_before_the_split</code></li>
+</ul>
+
+<p>With <code class="highlighter-rouge">SSE = sum((corresponding_yi_from_partition_0 - y_mean_0)^2  ) + sum(corresponding_yi_from_partition_1 - y_mean_1)^2) </code> where _0 and _1 are the two partitions.</p>
+
+<h3 id="a-little-bit-of-terminology">A little bit of terminology</h3>
+
+<p>Here is a little bit of terminology associated with the decision trees:</p>
+
+<ul>
+  <li>
+    <p>Classification tree: a tree which outputs which class the input vector belongs to. It does so by majority selection from the selected leaf.</p>
+  </li>
+  <li>
+    <p>Regression tree: a tree which outputs the predicted value for an input vector. It does so by averaging the values from the selected leaf.</p>
+  </li>
+  <li>
+    <p>Random forest: a way of improving the predicted values for CARTs by training a number of independent trees and averaging or voting from their outputs. This can be achieved by selecting a different set of features, sampling from the training data or training with the model different hyperparameters.</p>
+  </li>
+  <li>
+    <p>Bagging: a way of building a tree from the forest by randomly sampling with replacement from the training data.</p>
+  </li>
+  <li>
+    <p>Gradient boosting: a way of building subsequent trees by weighting down the points for which the tree classified correctly and weighting up the misclassified points. In the end result, trees which performed poorly in classification will have a lower voting weight than trees that performed well.</p>
+  </li>
+  <li>
+    <p>Post pruning: the opposite of splitting, cutting the nodes that don’t bring enough information, to avoid overfitting.</p>
+  </li>
+</ul>
+
+<h3 id="building-the-tree">Building the tree</h3>
+
+<p>Building the decision tree is a recursive process. At each step a feature is selected and a value from the selected feature based on which to do the split. The selection is made such that the highest information gain is attained, meaning each group as as homogenous as possible.</p>
+
+<p>Nodes are split based on their “impurity”. Impurity is a measure of how badly the observations at a given node fit the model.</p>
+
+<p>In a regression tree, for example, the impurity may be measured by the residual sum of squares within that node - as we’ve seen in the example above.</p>
+
+<p>In a classification tree, there are various ways of measuring the impurity, such as the misclassification error, the Gini index, and the entropy.</p>
+
+<p>For building the tree there are 3 general cases, each building on each other:</p>
+
+<ul>
+  <li>All independent (<code class="highlighter-rouge">X</code>) and dependent (<code class="highlighter-rouge">y</code>) variables are categorical.</li>
+  <li>There is a mix of categorical and continuous independent variables (<code class="highlighter-rouge">X</code>) but the dependent variable is categorical (<code class="highlighter-rouge">y</code>).</li>
+  <li>The dependent variable is continuous (<code class="highlighter-rouge">y</code>).</li>
+</ul>
+
+<h3 id="all-independent-and-dependent-variables-are-categorical">All independent and dependent variables are categorical</h3>
+
+<p>The algorithm goes as follows:</p>
+
+<ol>
+  <li>Compute the uncertainty at the root node</li>
+  <li>Find the feature that has the highest uncertainty</li>
+  <li>Find the splitting point</li>
+  <li>Repeat</li>
+</ol>
+
+<p>We are going to analyze the following <a href="(https://alexandrugris.github.io/assets/telco.csv)">dataset</a>, where the predicted variable is <code class="highlighter-rouge">churn</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'../data/telco.csv'</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">'</span><span class="se">\t</span><span class="s">'</span><span class="p">)</span>
+
+<span class="n">df_categorical</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s">'marital'</span><span class="p">,</span> <span class="s">'ed'</span><span class="p">,</span> <span class="s">'gender'</span><span class="p">,</span> <span class="s">'retire'</span><span class="p">]]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'churn'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Entropy (uncertainty) at the root:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">values</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="n">y_entropy</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Calculating the entropy reduction if we split by each feature:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_categorical</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">df_categorical</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="s">'index'</span><span class="p">)</span>
+    
+    <span class="c"># compute entropy for each of classes </span>
+    <span class="n">entp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">*</span> <span class="n">ct</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">entp</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">entp</span> <span class="o">=</span> <span class="n">entp</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">entp</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">columns</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="c"># compute weights for each of the classes</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_categorical</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span> <span class="o">/</span> <span class="n">df_categorical</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">columns</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="c"># normalize for size of the population to get the weighted entropy</span>
+    <span class="n">weighted_entropy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">entp</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">'Entropy for {c} is {weighted_entropy}, reduction in entropy is {y_entropy - weighted_entropy}'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Given the results below, we would choose feature <code class="highlighter-rouge">ed</code> for split as it gives the highest entropy decrease.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_2.png" alt="Feature selection" /></p>
+
+<p>Broken down into individual steps, for the variable <code class="highlighter-rouge">ed</code> the intermediate results from each step are shown in the image below:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_3.png" alt="Entropy gain" /></p>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
