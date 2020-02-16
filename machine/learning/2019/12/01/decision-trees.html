@@ -169,13 +169,14 @@
 <p>The algorithm goes as follows:</p>
 
 <ol>
-  <li>Compute the uncertainty at the root node</li>
+  <li>Split the dataset in 3 parts: training, parameter-tuning and test</li>
+  <li>Compute the uncertainty at the root node (the node we want to split)</li>
   <li>Find the feature that has the highest uncertainty</li>
   <li>Find the splitting point</li>
-  <li>Repeat</li>
+  <li>Repeat until each node is pure or when the accuracy computed on the parameter-tuning dataset does not improve anymore.</li>
 </ol>
 
-<p>We are going to analyze the following <a href="(https://alexandrugris.github.io/assets/telco.csv)">dataset</a>, where the predicted variable is <code class="highlighter-rouge">churn</code>.</p>
+<p>We are going to analyze the following <a href="(https://alexandrugris.github.io/assets/telco.csv)">dataset</a>, where the predicted variable is <code class="highlighter-rouge">churn</code>. The first step is to select which feature to split by:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
 
@@ -185,7 +186,7 @@
 <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'churn'</span><span class="p">]</span>
 </code></pre></div></div>
 
-<p>Entropy (uncertainty) at the root:</p>
+<p>Entropy (uncertainty) at the root node:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
@@ -224,6 +225,92 @@
 <p>Broken down into individual steps, for the variable <code class="highlighter-rouge">ed</code> the intermediate results from each step are shown in the image below:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/decision_trees_3.png" alt="Entropy gain" /></p>
+
+<p>The next step is to find the right splitting point. We are going to use a measure called Gini Inpurity to split the node in two partitions, each as pure a possible.</p>
+
+<p>We define the Gini Inpurity as follows:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gini impurity = 1 - sum(p_i^2), where p_i is the probability associated with each class
+</code></pre></div></div>
+
+<p>For example, a group made of 50% males and 50% females would have a Gini Impurity of 0.5, which is the highest possible in this case. A group made only of males would have a Gini Impurity of 0, which makes it a pure node. In our case, the probabilities are the counts for the elements of each class divided by the total number of elements in the node.</p>
+
+<p>Let’s do just that.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gini</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_categorical</span><span class="p">[</span><span class="s">'ed'</span><span class="p">])</span>
+<span class="n">gini</span><span class="p">[</span><span class="s">'churn'</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+
+<span class="n">gini</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">gini</span><span class="p">[</span><span class="s">'ed'</span><span class="p">],</span> <span class="n">gini</span><span class="p">[</span><span class="s">'churn'</span><span class="p">])</span>
+
+<span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gini</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<span class="n">probs_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">'P_'</span> <span class="o">+</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">]</span>
+
+<span class="c"># compute the probability for each class</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+    <span class="n">gini</span><span class="p">[</span><span class="s">'P_'</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">gini</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">/</span> <span class="n">gini</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+    
+<span class="c"># sort by the dependant variable probability in each class</span>
+<span class="c"># to get as pure a node as possible</span>
+<span class="n">gini</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">probs_columns</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># we take each class in the independent variable,</span>
+<span class="c"># now sorted by their probabilities,</span>
+<span class="c"># and try to split by it - compute impurity</span>
+<span class="n">sorted_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+<span class="n">left_node</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">right_node</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sorted_rows</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">impurity</span><span class="p">(</span><span class="n">node_set</span><span class="p">):</span>
+    <span class="n">counts_depedent_var</span> <span class="o">=</span> <span class="n">gini</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">node_set</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c"># to type less</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">counts_depedent_var</span>
+    <span class="c"># probs</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">cnts</span> <span class="o">/</span> <span class="n">cnts</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="c"># sqr</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">cnts</span> <span class="o">*</span> <span class="n">cnts</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cnts</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    
+<span class="k">def</span> <span class="nf">no_of_observations</span><span class="p">(</span><span class="n">node_set</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">gini</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">node_set</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+
+<span class="n">total_no_of_observations</span> <span class="o">=</span> <span class="n">no_of_observations</span><span class="p">(</span><span class="n">sorted_rows</span><span class="p">)</span>
+    
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sorted_rows</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="n">left_node</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">right_node</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c"># simply follows the 1 - sum(p_i^2) formula</span>
+    <span class="n">gini_left</span> <span class="o">=</span> <span class="n">impurity</span><span class="p">(</span><span class="n">left_node</span><span class="p">)</span>
+    <span class="n">gini_right</span> <span class="o">=</span> <span class="n">impurity</span><span class="p">(</span><span class="n">right_node</span><span class="p">)</span>
+    
+    <span class="c"># computing the weighted impurity,</span>
+    <span class="c"># with the number of observations in each node</span>
+    <span class="n">total_impurity</span> <span class="o">=</span> <span class="p">(</span><span class="n">gini_left</span> <span class="o">*</span> <span class="n">no_of_observations</span><span class="p">(</span><span class="n">left_node</span><span class="p">)</span> <span class="o">+</span> <span class="n">gini_right</span> <span class="o">*</span> <span class="n">no_of_observations</span><span class="p">(</span><span class="n">right_node</span><span class="p">))</span> <span class="o">/</span> <span class="n">total_no_of_observations</span>
+                    
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {left_node} = {gini_left}"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {right_node} = {gini_right}"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Total impurity = {total_impurity}"</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s">"-------"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The combination that has the least overall weighted impurity is the combination that will be chosen in the left node and right node. In our case, the combination that will split by education is this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Impurity in ['Did not complete high school', 'High school degree', 'Some college'] = 0.34319999999999995
+Impurity in ['College degree', 'Post-undergraduate degree'] = 0.48
+Total impurity = 0.38423999999999997
+</code></pre></div></div>
+
+<p>Let’s observe a little bit the data in between steps.</p>
+
+<p>Gini dataframe, after initial setup and sorting by probabilities:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_4.png" alt="gini dataframe" /></p>
+
+<p>Impurity calculated in the loop, for each combination of possible values in the left-right nodes:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_5.png" alt="gini dataframe" /></p>
 
 
   </div>
