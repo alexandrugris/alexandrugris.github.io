@@ -291,42 +291,41 @@
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {left_node} = {gini_left}"</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {right_node} = {gini_right}"</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Total impurity = {total_impurity}"</span><span class="p">)</span>
-    <span class="sb">``</span><span class="err">`</span>
-
-<span class="n">The</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">has</span> <span class="n">the</span> <span class="n">least</span> <span class="n">overall</span> <span class="n">weighted</span> <span class="n">impurity</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">will</span> <span class="n">be</span> <span class="n">chosen</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">left</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">right</span> <span class="n">node</span><span class="o">.</span> <span class="n">In</span> <span class="n">our</span> <span class="n">case</span><span class="p">,</span> <span class="n">the</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">will</span> <span class="n">split</span> <span class="n">by</span> <span class="n">education</span> <span class="ow">is</span> <span class="n">this</span><span class="p">:</span>
-
 </code></pre></div></div>
-<p>Impurity in [‘Did not complete high school’, ‘High school degree’, ‘Some college’] = 0.34319999999999995
-Impurity in [‘College degree’, ‘Post-undergraduate degree’] = 0.48
-Total impurity = 0.38423999999999997</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-Let's observe a little bit the data in between steps.
 
-The gini dataframe, after initial setup and sorting by probabilities:
+<p>The combination that has the least overall weighted impurity will be chosen for the split. In our case, the combination that will split by education is this:</p>
 
-![gini dataframe](https://alexandrugris.github.io/assets/decision_trees_4.png)
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Impurity in ['Did not complete high school', 'High school degree', 'Some college'] = 0.34319999999999995
+Impurity in ['College degree', 'Post-undergraduate degree'] = 0.48
+Total impurity = 0.38423999999999997
+</code></pre></div></div>
 
-Impurity calculated in the loop, for each combination of possible values in the left-right nodes:
+<p>Let’s observe a little bit the data in between steps.</p>
 
-![gini dataframe](https://alexandrugris.github.io/assets/decision_trees_5.png)
+<p>The gini dataframe, after initial setup and sorting by probabilities:</p>
 
-### Gini Impurity for Continuous Independent Variables
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_4.png" alt="gini dataframe" /></p>
 
-We are starting as follows:
+<p>Impurity calculated in the loop, for each combination of possible values in the left-right nodes:</p>
 
-```python
-#######################################################
-### Gini Impurity for a continuous independent variable
-#######################################################
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_5.png" alt="gini dataframe" /></p>
 
-continuous_var = 'age'
-dependent_var = 'churn'
+<h3 id="gini-impurity-for-continuous-independent-variables">Gini Impurity for Continuous Independent Variables</h3>
 
-df_continuous = df[[continuous_var]]
+<p>We are starting as follows:</p>
 
-gini = pd.DataFrame(df_continuous[continuous_var])
-gini[dependent_var] = y
-gini.sort_values([continuous_var], ascending=True, inplace=True)
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#######################################################</span>
+<span class="c">### Gini Impurity for a continuous independent variable</span>
+<span class="c">#######################################################</span>
+
+<span class="n">continuous_var</span> <span class="o">=</span> <span class="s">'age'</span>
+<span class="n">dependent_var</span> <span class="o">=</span> <span class="s">'churn'</span>
+
+<span class="n">df_continuous</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="n">continuous_var</span><span class="p">]]</span>
+
+<span class="n">gini</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_continuous</span><span class="p">[</span><span class="n">continuous_var</span><span class="p">])</span>
+<span class="n">gini</span><span class="p">[</span><span class="n">dependent_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+<span class="n">gini</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="n">continuous_var</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/decision_trees_6.png" alt="Sorted by continuous independent variable" /></p>
