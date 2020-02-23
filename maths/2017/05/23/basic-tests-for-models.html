@@ -6,8 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Basic Tests For ML Models</title>
-  <meta name="description" content="Very short and simple post about metrics used for validating models.">
+  <title>Classification</title>
+  <meta name="description" content="Very short and simple post about metrics used for validating classification models.">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/maths/2017/05/23/basic-tests-for-models.html">
@@ -61,12 +61,12 @@
         <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">Basic Tests For ML Models</h1>
+    <h1 class="post-title" itemprop="name headline">Classification</h1>
     <p class="post-meta"><time datetime="2017-05-23T14:15:16+03:00" itemprop="datePublished">May 23, 2017</time></p>
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>Very short and simple post about metrics used for validating models.</p>
+    <p>Very short and simple post about metrics used for validating classification models.</p>
 
 <h3 id="confusion-matrix">Confusion matrix</h3>
 
@@ -79,11 +79,11 @@
   <li><em>true negatives:</em> my test says not spam and the email is not spam (tn)</li>
 </ul>
 
-<p>For the rest of the article let’s consider some numbers: tp = 10, fp = 100, fn = 1000, tn = 10000</p>
+<p>For the rest of the article, let’s consider a classifier that has the following confusion matrix: <code class="highlighter-rouge">tp = 10</code>, <code class="highlighter-rouge">fp = 100</code>, <code class="highlighter-rouge">fn = 1000</code>, <code class="highlighter-rouge">tn = 10000</code>. This is an example of an imbalanced dataset (<code class="highlighter-rouge">tp + fn  = 10 + 1000 &lt;&lt; fp + tn = 100 + 10000</code>).</p>
 
 <h3 id="accuracy">Accuracy</h3>
 
-<p>Fraction of correct predictions:</p>
+<p>The percent of classes classified correctly.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">def</span> <span class="nf">accuracy</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tn</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">tn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fp</span> <span class="o">+</span> <span class="n">fn</span> <span class="o">+</span> <span class="n">tn</span><span class="p">)</span>
@@ -95,7 +95,7 @@
 
 <h3 id="precision">Precision</h3>
 
-<p>How accurate our positive predictions are.</p>
+<p>How accurate our positive predictions are. The percent of predicted 1s that are actually 1s.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">precision</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tn</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fp</span><span class="p">)</span>
@@ -106,9 +106,9 @@
 </code></pre></div></div>
 <p>Obviously, accuracy is less than 1%.</p>
 
-<h3 id="recall">Recall</h3>
+<h3 id="recall-or-sensitivity">Recall or Sensitivity</h3>
 
-<p>What fraction of positives the model identified.</p>
+<p>The percentage of 1s that the model correctly classified.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">recall</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tn</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tp</span>  <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
@@ -130,6 +130,87 @@
 <span class="n">f1_score</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="mf">0.017857142857142856</span>
 </code></pre></div></div>
+
+<h3 id="specificity">Specificity</h3>
+
+<p>The percentage of 0s correctly classified.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">specificity</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tn</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">tn</span> <span class="o">/</span> <span class="p">(</span><span class="n">tn</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="roc-and-auroc-auc">ROC and AUROC (AUC)</h3>
+
+<p>The ROC curve captures the tradeoff between specificity and recall (sensitivity). Its axes are <code class="highlighter-rouge">X:(1-specificity)</code> and <code class="highlighter-rouge">Y: sensitivity</code>. It is drawn by varying the lambda classification threshold for a specific model. It is used to select such a threshold that gives the best ratio of sensitivity and specificity, which is given by choosing a lambda as close as possible to the top - left corner of the chart.</p>
+
+<p>Below an example of plotting the ROC curve and setting the lambda parameter for a logistic regression.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+
+<span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
+<span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="c"># our lambda parameter</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.5</span> 
+
+<span class="c"># ...[0] is probability of not `0` </span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+
+<span class="n">sensitivity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">specificity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Sensitivity: {sensitivity}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Specificity: {specificity}"</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted no, actual no: {sum((y==0) &amp; (y_pred==0))}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted no, actual yes: {sum((y==1) &amp; (y_pred==0))}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted yes, actual no: {sum((y==0) &amp; (y_pred==1))}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted yes, actual yes: {sum((y==1) &amp; (y_pred==1))}"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now, let’s vary the threshold and plot the ROC curve.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def roc(threshold):
+    
+    y_pred = lr.predict_proba(X).T[1] &gt;= threshold
+    sensitivity = sum((y == 1) &amp; (y_pred == 1)) / sum(y==1)
+    specificity = sum((y == 0) &amp; (y_pred == 0)) / sum(y==0)
+    
+    return [sensitivity, 1 - specificity, threshold]
+
+v = np.array([roc(th) for  th in np.arange(0, 1, step=0.01)]).T
+
+# draw the ROC curve
+plt.scatter(v[1], v[0])
+
+# the point most distant from the curve
+n = np.argmax(v[0] - v[1])
+print(f"recommended threshold = {v[2][n]} with sensitivity = {v[0][n]} and specificity={1-v[1][n]}")
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/classification_1.png" alt="ROC" /></p>
+
+<p>The AUC (area under the curve) or, in our case, better said AUROC (area under the ROC), is a measure of how good the classifier is. The larger the area, the better the classifier. In our case above, the classifier is pretty weak to start with.</p>
+
+<p>In addition to the ROC curves, it can be very useful to examine the precision-recall curve <a href="https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html">(PR-curve)</a>. These are especially useful for imbalanced outcomes. Below is an example for the precision / recall curve:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/classification_2.png" alt="PR-curve" /></p>
+
+<p>In the example above, precision starts to fall sharply around 80% recall. In this case, we probably want to select a precision/recall tradeoff just before that drop for example, at around 60% recall. A good classifier has a PR-curve which gets closer to the top-right corner.</p>
+
+<h3 id="the-imbalanced-dataset-problem">The Imbalanced Dataset Problem</h3>
+
+<p>Imbalanced datasets can lead to a very poor classifier because the underrepresented class might simply be rejected as noise in the training step.</p>
+
+<p>Some ways to deal with imbalanced data are described below:</p>
+<ul>
+  <li>Undersample - use less of the prevalent class to train the model</li>
+  <li>Oversample - use more of the rare class records to rain the model, usually achieved through bootstrapping</li>
+  <li>Up/down weight - add weights to the classification data, so that the probability for each class becomes roughly the same</li>
+  <li>Data generation - similar to bootstrapping, but each generated record is slightly different from its source. SMOTE is an algorithm that generates a new record for the record being up-sampled by using the K-nearest neighbors and assigning a randomly selected weight for each feature.</li>
+</ul>
+
+<p>A classification problem could be turned to a regression problem if an expected value is assigned to each classification record. For instance, instead of trying to predict a credit default, we might want to predict the expected return of a given loan.</p>
 
 
   </div>
