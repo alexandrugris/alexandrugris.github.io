@@ -103,7 +103,7 @@
 </code></pre></div></div>
 <p><img src="https://alexandrugris.github.io/assets/decision_trees_1.png" alt="Decision Tree Visualization" /></p>
 
-<p>The tree above is a regression tree, inputted with numeric features.</p>
+<p>The tree above is a regression tree, built with numeric features.</p>
 
 <ul>
   <li><code class="highlighter-rouge">X[n]</code> - the feature based on which the split has been made</li>
@@ -142,7 +142,7 @@
     <p>Gradient boosting: a way of building subsequent trees by weighting down the points for which the tree classified correctly and weighting up the misclassified points. In the end result, trees which performed poorly in classification will have a lower voting weight than trees that performed well.</p>
   </li>
   <li>
-    <p>Post pruning: the opposite of splitting, cutting the nodes that don’t bring enough information, to avoid overfitting.</p>
+    <p>Pruning: the opposite of splitting, removing the nodes that don’t bring enough information, to avoid overfitting.</p>
   </li>
 </ul>
 
@@ -152,9 +152,7 @@
 
 <p>Nodes are split based on their “impurity”. Impurity is a measure of how badly the observations at a given node fit the model.</p>
 
-<p>In a regression tree, for example, the impurity may be measured by the residual sum of squares within that node - as we’ve seen in the example above.</p>
-
-<p>In a classification tree, there are various ways of measuring the impurity, such as the misclassification error, the Gini index, and the entropy.</p>
+<p>For a regression tree the impurity is be measured by the residual sum of squares within that node - as we’ve seen in the example above. For a classification tree, there are various ways of measuring the impurity, such as the misclassification error, the Gini Impurity, and the Entropy.</p>
 
 <p>For building the tree there are 3 general cases, each building on each other:</p>
 
@@ -164,16 +162,16 @@
   <li>The dependent variable is continuous (<code class="highlighter-rouge">y</code>).</li>
 </ul>
 
-<h3 id="all-independent-and-dependent-variables-are-categorical">All independent and dependent variables are categorical</h3>
+<h3 id="all-independent-and-dependent-variables-are-categorical">All Independent and Dependent Variables Are Categorical</h3>
 
 <p>The algorithm goes as follows:</p>
 
 <ol>
   <li>Split the dataset in 3 parts: training, parameter-tuning and test</li>
   <li>Compute the uncertainty at the root node (the node we want to split)</li>
-  <li>Find the feature that has the highest uncertainty</li>
+  <li>Find the feature that provides the highest uncertainty reduction and decide to split by this feature</li>
   <li>Find the splitting point</li>
-  <li>Repeat until each node is pure or when the accuracy computed on the parameter-tuning dataset does not improve anymore.</li>
+  <li>Repeat until each node is pure or until the accuracy computed on the parameter-tuning dataset does not improve anymore.</li>
 </ol>
 
 <p>We are going to analyze the following <a href="(https://alexandrugris.github.io/assets/telco.csv)">dataset</a>, where the predicted variable is <code class="highlighter-rouge">churn</code>. The first step is to select which feature to split by:</p>
@@ -186,7 +184,7 @@
 <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'churn'</span><span class="p">]</span>
 </code></pre></div></div>
 
-<p>Entropy (uncertainty) at the root node:</p>
+<p>Entropy (uncertainty) at the root node. By definition, <code class="highlighter-rouge">entropy = sum(-p*log2(p))</code> where <code class="highlighter-rouge">p</code> is the probability of a class to appear in the given set.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
@@ -201,6 +199,8 @@
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_categorical</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
 
+    <span class="c"># compute the counts for each category mapped to the predicted variable</span>
+    <span class="c"># normalize per line to get the probability</span>
     <span class="n">ct</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">df_categorical</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="s">'index'</span><span class="p">)</span>
     
     <span class="c"># compute entropy for each of classes </span>
@@ -226,9 +226,9 @@
 
 <p><img src="https://alexandrugris.github.io/assets/decision_trees_3.png" alt="Entropy gain" /></p>
 
-<p>The next step is to find the right splitting point. We are going to use a measure called Gini Inpurity to split the node in two partitions, each as pure a possible.</p>
+<p>The next step is to find the right splitting point. We are going to use a measure called Gini Impurity to split the node in two partitions, each as pure a possible.</p>
 
-<p>We define the Gini Inpurity as follows:</p>
+<p>We define the Gini Impurity as follows:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gini impurity = 1 - sum(p_i^2), where p_i is the probability associated with each class
 </code></pre></div></div>
@@ -255,7 +255,7 @@
 
 <span class="c"># we take each class in the independent variable,</span>
 <span class="c"># now sorted by their probabilities,</span>
-<span class="c"># and try to split by it - compute impurity</span>
+<span class="c"># and split by it to compute impurity</span>
 <span class="n">sorted_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
 <span class="n">left_node</span> <span class="o">=</span> <span class="p">[]</span>
@@ -291,26 +291,194 @@
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {left_node} = {gini_left}"</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Impurity in {right_node} = {gini_right}"</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Total impurity = {total_impurity}"</span><span class="p">)</span>
+    <span class="sb">``</span><span class="err">`</span>
+
+<span class="n">The</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">has</span> <span class="n">the</span> <span class="n">least</span> <span class="n">overall</span> <span class="n">weighted</span> <span class="n">impurity</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">will</span> <span class="n">be</span> <span class="n">chosen</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">left</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">right</span> <span class="n">node</span><span class="o">.</span> <span class="n">In</span> <span class="n">our</span> <span class="n">case</span><span class="p">,</span> <span class="n">the</span> <span class="n">combination</span> <span class="n">that</span> <span class="n">will</span> <span class="n">split</span> <span class="n">by</span> <span class="n">education</span> <span class="ow">is</span> <span class="n">this</span><span class="p">:</span>
+
+</code></pre></div></div>
+<p>Impurity in [‘Did not complete high school’, ‘High school degree’, ‘Some college’] = 0.34319999999999995
+Impurity in [‘College degree’, ‘Post-undergraduate degree’] = 0.48
+Total impurity = 0.38423999999999997</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+Let's observe a little bit the data in between steps.
+
+The gini dataframe, after initial setup and sorting by probabilities:
+
+![gini dataframe](https://alexandrugris.github.io/assets/decision_trees_4.png)
+
+Impurity calculated in the loop, for each combination of possible values in the left-right nodes:
+
+![gini dataframe](https://alexandrugris.github.io/assets/decision_trees_5.png)
+
+### Gini Impurity for Continuous Independent Variables
+
+We are starting as follows:
+
+```python
+#######################################################
+### Gini Impurity for a continuous independent variable
+#######################################################
+
+continuous_var = 'age'
+dependent_var = 'churn'
+
+df_continuous = df[[continuous_var]]
+
+gini = pd.DataFrame(df_continuous[continuous_var])
+gini[dependent_var] = y
+gini.sort_values([continuous_var], ascending=True, inplace=True)
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_6.png" alt="Sorted by continuous independent variable" /></p>
+
+<p>In our case, the <code class="highlighter-rouge">age</code> looks more like a categorical variable with many classes, but we will treat it as a continuous variable. This is why, in the next step we uniquify it.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># we are using np.unique to deduplicate identical values</span>
+<span class="c"># for a purely continuous variable, it might be some sort of bucketing to</span>
+<span class="c"># reduce the amount of gini calculations we perform</span>
+<span class="n">sorted_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">gini</span><span class="p">[</span><span class="n">continuous_var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Now, let’s compute the impurity for each value. The impurity will be saved in the <code class="highlighter-rouge">df_splits</code> dataframe.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">impurity</span><span class="p">(</span><span class="n">subset</span><span class="p">):</span>
+    <span class="c"># for this subset, we want to see how many 'yes'es and 'no's we have</span>
+    <span class="n">counts_depedent_var</span> <span class="o">=</span> <span class="n">subset</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dependent_var</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="c"># to type less</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">counts_depedent_var</span>
+    <span class="c"># probs</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">cnts</span> <span class="o">/</span> <span class="n">cnts</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="c"># sqr</span>
+    <span class="n">cnts</span> <span class="o">=</span> <span class="n">cnts</span> <span class="o">*</span> <span class="n">cnts</span>
+    <span class="c"># return a float instead of a dataframe</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cnts</span><span class="o">.</span><span class="nb">sum</span><span class="p">())</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
-    <span class="k">print</span><span class="p">(</span><span class="s">"-------"</span><span class="p">)</span>
+<span class="n">df_splits</span> <span class="o">=</span> <span class="p">{</span>
+    
+        <span class="s">'Split'</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s">'Gini left'</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s">'Gini right'</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s">'Total impurity'</span><span class="p">:</span> <span class="p">[]</span>
+    
+    <span class="p">}</span>
+    
+<span class="k">for</span> <span class="n">split_value</span> <span class="ow">in</span> <span class="n">sorted_rows</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    
+    <span class="c"># since we've already sorted, in real production code</span>
+    <span class="c"># we would have just incremented the counts in a linear fashion</span>
+    <span class="c"># here we rely on the dataframe functionality and trade performance for less typing</span>
+
+    <span class="n">subset_left</span> <span class="o">=</span> <span class="n">gini</span><span class="p">[</span><span class="n">gini</span><span class="p">[</span><span class="n">continuous_var</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">split_value</span><span class="p">]</span>
+    <span class="n">subset_right</span> <span class="o">=</span> <span class="n">gini</span><span class="p">[</span><span class="n">gini</span><span class="p">[</span><span class="n">continuous_var</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">split_value</span><span class="p">]</span>
+
+    <span class="n">gini_left</span> <span class="o">=</span> <span class="n">impurity</span><span class="p">(</span><span class="n">subset_left</span><span class="p">)</span>
+    <span class="n">gini_right</span> <span class="o">=</span> <span class="n">impurity</span><span class="p">(</span><span class="n">subset_right</span><span class="p">)</span>
+
+    <span class="n">len_left</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_left</span><span class="p">)</span>
+    <span class="n">len_right</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_right</span><span class="p">)</span>
+    <span class="n">len_total</span> <span class="o">=</span> <span class="n">len_left</span> <span class="o">+</span> <span class="n">len_right</span>
+    
+    <span class="n">total_impurity</span> <span class="o">=</span> <span class="p">(</span><span class="n">gini_left</span> <span class="o">*</span> <span class="n">len_left</span> <span class="o">+</span> <span class="n">gini_right</span> <span class="o">*</span> <span class="n">len_right</span><span class="p">)</span> <span class="o">/</span> <span class="n">len_total</span>
+                    
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Total impurity for split value of {split_value} = {total_impurity}"</span><span class="p">)</span>
+    
+    <span class="n">df_splits</span><span class="p">[</span><span class="s">'Split'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split_value</span><span class="p">)</span>
+    <span class="n">df_splits</span><span class="p">[</span><span class="s">'Gini left'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gini_left</span><span class="p">)</span>
+    <span class="n">df_splits</span><span class="p">[</span><span class="s">'Gini right'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gini_right</span><span class="p">)</span>
+    <span class="n">df_splits</span><span class="p">[</span><span class="s">'Total impurity'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_impurity</span><span class="p">)</span>
+    
+<span class="n">df_splits</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_splits</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>The combination that has the least overall weighted impurity is the combination that will be chosen in the left node and right node. In our case, the combination that will split by education is this:</p>
+<p>Let’s investigate a little bit the results now. We’ll look at two things:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Impurity in ['Did not complete high school', 'High school degree', 'Some college'] = 0.34319999999999995
-Impurity in ['College degree', 'Post-undergraduate degree'] = 0.48
-Total impurity = 0.38423999999999997
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># counts of age and churn</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">gini</span><span class="p">[</span><span class="s">'age'</span><span class="p">],</span> <span class="n">gini</span><span class="p">[</span><span class="s">'churn'</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p>Let’s observe a little bit the data in between steps.</p>
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_7.png" alt="counts of age and churn" /></p>
 
-<p>Gini dataframe, after initial setup and sorting by probabilities:</p>
+<p>and</p>
 
-<p><img src="https://alexandrugris.github.io/assets/decision_trees_4.png" alt="gini dataframe" /></p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_splits</span><span class="p">[[</span><span class="s">'Gini left'</span><span class="p">,</span> <span class="s">'Gini right'</span><span class="p">,</span> <span class="s">'Total impurity'</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+</code></pre></div></div>
 
-<p>Impurity calculated in the loop, for each combination of possible values in the left-right nodes:</p>
+<p><img src="https://alexandrugris.github.io/assets/decision_trees_8.png" alt="counts of age and churn" /></p>
 
-<p><img src="https://alexandrugris.github.io/assets/decision_trees_5.png" alt="gini dataframe" /></p>
+<p>We observe the following:</p>
+
+<ul>
+  <li>The total impurity (weighted sum between the left node impurity and the right node impurity) has a minimum. That is our best splitting point.</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_splits</span><span class="p">[</span><span class="n">df_splits</span><span class="p">[</span><span class="s">'Total impurity'</span><span class="p">]</span> <span class="o">==</span> <span class="n">df_splits</span><span class="p">[</span><span class="s">'Total impurity'</span><span class="p">]</span><span class="o">.</span><span class="nb">min</span><span class="p">()]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">147</span><span class="p">]:</span> 
+    <span class="n">Split</span>  <span class="n">Gini</span> <span class="n">left</span>  <span class="n">Gini</span> <span class="n">right</span>  <span class="n">Total</span> <span class="n">impurity</span>
+<span class="mi">18</span>     <span class="mi">36</span>   <span class="mf">0.484056</span>    <span class="mf">0.302626</span>        <span class="mf">0.373747</span>
+</code></pre></div></div>
+
+<p>By assessing the first bar chart, we intuitively see that after <code class="highlighter-rouge">36</code>, the churn seems to decrease.</p>
+
+<ul>
+  <li>The impurity for both the left and the right node tend to decrease, but for the left node impurity decreases slower. This happens because the data set is not balanced and not very well separated, with less ‘Yes’es than ‘No’s.</li>
+</ul>
+
+<p>Now we can compute the entropy for the feature after the split:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">entropy_split</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">gini</span><span class="p">[</span><span class="n">continuous_var</span><span class="p">],</span> <span class="n">gini</span><span class="p">[</span><span class="n">dependent_var</span><span class="p">])</span>
+    
+    <span class="n">left</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">counts</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">pts</span><span class="p">]</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">counts</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">pts</span><span class="p">]</span>
+    
+    <span class="n">left_y_n</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="n">right_y_n</span> <span class="o">=</span> <span class="n">right</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    
+    <span class="n">left_cnt</span> <span class="o">=</span> <span class="n">left_y_n</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="n">right_cnt</span> <span class="o">=</span> <span class="n">right_y_n</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    
+    <span class="n">left_probs</span> <span class="o">=</span> <span class="n">left_y_n</span> <span class="o">/</span> <span class="n">left_cnt</span>
+    <span class="n">right_probs</span> <span class="o">=</span> <span class="n">right_y_n</span> <span class="o">/</span> <span class="n">right_cnt</span>
+    
+    <span class="n">entropy_left</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">left_probs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">left_probs</span><span class="p">))</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="n">entropy_right</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">right_probs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">right_probs</span><span class="p">))</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="p">((</span><span class="n">entropy_left</span> <span class="o">*</span> <span class="n">left_cnt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">entropy_right</span> <span class="o">*</span> <span class="n">right_cnt</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">left_cnt</span> <span class="o">+</span> <span class="n">right_cnt</span><span class="p">)</span>
+
+<span class="n">entropy_split</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span> <span class="c"># entropy for feature if we were to split by it</span>
+<span class="n">entropy_split</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="c"># entropy before the split, 100 means there's no split</span>
+
+<span class="n">entropy_gain</span> <span class="o">=</span> <span class="n">entropy_split</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-</span> <span class="n">entropy_split</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
+
+<span class="n">entropy_gain</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">179</span><span class="p">]:</span> <span class="mf">0.04303762368425612</span>
+</code></pre></div></div>
+
+<p>Unlike the previous scenario with only categorical variables, if we have continuous variables we have to reverse the tree building algorithm as we cannot compute the information gain for a feature before we find the splitting point. Therefore, we’ll first find out the point of splitting to the left node and right node, if we were to split on each of continuous the variables. Once the left and right nodes for each of the variables are figured, we’ll calculate the information gain obtained by the split and select the feature that gives us the highest information gain. We use that feature and that splitting point as our next step in the tree construction algorithm.</p>
+
+<h3 id="continuous-dependent-variable---regression-trees">Continuous Dependent Variable - Regression Trees</h3>
+
+<p>For this case, we don’t have measures such as Gini Impurity or Entropy, as both of them depend on the response variable being categorical. Therefore, we can use the improvement in the Mean Squared Error as a measure of best split.</p>
+
+<p><em>For the case of a continuous independent variable (feature):</em></p>
+
+<ol>
+  <li>We sort by the independent variable</li>
+  <li>For each increment of the independent variable we compute the MSE in the dependent variable</li>
+  <li>We select the increment with the highest improvement in the MSE</li>
+</ol>
+
+<p><em>For the case of a categorical independent variable (feature):</em></p>
+
+<ol>
+  <li>Compute the average response value for each category</li>
+  <li>Sort ascending by the average response value</li>
+  <li>Start with an empty left node and all features in the right node</li>
+  <li>Add feature by feature to the left node and compute the mean squared error for the split</li>
+  <li>Select the split with the highest decrease in the mean squared error</li>
+</ol>
+
+<p>After the steps above are performed for each feature, select the <code class="highlighter-rouge">(feature, split_point)</code> pair which gives the highest improvement in the <code class="highlighter-rouge">MSE</code> and then continue to split the tree recursively.</p>
 
 
   </div>
