@@ -173,22 +173,22 @@
 
 <p>Now, let’s vary the threshold and plot the ROC curve.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def roc(threshold):
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">roc</span><span class="p">(</span><span class="n">threshold</span><span class="p">):</span>
     
-    y_pred = lr.predict_proba(X).T[1] &gt;= threshold
-    sensitivity = sum((y == 1) &amp; (y_pred == 1)) / sum(y==1)
-    specificity = sum((y == 0) &amp; (y_pred == 0)) / sum(y==0)
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
+    <span class="n">sensitivity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">specificity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
     
-    return [sensitivity, 1 - specificity, threshold]
+    <span class="k">return</span> <span class="p">[</span><span class="n">sensitivity</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">threshold</span><span class="p">]</span>
 
-v = np.array([roc(th) for  th in np.arange(0, 1, step=0.01)]).T
+<span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">roc</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="k">for</span>  <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
 
-# draw the ROC curve
-plt.scatter(v[1], v[0])
+<span class="c"># draw the ROC curve</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-# the point most distant from the curve
-n = np.argmax(v[0] - v[1])
-print(f"recommended threshold = {v[2][n]} with sensitivity = {v[0][n]} and specificity={1-v[1][n]}")
+<span class="c"># the point most distant from the curve</span>
+<span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"recommended threshold = {v[2][n]} with sensitivity = {v[0][n]} and specificity={1-v[1][n]}"</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/classification_1.png" alt="ROC" /></p>
