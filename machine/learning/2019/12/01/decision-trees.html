@@ -460,7 +460,11 @@ gini.sort_values([continuous_var], ascending=True, inplace=True)
 
 <p>For this case, we don’t have measures such as Gini Impurity or Entropy, as both of them depend on the response variable being categorical. Therefore, we can use the improvement in the Mean Squared Error as a measure of best split.</p>
 
-<p><em>For the case of a continuous independent variable (feature):</em></p>
+<p>The algorithm goes as follows.</p>
+
+<p>For each feature,</p>
+
+<p><em>If the feature is continuous:</em></p>
 
 <ol>
   <li>We sort by the independent variable</li>
@@ -468,18 +472,19 @@ gini.sort_values([continuous_var], ascending=True, inplace=True)
   <li>We select the increment with the highest improvement in the MSE</li>
 </ol>
 
-<p><em>For the case of a categorical independent variable (feature):</em></p>
+<p><em>If the feature is categorical:</em></p>
 
 <ol>
-  <li>Compute the average response value for each category</li>
-  <li>Sort ascending by the average response value</li>
-  <li>Start with an empty left node and all features in the right node</li>
-  <li>Add feature by feature to the left node and compute the mean squared error for the split</li>
+  <li>Compute the average response value for each category in the selected feature</li>
+  <li>Sort categories ascending by the average response value</li>
+  <li>Start with one category in the left node and all the remaining categories in the right node</li>
+  <li>Add category by category to the left node and compute the mean squared error for the split</li>
   <li>Select the split with the highest decrease in the mean squared error</li>
 </ol>
 
-<p>After the steps above are performed for each feature, select the <code class="highlighter-rouge">(feature, split_point)</code> pair which gives the highest improvement in the <code class="highlighter-rouge">MSE</code> and then continue to split the tree recursively.</p>
+<p>After all the steps above are performed for each feature in the feature set, select the <code class="highlighter-rouge">(feature, split_point)</code> pair which gives the highest improvement in the <code class="highlighter-rouge">MSE</code> and then continue to split the tree recursively.</p>
 
+<p>As we can see, for decision trees we don’t do any dummy variable encoding on the categorical dependent variables. We treat them as they are.</p>
 
   </div>
 

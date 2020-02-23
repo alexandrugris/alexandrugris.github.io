@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2020-02-23T14:14:45+02:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2020-02-23T14:22:00+02:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
 </subtitle><entry><title type="html">Stats Again</title><link href="https://alexandrugris.github.io/statistics/2019/12/24/stats-again.html" rel="alternate" type="text/html" title="Stats Again" /><published>2019-12-24T13:15:16+02:00</published><updated>2019-12-24T13:15:16+02:00</updated><id>https://alexandrugris.github.io/statistics/2019/12/24/stats-again</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2019/12/24/stats-again.html">&lt;p&gt;A summary of statistics notions not found anywhere else on this blog. The post touches among others: some descriptive statistics measures, hypothesis testing, goodness of fit, Lasso and Ridge regression.&lt;/p&gt;
 
 &lt;h3 id=&quot;descriptive-statistics&quot;&gt;Descriptive Statistics&lt;/h3&gt;
@@ -824,7 +824,11 @@ gini.sort_values([continuous_var], ascending=True, inplace=True)
 
 &lt;p&gt;For this case, we don’t have measures such as Gini Impurity or Entropy, as both of them depend on the response variable being categorical. Therefore, we can use the improvement in the Mean Squared Error as a measure of best split.&lt;/p&gt;
 
-&lt;p&gt;&lt;em&gt;For the case of a continuous independent variable (feature):&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The algorithm goes as follows.&lt;/p&gt;
+
+&lt;p&gt;For each feature,&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;If the feature is continuous:&lt;/em&gt;&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;We sort by the independent variable&lt;/li&gt;
@@ -832,17 +836,19 @@ gini.sort_values([continuous_var], ascending=True, inplace=True)
   &lt;li&gt;We select the increment with the highest improvement in the MSE&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;&lt;em&gt;For the case of a categorical independent variable (feature):&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;If the feature is categorical:&lt;/em&gt;&lt;/p&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;Compute the average response value for each category&lt;/li&gt;
-  &lt;li&gt;Sort ascending by the average response value&lt;/li&gt;
-  &lt;li&gt;Start with an empty left node and all features in the right node&lt;/li&gt;
-  &lt;li&gt;Add feature by feature to the left node and compute the mean squared error for the split&lt;/li&gt;
+  &lt;li&gt;Compute the average response value for each category in the selected feature&lt;/li&gt;
+  &lt;li&gt;Sort categories ascending by the average response value&lt;/li&gt;
+  &lt;li&gt;Start with one category in the left node and all the remaining categories in the right node&lt;/li&gt;
+  &lt;li&gt;Add category by category to the left node and compute the mean squared error for the split&lt;/li&gt;
   &lt;li&gt;Select the split with the highest decrease in the mean squared error&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;After the steps above are performed for each feature, select the &lt;code class=&quot;highlighter-rouge&quot;&gt;(feature, split_point)&lt;/code&gt; pair which gives the highest improvement in the &lt;code class=&quot;highlighter-rouge&quot;&gt;MSE&lt;/code&gt; and then continue to split the tree recursively.&lt;/p&gt;</content><author><name></name></author><summary type="html">A short introduction to decision trees (CART). Decision trees are a supervised machine learning technique used for classification and regression problems. Since the launch of XGBoost, it has been the preferred way of tackling problems at machine learning competitions and not only, because of easy setup, learning speed, straightforward tuning parameters, easy to reason about results and, above all, very good results. Arguably, with current implementations, decision trees outperform many of the other machine learning techniques.</summary></entry><entry><title type="html">Streaming Architecture Using Apache Kafka And Redis</title><link href="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html" rel="alternate" type="text/html" title="Streaming Architecture Using Apache Kafka And Redis" /><published>2019-09-04T14:15:16+03:00</published><updated>2019-09-04T14:15:16+03:00</updated><id>https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html">&lt;p&gt;This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems.  It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.&lt;/p&gt;
+&lt;p&gt;After all the steps above are performed for each feature in the feature set, select the &lt;code class=&quot;highlighter-rouge&quot;&gt;(feature, split_point)&lt;/code&gt; pair which gives the highest improvement in the &lt;code class=&quot;highlighter-rouge&quot;&gt;MSE&lt;/code&gt; and then continue to split the tree recursively.&lt;/p&gt;
+
+&lt;p&gt;As we can see, for decision trees we don’t do any dummy variable encoding on the categorical dependent variables. We treat them as they are.&lt;/p&gt;</content><author><name></name></author><summary type="html">A short introduction to decision trees (CART). Decision trees are a supervised machine learning technique used for classification and regression problems. Since the launch of XGBoost, it has been the preferred way of tackling problems at machine learning competitions and not only, because of easy setup, learning speed, straightforward tuning parameters, easy to reason about results and, above all, very good results. Arguably, with current implementations, decision trees outperform many of the other machine learning techniques.</summary></entry><entry><title type="html">Streaming Architecture Using Apache Kafka And Redis</title><link href="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html" rel="alternate" type="text/html" title="Streaming Architecture Using Apache Kafka And Redis" /><published>2019-09-04T14:15:16+03:00</published><updated>2019-09-04T14:15:16+03:00</updated><id>https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2019/09/04/realtime-architecture-with-apache-kafka.html">&lt;p&gt;This post describes an architecture based on Apache Kafka and Redis that can be applied to building high performing, resilient streaming systems.  It applies to near-realtime systems, where a stream of events needs to be processed and the results submitted to a large list of subscribers, each of them receiving its own view of the stream.&lt;/p&gt;
 
 &lt;p&gt;Examples might include the following:&lt;/p&gt;
 &lt;ul&gt;
