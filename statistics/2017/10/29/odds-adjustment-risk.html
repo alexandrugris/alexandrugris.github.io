@@ -186,6 +186,139 @@ If alpha is much larger than beta, most of the weight is near 1.</p>
 <p>So let’s say we assume a coin toss experiment, with a probability of <code class="highlighter-rouge">p</code> for heads to appear. If we don’t want to take a stand on whether the coin is fair, we choose alpha and beta to both equal 1. Or maybe we have a strong belief that it lands heads 55% of the time, and we choose alpha equals 55, beta equals 45. The higher the numbers for alpha and beta are, the tighter the distribution is and a stronger belief we express. 
 When we flip our coin a several times and see <code class="highlighter-rouge">h</code> heads and <code class="highlighter-rouge">t</code> tails, Bayes’s theorem and additional mathemathics tell us that the posterior distribution for <code class="highlighter-rouge">p</code> is again a Beta distribution, with adjusted parameters <code class="highlighter-rouge">alpha + h</code> and <code class="highlighter-rouge">beta + t</code>. We will use this result when we will compute the odds adjustments later in this post, based on the possible returns of a series of bets.</p>
 
+<h3 id="a-counting-problem-first">A Counting Problem First</h3>
+
+<p>Before getting to odds adjustments, we will solve another problem, but this time through counting. Let’s assume we have a cluster of <code class="highlighter-rouge">N</code> players for which we have the results from the last <code class="highlighter-rouge">M</code> matches. Another player is classified as similar to these <code class="highlighter-rouge">N</code> players, but we only have his results for the last <code class="highlighter-rouge">P</code> matches, with <code class="highlighter-rouge">P &lt; M*N</code>. What is the expected probability to score for this player?</p>
+
+<p>The problem is interesting because (a) player to score is rare event and (b) the number of relevant matches to the present a player plays in is rather limited, as his performance changes across seasons, teams etc. Therefore, a way to cluster and then use the cluster information enrich the data is highly recommended.</p>
+
+<p>Let’s solve this problem. Some assumptions first:</p>
+
+<ul>
+  <li>The goals a player scores are rare events</li>
+  <li>The goals a player scores are distributed according to a Poisson distribution, with a <code class="highlighter-rouge">lambda</code> (rate parameter) relatively low.</li>
+</ul>
+
+<p>The algorithm we are going to follow is described as follows:</p>
+
+<ol>
+  <li>
+    <p>First we seed our cluster with the goals the players have performed in the past matches. We are going to consider a random rate for each player, as described by the following formula: <code class="highlighter-rouge">player_rates = np.random.poisson(1, size=no_of_players) * 0.24</code></p>
+  </li>
+  <li>
+    <p>We generate a sample of our subject’s performance, in our example with a <code class="highlighter-rouge">lambda=0.2</code>.</p>
+  </li>
+  <li>
+    <p>Compute the lambda (rate) of goals for the cluster. We use MLE to find the lambda for the poisson distribution. Obviously, it is virtually identical to the mean of the set.</p>
+  </li>
+  <li>
+    <p>We compute the probability of his performance vector given the performance of the cluster.</p>
+  </li>
+  <li>
+    <p>We use that probability to average between the cluster <code class="highlighter-rouge">lambda</code> (poisson average) and his <code class="highlighter-rouge">lambda</code>. The result is stored in the <code class="highlighter-rouge">learned_lambda</code> parameter.</p>
+  </li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span> <span class="k">as</span> <span class="n">misc</span>
+
+<span class="c"># parametes of the cluster:</span>
+<span class="n">no_of_matches</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">no_of_players</span> <span class="o">=</span> <span class="mi">11</span>
+
+<span class="c"># parameters for our player</span>
+<span class="n">no_of_matches_player_in_question</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">player_in_question_lambda</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+<span class="c"># generate the vector of player performances in the cluster</span>
+<span class="n">player_rates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">no_of_players</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.24</span>
+<span class="n">players</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">no_of_matches</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">player_rates</span><span class="p">])</span>
+
+<span class="c"># generate the performance of our player</span>
+<span class="n">player_in_question</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">player_in_question_lambda</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">no_of_matches_player_in_question</span><span class="p">))</span>
+
+<span class="c"># poisson fit to find the rate of goals for the cluster using MLE</span>
+<span class="k">def</span> <span class="nf">poisson_fit</span><span class="p">(</span><span class="n">lmbda</span><span class="p">,</span> <span class="n">players</span><span class="p">):</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">players</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">)))</span>
+    
+<span class="c"># start from the mean of the cluster which, obviously, is virtually identical to the MLE-fit value</span>
+<span class="n">players_lambda</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">poisson_fit</span><span class="p">,</span> <span class="n">players</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">args</span> <span class="o">=</span><span class="p">(</span><span class="n">players</span><span class="p">))</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c"># compute the probability of our performance, stored in the `array` variable</span>
+<span class="c"># versus the cluster</span>
+<span class="c"># we consider the cluster as poisson distributed, with lambda=cluster.mean()</span>
+<span class="k">def</span> <span class="nf">prob</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    
+    <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="c"># for scores from 0 (no goal) to 10 goals (max score)</span>
+    <span class="c"># compute the probability of observing that specific count</span>
+    <span class="c"># the formula is very simple</span>
+    <span class="c"># p_of_counts = K * (p(observing 0 goals)^number_of_zero_goals) * (p(observing 1 goals)^number_of_one goals)  * ...</span>
+    <span class="c"># with K number of ways in which that specific count can be obtained:</span>
+    <span class="c"># K = N! / (no_of_0! * no_of_1! * ... no_of_10!)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span> 
+        <span class="n">cnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">array</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">players_lambda</span><span class="p">)</span> <span class="o">**</span> <span class="n">cnt</span><span class="p">)</span>
+        <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+        
+    <span class="c"># just simple hack to make sure permutations don't overflow</span>
+    <span class="c"># since 0's are the most predominant, we make that simplification first</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">n_fact</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    
+    <span class="n">counts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">:</span>
+        <span class="n">n_fact</span> <span class="o">/=</span> <span class="n">misc</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">p</span> <span class="o">*</span> <span class="n">n_fact</span>
+
+<span class="c"># find through random sampling what is the probability for the most probable arrangement</span>
+<span class="c"># of goals to be observed given our number of matches in question</span>
+<span class="k">def</span> <span class="nf">difference</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">players</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">),</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                <span class="n">prob</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">players</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">cnt</span><span class="p">)</span>
+            <span class="p">]))</span>
+
+<span class="c"># compare the probability of getting the set of goals to the maximum probability a set of goals can have</span>
+<span class="n">p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">prob</span><span class="p">(</span><span class="n">player_in_question</span><span class="p">)</span> <span class="o">/</span> <span class="n">difference</span><span class="p">(</span><span class="n">player_in_question</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c"># same poisson MLE estimation for the rate (lambda) starting from the mean</span>
+<span class="n">player_in_question_lambda</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">poisson_fit</span><span class="p">,</span> <span class="n">player_in_question</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">args</span> <span class="o">=</span><span class="p">(</span><span class="n">player_in_question</span><span class="p">))</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">learned_lambda</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">players</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">player_in_question_lambda</span>
+</code></pre></div></div>
+
+<p>The simulated players cluster array:
+<img src="https://alexandrugris.github.io/assets/bayes_5.png" alt="Simulated player array" /></p>
+
+<p>The results of the our player in this context:
+<img src="https://alexandrugris.github.io/assets/bayes_6.png" alt="Results" /></p>
+
+<p>The example above is run with the following parameters:</p>
+<ul>
+  <li>The player in question is simulated with a poisson mean of <code class="highlighter-rouge">lambda=0.5</code> average goals per match. The simulated results contain plenty of zeros, but also some ones and twos: <code class="highlighter-rouge">array([1, 2, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0])</code>.</li>
+  <li>The average for the players in the cluster is <code class="highlighter-rouge">0.2318</code>.</li>
+  <li>After 12 matches, the probability to observe results similar to the cluster is <code class="highlighter-rouge">p=0.032489</code>.</li>
+  <li>Therefore, we conclude that the most probable lambda for our player, just by observing the result and without prior knowledge of his true lambda, is <code class="highlighter-rouge">0.49128</code>.</li>
+</ul>
+
+<p>Running the same simulation on a lower number of matches would give different results. Here are, for instance, the results for only 5 matches for the player in question (p is the probability the result belongs in the cluster):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p
+Out[66]: 0.8454545454545455
+
+player_in_question
+Out[67]: array([1, 0, 0, 0, 1])
+</code></pre></div></div>
+
 <h3 id="sports-betting-vocabulary">Sports Betting Vocabulary</h3>
 
 <ul>
