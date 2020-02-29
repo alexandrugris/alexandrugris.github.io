@@ -228,16 +228,15 @@
 
 <p>In <a href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">Odds And Models</a>, we used a factor-based system for determining the expected goals. In this post we will take a different approach and create a team rank based model for the same thing. We will start with a basic model, <code class="highlighter-rouge">lambda = b0 + b1 * home_team_rank + b2 * away_team_rank</code>. Out of laziness, I will only do the in-sample analysis which has the potential to skew the results quite heavily.</p>
 
-<p>For ranking, we are going to use the power function and define the probability of one team winning as
-<code class="highlighter-rouge">p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))</code>, where the ranks for each team are the variables we want to compute using MLE.</p>
+<p>For ranking the teams, we are going to use the power function and define the probability of one team winning as <code class="highlighter-rouge">p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))</code>, where the ranks for each team are the variables we want to compute using MLE.</p>
 
-<p>For defining the winning team, I tried two definitions of win:</p>
+<p>For encoding the result of the winning team I tried two different definitions:</p>
 <ul>
-  <li><code class="highlighter-rouge">HomeWins = (X['FTHG'] &gt; X['FTAG']).to_numpy().flatten()</code> - simply assign <code class="highlighter-rouge">1</code> to the variable if the home team wins or draws, to count for the home field advantage.</li>
-  <li><code class="highlighter-rouge">HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5</code> - spread a little bit the unclear wins while taking into account the home team advantage (zscore will normalize for home team advantage).</li>
+  <li><code class="highlighter-rouge">HomeWins = (X['FTHG'] &gt; X['FTAG']).to_numpy().flatten()</code> - simply assigns <code class="highlighter-rouge">1</code> to the variable if the home team wins or draws, to count for the home field advantage.</li>
+  <li><code class="highlighter-rouge">HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5</code> - spreads a little bit the unclear wins while taking into account the home team advantage (zscore will normalize for home team advantage).</li>
 </ul>
 
-<p>I was surprised to observe that the second function produces more extreme results for the ranking, so we will keep the first definition of a win.</p>
+<p>I was surprised to observe that the second function produces more extreme results for the ranking, so we will keep the first definition of a win for this exercise.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># starting with fresh data</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1819_csv.csv"</span><span class="p">)</span> 
@@ -323,9 +322,7 @@ Huddersfield    0.014049 -4.265229
 <span class="n">RegressionData</span><span class="p">[</span><span class="s">'Intercept'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 </code></pre></div></div>
 
-<p>For the next step we will do again a Poisson regression to get the expected goals lambda, but this time we will use the <code class="highlighter-rouge">statsmodel.api</code> package since we have already demonstrated above how Poisson regression works if we are to do it manually.</p>
-
-<p>We will predict for both home and away.</p>
+<p>For the next step we will do again a Poisson regression to get the expected goals lambda, but this time we will use the <code class="highlighter-rouge">statsmodel.api</code> package since we have already demonstrated above how Poisson regression works if we are to do it manually. We will predict for both home and away.</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import statsmodels.api as sm
 
