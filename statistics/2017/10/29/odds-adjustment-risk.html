@@ -184,13 +184,13 @@ This means that, given our initial knowledge of a system, as new events come, we
 If alpha is much larger than beta, most of the weight is near 1.</p>
 
 <p>So let’s say we assume a coin toss experiment, with a probability of <code class="highlighter-rouge">p</code> for heads to appear. If we don’t want to take a stand on whether the coin is fair, we choose alpha and beta to both equal 1. Or maybe we have a strong belief that it lands heads 55% of the time, and we choose alpha equals 55, beta equals 45. The higher the numbers for alpha and beta are, the tighter the distribution is and a stronger belief we express. 
-When we flip our coin a several times and see <code class="highlighter-rouge">h</code> heads and <code class="highlighter-rouge">t</code> tails, Bayes’s theorem and additional mathemathics tell us that the posterior distribution for <code class="highlighter-rouge">p</code> is again a Beta distribution, with adjusted parameters <code class="highlighter-rouge">alpha + h</code> and <code class="highlighter-rouge">beta + t</code>. We will use this result when we will compute the odds adjustments later in this post, based on the possible returns of a series of bets.</p>
+When we flip our coin a several times and see <code class="highlighter-rouge">h</code> heads and <code class="highlighter-rouge">t</code> tails, Bayes’s theorem and additional mathematics tell us that the posterior distribution for <code class="highlighter-rouge">p</code> is again a Beta distribution, with adjusted parameters <code class="highlighter-rouge">alpha + h</code> and <code class="highlighter-rouge">beta + t</code>. We will use this result when we will compute the odds adjustments later in this post, based on the possible returns of a series of bets.</p>
 
 <h3 id="a-counting-problem-first">A Counting Problem First</h3>
 
 <p>Before getting to odds adjustments, we will solve another problem, but this time through counting. Let’s assume we have a cluster of <code class="highlighter-rouge">N</code> players for which we have the results from the last <code class="highlighter-rouge">M</code> matches. Another player is classified as similar to these <code class="highlighter-rouge">N</code> players, but we only have his results for the last <code class="highlighter-rouge">P</code> matches, with <code class="highlighter-rouge">P &lt; M*N</code>. What is the expected probability to score for this player?</p>
 
-<p>The problem is interesting because (a) player to score is rare event and (b) the number of relevant matches to the present a player plays in is rather limited, as his performance changes across seasons, teams etc. Therefore, a way to cluster and then use the cluster information enrich the data is highly recommended.</p>
+<p>The problem is interesting because (a) player-to-score is rare event and (b) the number of recent relevant matches a player plays in is rather limited, as his performance changes across seasons, teams etc. Therefore, a way to cluster and then use the cluster information enrich the data is highly recommended.</p>
 
 <p>Let’s solve this problem. Some assumptions first:</p>
 
@@ -199,23 +199,23 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
   <li>The goals a player scores are distributed according to a Poisson distribution, with a <code class="highlighter-rouge">lambda</code> (rate parameter) relatively low.</li>
 </ul>
 
-<p>The algorithm we are going to follow is described as follows:</p>
+<p>The algorithm we are going to follow is:</p>
 
 <ol>
   <li>
     <p>First we seed our cluster with the goals the players have performed in the past matches. We are going to consider a random rate for each player, as described by the following formula: <code class="highlighter-rouge">player_rates = np.random.poisson(1, size=no_of_players) * 0.24</code></p>
   </li>
   <li>
-    <p>We generate a sample of our subject’s performance, in our example with a <code class="highlighter-rouge">lambda=0.2</code>.</p>
+    <p>We generate a sample of our subject’s performance, in our example with a <code class="highlighter-rouge">player_in_question_lambda=0.5</code>.</p>
   </li>
   <li>
-    <p>Compute the lambda (rate) of goals for the cluster. We use MLE to find the lambda for the poisson distribution. Obviously, it is virtually identical to the mean of the set.</p>
+    <p>We compute lambda, the rate of goals for the cluster. We use MLE to find the lambda for the poisson distribution. Obviously, the result is virtually identical to the mean of the set, so this step could be skipped.</p>
   </li>
   <li>
-    <p>We compute the probability of his performance vector given the performance of the cluster.</p>
+    <p>We compute the probability of his performance, given the performance of the cluster.</p>
   </li>
   <li>
-    <p>We use that probability to average between the cluster <code class="highlighter-rouge">lambda</code> (poisson average) and his <code class="highlighter-rouge">lambda</code>. The result is stored in the <code class="highlighter-rouge">learned_lambda</code> parameter.</p>
+    <p>We use that probability to interpolate between the cluster <code class="highlighter-rouge">lambda</code> (poisson average) and his <code class="highlighter-rouge">lambda</code>. The result is stored in the <code class="highlighter-rouge">learned_lambda</code> parameter.</p>
   </li>
 </ol>
 
@@ -230,7 +230,7 @@ When we flip our coin a several times and see <code class="highlighter-rouge">h<
 
 <span class="c"># parameters for our player</span>
 <span class="n">no_of_matches_player_in_question</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">player_in_question_lambda</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">player_in_question_lambda</span> <span class="o">=</span> <span class="mf">0.5</span>
 
 <span class="c"># generate the vector of player performances in the cluster</span>
 <span class="n">player_rates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">no_of_players</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.24</span>
