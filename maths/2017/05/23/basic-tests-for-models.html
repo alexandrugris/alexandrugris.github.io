@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Classification</title>
-  <meta name="description" content="Very short and simple post about metrics used for validating classification models.">
+  <meta name="description" content="A post about classification and metrics used for validating classification models.">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/maths/2017/05/23/basic-tests-for-models.html">
@@ -66,7 +66,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>Very short and simple post about metrics used for validating classification models.</p>
+    <p>A post about classification and metrics used for validating classification models.</p>
 
 <h3 id="confusion-matrix">Confusion matrix</h3>
 
@@ -91,7 +91,7 @@
 <span class="n">accuracy</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="mf">0.900990099009901</span>
 </code></pre></div></div>
-<p>Very high, but obviously the test is crap, as we will see with the following three metrics. The results are completely biased by the true negatives. An example of such a crap test with high accuracy could be ‘you are CEO if your name is Jack’. Obviously, there are a lot of Jacks who are not CEOs.</p>
+<p>Very high, but obviously the test is bad, as we will see with the following three metrics. The results are completely biased by the true negatives. An example of such a bad test with high accuracy could be ‘you are CEO if your name is Jack’. Obviously, there are a lot of Jacks who are not CEOs.</p>
 
 <h3 id="precision">Precision</h3>
 
@@ -214,6 +214,111 @@
 </ul>
 
 <p>A classification problem could be turned to a regression problem if an numeric expected value is assigned to each classification record. For instance, instead of trying to predict a credit default, we might want to predict the expected return of a given loan.</p>
+
+<h3 id="an-example-of-all-the-above">An Example Of All The Above</h3>
+
+<p>We are going to look at the MINST dataset with hand written letters and build a classifier to recognize digit 5. We are going to use all the metrics defined above to evaluate our classifier. We are going to use SKLearn for all the steps.</p>
+
+<p>Importing the functions we are going to use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_openml</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span><span class="p">,</span> <span class="n">cross_val_score</span><span class="p">,</span> <span class="n">StratifiedKFold</span><span class="p">,</span> <span class="n">cross_val_predict</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">plot_roc_curve</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">,</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">plot_precision_recall_curve</span><span class="p">,</span> <span class="n">precision_recall_curve</span><span class="p">,</span> <span class="n">roc_curve</span>
+</code></pre></div></div>
+
+<p>Reading and inspecting the dataset. After getting the dataset, we will just plot a digit.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_openml</span><span class="p">(</span><span class="s">'mnist_784'</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_X_y</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">digit</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">32000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
+</code></pre></div></div>
+
+<p>Splitting the dataset in train and test. As good ML engineers, we are going to look further only at the train dataset, and leave the test dataset untouched until the last stages of the project.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">train_index_5</span> <span class="o">=</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span>
+<span class="n">test_index_5</span> <span class="o">=</span> <span class="n">y_test</span> <span class="o">==</span> <span class="s">'5'</span>
+
+<span class="c"># observe a digit in the train dataset</span>
+<span class="n">digit</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="mi">1000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
+</code></pre></div></div>
+
+<p>Train a classifier and predict a positive and a negative case, just for testing purposes. Success.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
+
+<span class="c"># a classifier that has the capacity to handle large datasets efficiently</span>
+<span class="n">sgd_c</span> <span class="o">=</span> <span class="n">SGDClassifier</span><span class="p">()</span>
+<span class="n">sgd_c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">train_index_5</span><span class="p">)</span>
+
+<span class="c"># predict one true:</span>
+<span class="n">sgd_c</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X_train</span><span class="p">[</span><span class="n">train_index_5</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+
+<span class="c"># predict one false</span>
+<span class="n">sgd_c</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="mi">10</span><span class="p">]])</span>
+</code></pre></div></div>
+
+<p>Compute the cross validation score. The results for accuracy seem pretty good. However, this is an imbalanced class, only approx <code class="highlighter-rouge">10%</code> of the digits are <code class="highlighter-rouge">5</code>, which would give a pure <code class="highlighter-rouge">False</code> classifier an accuracy of approx <code class="highlighter-rouge">90%</code>. Therefore, the <code class="highlighter-rouge">96%</code> score obtained below is not great.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cv_score</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">StratifiedKFold</span><span class="p">())</span>
+<span class="c">#array([0.96414286, 0.94464286, 0.96785714, 0.96135714, 0.96757143])</span>
+</code></pre></div></div>
+
+<p>Now we are going to look at the ROC curve and the Precision Recall curve and compare the two. We will look also at the classification metrics.</p>
+
+<p>The ROC curve first:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># to get the false positive and true positive rates together with the thresholds for each</span>
+<span class="c"># and analyze them programmatically, use the following method. </span>
+<span class="c"># This will allow the programmer to pick the desired threshold for the classifier</span>
+<span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+
+<span class="c"># Plot the curve and compute the AUC</span>
+<span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c"># We can also plot our decision function</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">)))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The curve looks quite steep, which gives the impression of a good classifier. 
+<img src="https://alexandrugris.github.io/assets/classification_3.png" alt="ROC-curve" /></p>
+
+<p>But when we do the same with the precision-recall curve, we see the results are less outstanding. That is because we have a minority class we want to classify and the PR-curve is better suited for it. But before that, let’s look at the <code class="highlighter-rouge">cross_val_predict</code> function and then compute the classification metrics described at the beginning of this article.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># splits internally the train set in k folds and outputs the result for</span>
+<span class="c"># each number in the set based on the test fold. That is, when a result is predicted</span>
+<span class="c"># the train method has not seen that data</span>
+<span class="n">cv_p</span> <span class="o">=</span> <span class="n">cross_val_predict</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">StratifiedKFold</span><span class="p">())</span>
+
+<span class="c"># the confusion matrix</span>
+<span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+
+<span class="c"># when it claims an image is a 5, how many times it is a 5 </span>
+<span class="n">precision_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+
+<span class="c"># how many 5s it detects</span>
+<span class="n">recall_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+
+<span class="c"># the f1 score</span>
+<span class="n">f1_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>And finally the precision recall curve and, similarly to the ROC curve, the function to programmatically access the precisions and recalls for each threshold allowing for a manual selection of the classifier decision boundary.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># plot precision / recall curve</span>
+<span class="n">precisions</span><span class="p">,</span> <span class="n">recalls</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">precision_recall_curve</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+<span class="n">plot_precision_recall_curve</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The not so steep Precision-Recall curve:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/classification_3.png" alt="PR-curve" /></p>
 
 
   </div>
