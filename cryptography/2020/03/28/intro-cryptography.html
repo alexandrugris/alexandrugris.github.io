@@ -99,7 +99,7 @@
         <span class="kt">byte</span><span class="o">[]</span> <span class="n">ret</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">msgb</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
 
         <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">msgb</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
-            <span class="n">ret</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">(</span><span class="kt">byte</span><span class="o">)</span> <span class="n">f</span><span class="o">.</span><span class="na">apply</span> <span class="o">(</span><span class="n">msgb</span><span class="o">[</span><span class="n">i</span><span class="o">],</span> <span class="n">keyb</span><span class="o">[</span><span class="n">i</span><span class="o">%</span><span class="n">keyb</span><span class="o">.</span><span class="na">length</span><span class="o">]);</span>
+            <span class="n">ret</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="na">apply</span> <span class="o">(</span><span class="n">msgb</span><span class="o">[</span><span class="n">i</span><span class="o">],</span> <span class="n">keyb</span><span class="o">[</span><span class="n">i</span><span class="o">%</span><span class="n">keyb</span><span class="o">.</span><span class="na">length</span><span class="o">]);</span>
         <span class="o">}</span>
         <span class="k">return</span> <span class="k">new</span> <span class="nf">String</span> <span class="o">(</span><span class="n">ret</span><span class="o">);</span>
 
@@ -111,7 +111,7 @@
 
     <span class="kd">static</span> <span class="n">String</span> <span class="nf">decode</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">,</span> <span class="n">String</span> <span class="n">key</span><span class="o">){</span>
         <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">COUNT</span><span class="o">;</span>
-        <span class="k">return</span> <span class="nf">parse</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="o">(</span><span class="n">m</span><span class="o">,</span> <span class="n">k</span><span class="o">)</span> <span class="o">-&gt;(</span><span class="kt">byte</span><span class="o">)</span>  <span class="o">((</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">&gt;=</span><span class="mi">0</span><span class="o">)?</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)</span> <span class="o">:</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)));</span>
+        <span class="k">return</span> <span class="nf">parse</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="o">(</span><span class="n">m</span><span class="o">,</span> <span class="n">k</span><span class="o">)</span> <span class="o">-&gt;(</span><span class="kt">byte</span><span class="o">)((</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">&gt;=</span><span class="mi">0</span><span class="o">)?</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)</span> <span class="o">:</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)));</span>
     <span class="o">}</span>
 </code></pre></div></div>
 
@@ -306,23 +306,23 @@ and this property is preserved for modulo n as follows:
         <span class="kt">int</span><span class="o">[]</span> <span class="n">actor2PublicMessage</span><span class="o">,</span> 
         <span class="n">String</span> <span class="n">encodedMessage</span><span class="o">){</span>
 
-        <span class="n">var</span> <span class="n">indices</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">actor1PublicMessage</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+        <span class="n">var</span> <span class="n">crackedInternalRandoms</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">actor1PublicMessage</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
 
         <span class="c1">// STEP 1: </span>
         <span class="c1">// for each element in the public message from the first actor,</span>
         <span class="c1">// find a number for which the initialPowModulo is equal to the observed value</span>
         <span class="c1">// the O(n^2) algorithm:</span>
-        <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">indices</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+        <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">crackedInternalRandoms</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
             <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">COUNT</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
                 <span class="k">if</span> <span class="o">(</span><span class="n">Actor</span><span class="o">.</span><span class="na">initialPowModulo</span> <span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">==</span> <span class="n">actor1PublicMessage</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
-                    <span class="n">indices</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
+                    <span class="n">crackedInternalRandoms</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
                     <span class="k">break</span><span class="o">;</span>
                 <span class="o">}</span>
             <span class="o">}</span>
         <span class="o">}</span>
 
-        <span class="c1">// STEP 2: create an actor with these indices as the internal password</span>
-        <span class="n">var</span> <span class="n">actor3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Actor</span> <span class="o">(</span><span class="n">indices</span><span class="o">);</span>
+        <span class="c1">// STEP 2: create an actor with these randoms as the internal password</span>
+        <span class="n">var</span> <span class="n">actor3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Actor</span> <span class="o">(</span><span class="n">crackedInternalRandoms</span><span class="o">);</span>
 
         <span class="c1">// STEP 3: use this fake internal password and the observed responses from </span>
         <span class="c1">// the second actor to re-create the shared password</span>
@@ -331,7 +331,6 @@ and this property is preserved for modulo n as follows:
         <span class="c1">// STEP 4: decode the message</span>
         <span class="k">return</span> <span class="n">actor3</span><span class="o">.</span><span class="na">decodeMessage</span> <span class="o">(</span><span class="n">encodedMessage</span><span class="o">);</span>
     <span class="o">}</span>
-
 </code></pre></div></div>
 
 <p>Since we want for someone in the middle to be as hard as possible to guess which was the initial hidden random number we started with, we want to force them to run through the longest number of trials and errors, thus we want the longest possible sequence of non-1s results, that is we want <code class="highlighter-rouge">1</code> to be reached again when <code class="highlighter-rouge">x==n-1</code>, while avoiding premature cycles.</p>
