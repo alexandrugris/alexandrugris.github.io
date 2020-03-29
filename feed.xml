@@ -1,5 +1,217 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2020-03-29T10:27:16+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">Introduction to Cryptography</title><link href="https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography.html" rel="alternate" type="text/html" title="Introduction to Cryptography" /><published>2020-03-28T09:15:16+02:00</published><updated>2020-03-28T09:15:16+02:00</updated><id>https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography</id><content type="html" xml:base="https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography.html">&lt;p&gt;A very brief introduction to cryptography.This post covers one-time pads, a little bit of random numbers and the Diffie-Hellman algorithm.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2020-03-29T19:03:21+03:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">Introduction to Cryptography (Part 2)</title><link href="https://alexandrugris.github.io/cryptography/2020/03/29/intro-cryptography-2.html" rel="alternate" type="text/html" title="Introduction to Cryptography (Part 2)" /><published>2020-03-29T10:15:16+03:00</published><updated>2020-03-29T10:15:16+03:00</updated><id>https://alexandrugris.github.io/cryptography/2020/03/29/intro-cryptography%202</id><content type="html" xml:base="https://alexandrugris.github.io/cryptography/2020/03/29/intro-cryptography-2.html">&lt;p&gt;This is the second part of Introduction to Cryptography.&lt;/p&gt;
+
+&lt;h3 id=&quot;symmetric-encryption-with-cypher-block-chaining-cbc&quot;&gt;Symmetric Encryption with Cypher Block Chaining (CBC)&lt;/h3&gt;
+
+&lt;p&gt;CBC is a very simple concept. It acknowledges the practical impossibility of sending a purely random, equal in size to the message, secret of the one-time pads and addresses it. It splits the message into predefined size blocks, then encrypts each block individually, taking into account the ciphertext generated for the previous blocks.&lt;/p&gt;
+
+&lt;p&gt;For Block Ciphers, Shannon introduced two measures:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Confusion: how much a change in the key leads to a change in the ciphertext&lt;/li&gt;
+  &lt;li&gt;Diffusion: how much a change in the text leads to a change in the ciphertext&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We want both confusion and diffusion to be as high as possible.&lt;/p&gt;
+
+&lt;p&gt;To increase confusion, we want for a small change in the key to lead to a large change in the text. 
+If we were to apply a simple &lt;code class=&quot;highlighter-rouge&quot;&gt;text XOR key&lt;/code&gt; on each block independently, one bit of change in the key leads to one bit of change in the ciphertext, thus a very low confusion. Therefore, a good CBC algorithm work in several encryption rounds on each block.&lt;/p&gt;
+
+&lt;p&gt;Similarly, we want a small change in the text to lead to a large change in the ciphertext. Therefore, we cannot simply apply the same key over and over the encrypted message, independently, block from block. That would encrypt the block itself, but patterns in the text would still be apparent when the same group of characters reappears. Therefore, we use the ciphertext from the previous block as a part of encryption of the current block. This ensures that every block in the message depends on all the previous blocks. Thus, a small change in the message early in the stream would lead to a large change of the ciphertext, spread all the way to the end, hence increasing diffusion.&lt;/p&gt;
+
+&lt;p&gt;Below is a very basic implementation of this concept, with a single XOR round and with block chaining.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;initVector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Random&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;nextBytes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// given key&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;encryptDecryptCBC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encrypt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// for each block the encryption should be done as a series of rounds,&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// but we are going to use a single XOR round for this example&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;currentBlock&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++){&lt;/span&gt;
+
+            &lt;span class=&quot;c1&quot;&gt;// one simple XOR round and diffusion with previous block&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]);&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;currentBlock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encrypt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;initVector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;currentBlock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;currentBlock&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blockSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;encryptCBC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getBytes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StandardCharsets&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;US_ASCII&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getBytes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StandardCharsets&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;US_ASCII&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;encryptDecryptCBC&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;decryptCBC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getBytes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StandardCharsets&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;US_ASCII&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;encryptDecryptCBC&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;cm&quot;&gt;/***
+     * Here it starts
+     */&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_CypherBlockChaining&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myMsg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;This is a message which is long&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptCBC&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;myMsg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptCBC&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello World&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;myMsg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Wrong Algorithm&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One of the early implementations were DES, currently considered obsolete due to the short key length. Another newer is AES, which is run with keys 128, 192 or 256 bits. AES runs on blocks of 16 bytes and applies a series of rounds to to confuse the key, including operations like shifting rows, mixing rows, XOR-ing, side lookups. AES256 is considered strong enough to encrypt government secrets.&lt;/p&gt;
+
+&lt;p&gt;When sending a message, the following order of operations must be kept:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Compression&lt;/li&gt;
+  &lt;li&gt;Encryption&lt;/li&gt;
+  &lt;li&gt;Error correction&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Compression reduces redundancy in the message. If encryption is applied before compression, due to diffusion which is aimed at masking redundant patterns, compression becomes ineffective. Error correction adds redundancy to the message. Thus, if applied it the same step as the encryption, as the DES algorithm did, it decreases the encryption strength. If applied before, it loses its meaning as accidental information loss can occur during transmission, not at encryption time.&lt;/p&gt;
+
+&lt;h3 id=&quot;asymmetric-algorithms&quot;&gt;Asymmetric Algorithms&lt;/h3&gt;
+
+&lt;p&gt;The principle of asymmetric algorithms is simple. The emitter keeps a function &lt;code class=&quot;highlighter-rouge&quot;&gt;ciphertext = f(text)&lt;/code&gt; to himself while giving the recipient its inverse &lt;code class=&quot;highlighter-rouge&quot;&gt;text = f-1(ciphertext)&lt;/code&gt;. In more practical terms, I want to give you a an encrypting exponent &lt;code class=&quot;highlighter-rouge&quot;&gt;e&lt;/code&gt; and a modulus &lt;code class=&quot;highlighter-rouge&quot;&gt;m&lt;/code&gt; so that you can &lt;code class=&quot;highlighter-rouge&quot;&gt;message^e % m = ciphertext&lt;/code&gt; while I can &lt;code class=&quot;highlighter-rouge&quot;&gt;ciphertext^d % m = message&lt;/code&gt;, where &lt;code class=&quot;highlighter-rouge&quot;&gt;d&lt;/code&gt; is the decrypting exponent.&lt;/p&gt;
+
+&lt;p&gt;The principle of exponentiation in the modulo has been discussed in the previous post. In short, exponentiation in the modulo has the following interesting properties:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;the result “jumps around”, so it is very hard to predict the root&lt;/li&gt;
+  &lt;li&gt;the exponentiation operation can be performed very fast&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The code below exemplifies the algorithm. The modulo exponentiation function is described in the previous post. Important to note that each chunk of message we can encrypt with this process must be lower than &lt;code class=&quot;highlighter-rouge&quot;&gt;modulo&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;But how do we get the encrypting/decrypting exponent pairs and the modulo? The maths goes like this:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;We select the modulo &lt;code class=&quot;highlighter-rouge&quot;&gt;m = p * q&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;q&lt;/code&gt; are two (large) prime numbers.&lt;/li&gt;
+  &lt;li&gt;The formula for inverse assumes that &lt;code class=&quot;highlighter-rouge&quot;&gt;(message^e)^d % m = message&lt;/code&gt; which is equivalent to &lt;code class=&quot;highlighter-rouge&quot;&gt;message ^ (e * d) % m = message&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Because we selected &lt;code class=&quot;highlighter-rouge&quot;&gt;m = p * q&lt;/code&gt;, we obtain &lt;code class=&quot;highlighter-rouge&quot;&gt;message^(e * d) % p = message^(e * d) % q = message&lt;/code&gt;, which is true when &lt;code class=&quot;highlighter-rouge&quot;&gt;message &amp;lt; p&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;message &amp;lt; q&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;This is equivalent to saying &lt;code class=&quot;highlighter-rouge&quot;&gt;message^(e * d - 1) * message % p = message&lt;/code&gt; which looks very much like the &lt;a href=&quot;https://en.wikipedia.org/wiki/Fermat%27s_little_theorem&quot;&gt;&lt;em&gt;Fermat’s Little Theorem&lt;/em&gt;&lt;/a&gt; which tells us &lt;code class=&quot;highlighter-rouge&quot;&gt;m^(p-1) % p = 1&lt;/code&gt; when &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; is prime and &lt;code class=&quot;highlighter-rouge&quot;&gt;m&lt;/code&gt; is not a multiple of &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;If we select &lt;code class=&quot;highlighter-rouge&quot;&gt;e * d = k * (p-1)&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;k&lt;/code&gt; is a constant and plug it in point 4, we obtain &lt;code class=&quot;highlighter-rouge&quot;&gt;(message^(p-1))^k * message % p = message&lt;/code&gt; which is equivalent to &lt;code class=&quot;highlighter-rouge&quot;&gt;1^k * message % p = message&lt;/code&gt; which is equivalent to &lt;code class=&quot;highlighter-rouge&quot;&gt;message % p = message&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;If we proceed in an identical manner on the &lt;code class=&quot;highlighter-rouge&quot;&gt;q&lt;/code&gt; side, we get &lt;code class=&quot;highlighter-rouge&quot;&gt;e * d - 1 = k * (p-1) * (q-1)&lt;/code&gt;. So we need to find &lt;code class=&quot;highlighter-rouge&quot;&gt;k&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;d&lt;/code&gt;, both integers, which satisfy the above equation.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Let’s do just that:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;encryptMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// if msg == modulo, exponentiation returns 0 =&amp;gt; message is compromised&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// from there on, it loops again through the same values =&amp;gt; impossible to construct the msg&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Cannot encrypt messages larger than modulo&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Actor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;powModulo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;decryptMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptedMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Actor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;powModulo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;encryptedMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getDecryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        
+        &lt;span class=&quot;c1&quot;&gt;// here we search blindly for this k, &lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// a better algorithm can be found in wikipedia &lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// (RSA and Extended Euclidean Algorithm)&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fk_plus_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fk_plus_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;d&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fk_plus_1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// return only integer divisors&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Cannot find inverse exponent&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;test_asymmetricEncryption&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;// [SECRET] my secret message&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;17&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// factor of modulo, large prime - [SECRET]&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;19&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// factor of modulo, large prime - [SECRET]&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// msg should be less than modulo for encryption to work [PUBLIC]&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptingExponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// my public key [PUBLIC]&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// my private key [SECRET]&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptingExponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getDecryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;encryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// [PUBLIC]&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptedMsg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptMessage&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// [SECRET]&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptedMsg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;encryptedMsg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptingExponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modulo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;decryptedMsg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Error decrypting the message&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The algorithm above is a very rudimentary implementation of the &lt;a href=&quot;https://en.wikipedia.org/wiki/RSA_(cryptosystem)&quot;&gt;&lt;em&gt;RSA&lt;/em&gt; algorithm&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We’ve see in the previous post that, in order to solve the discrete logarithm problem and crack the Diffie-Hellman encryption, we need to perform a scan over the whole set of possible values, from &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; to &lt;code class=&quot;highlighter-rouge&quot;&gt;modulo&lt;/code&gt; (variable &lt;code class=&quot;highlighter-rouge&quot;&gt;COUNT&lt;/code&gt; is the &lt;code class=&quot;highlighter-rouge&quot;&gt;modulo&lt;/code&gt; in our case):&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Actor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;initialPowModulo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actor1PublicMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;crackedInternalRandoms&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Each extra bit added to the &lt;code class=&quot;highlighter-rouge&quot;&gt;COUNT&lt;/code&gt; variable doubles the amount of work the algorithm is required to perform. Therefore, the complexity of cracking the code is &lt;code class=&quot;highlighter-rouge&quot;&gt;O(2^no_of_bits_in_modulo)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In 2014 a paper has been published with an algorithm that would bring the discrete logarithm problem to significantly sub-exponential complexity. However, since in Diffie-Hellman the modulo is prime and in RSA it is a product of two prime numbers, the suggested heuristics from the paper does not (yet) apply.&lt;/p&gt;
+
+&lt;h3 id=&quot;authenticity&quot;&gt;Authenticity&lt;/h3&gt;
+
+&lt;p&gt;If we want to validate that indeed a message comes from a specific person, we do the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Person A, originator:&lt;/em&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Hash the message with a hash function.&lt;/li&gt;
+  &lt;li&gt;Encrypt the hash with the hash with his / her private key&lt;/li&gt;
+  &lt;li&gt;Send the encrypted hash along with the message&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;em&gt;Person B, recipient:&lt;/em&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Hash the message with the same hash function&lt;/li&gt;
+  &lt;li&gt;Decrypt the received message with Person A’s public key&lt;/li&gt;
+  &lt;li&gt;Compare the two hashes - they should be identical.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The weakness is the hash function. If the hash function is easily reversible, a potential attacker could craft a message that has the same hash as the original message and pass it along with the originally encrypted hash. The message, at the recipient, would pass the validation.&lt;/p&gt;
+
+&lt;p&gt;Because of this, we need cryptographically strong hash functions. These functions work on the same principles as the CBC described earlier in this chapter. MD5, the first designed hash function, is no longer recommended for use, same for SHA-1 which came later. SHA-2 (SHA-256 and SHA-512) and SHA-3 are currently the gold standard in cryptography.&lt;/p&gt;
+
+&lt;p&gt;There is still an attack vector open - an attacker can generate a large number of messages that I am likely to sign and a similarly large number of messages that I would not likely sign. This increases the probability that he/she will find a pair of (likely-to-sign, unlikely-to-sign) and thus use my signature to validate his malicious message. Because of this, the protocol for using signatures requires that we never sign a message received from a 3rd party without altering it a little bit before, to generate another hash.&lt;/p&gt;</content><author><name></name></author><summary type="html">This is the second part of Introduction to Cryptography.</summary></entry><entry><title type="html">Introduction to Cryptography</title><link href="https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography.html" rel="alternate" type="text/html" title="Introduction to Cryptography" /><published>2020-03-28T09:15:16+02:00</published><updated>2020-03-28T09:15:16+02:00</updated><id>https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography</id><content type="html" xml:base="https://alexandrugris.github.io/cryptography/2020/03/28/intro-cryptography.html">&lt;p&gt;A very brief introduction to cryptography.This post covers one-time pads, a little bit of random numbers and the Diffie-Hellman algorithm.&lt;/p&gt;
 
 &lt;h3 id=&quot;one-time-pads&quot;&gt;One-Time Pads&lt;/h3&gt;
 
@@ -245,7 +457,7 @@ and this property is preserved for modulo n as follows:
         &lt;span class=&quot;c1&quot;&gt;// for each element in the public message from the first actor,&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;// find a number for which the initialPowModulo is equal to the observed value&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;// the O(n^2) algorithm:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;crackedInternalRandoms&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;crackedInternalRandoms&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
             &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
                 &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Actor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;initialPowModulo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actor1PublicMessage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
                     &lt;span class=&quot;n&quot;&gt;crackedInternalRandoms&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
@@ -3247,292 +3459,4 @@ alexandrugris=# select * from test_ids;
 &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_team_by_prefix&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'New York Ran'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- will return Rangers New York&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/postgres_3.png&quot; alt=&quot;Running the queries&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">An introduction to PostgreSQL, including an example of full text indexing and search at the end of the article.</summary></entry><entry><title type="html">Logistic Regression</title><link href="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html" rel="alternate" type="text/html" title="Logistic Regression" /><published>2018-08-24T14:15:16+03:00</published><updated>2018-08-24T14:15:16+03:00</updated><id>https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression</id><content type="html" xml:base="https://alexandrugris.github.io/statistics/2018/08/24/logistic-regression.html">&lt;p&gt;While linear regression is about predicting effects given a set of causes, logistic regression predicts the probability of certain effects. This way, its main applications are classification and forecasting. Logistic regression helps find how probabilities are changed by our actions or by various changes in the factors included in the regression.&lt;/p&gt;
-
-&lt;h3 id=&quot;the-problem&quot;&gt;The problem&lt;/h3&gt;
-
-&lt;p&gt;The problem we want to solve is: given a vector of factors &lt;code class=&quot;highlighter-rouge&quot;&gt;X=[X1 ... Xn]&lt;/code&gt;, find a model that predicts the probability of a binary outcome to occur, &lt;code class=&quot;highlighter-rouge&quot;&gt;P(X, outcome = 1)&lt;/code&gt;. The input for the model are the previous observations of &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; and whether the expected outcome was &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;One can obviosly try to reduce the problem directly to a linear regression problem, as exemplified in the PDF file &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_1.pdf&quot;&gt;here&lt;/a&gt; but the shortcomings are immediately apparent:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;R^2 is low&lt;/li&gt;
-  &lt;li&gt;There is not an obvious way to link the results to probability, the regression line goes above 1 and below 0.&lt;/li&gt;
-  &lt;li&gt;Residuals are obviously not normally distributed&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;If in this precise case, one predictor variable, one result, one can simply find a cut-off point, the problem becomes more difficult if we include several predictor variables in the equation.&lt;/p&gt;
-
-&lt;h3 id=&quot;the-logistic-regression-approach&quot;&gt;The Logistic Regression Approach&lt;/h3&gt;
-
-&lt;p&gt;We notice that the Logistic function, &lt;code class=&quot;highlighter-rouge&quot;&gt;f(x) = 1 / (1+e^-(ax+b))&lt;/code&gt;, has properties that naturally map to our problem:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;it grows assimptotically from 0 to 1 - which are the natural boundaries of probabilty&lt;/li&gt;
-  &lt;li&gt;it is continuous&lt;/li&gt;
-  &lt;li&gt;has an inflection point from which &lt;code class=&quot;highlighter-rouge&quot;&gt;f(x)&lt;/code&gt; grows quickly from close to 0 to close to 1&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_8.png&quot; alt=&quot;Logistic function&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;And the wikipedia link: &lt;a href=&quot;https://en.wikipedia.org/wiki/Logistic_function&quot;&gt;Logistic function&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Therefore, we will find a mathematical model that uses the logistic function to map from causes to probabilities. The model aims to find a vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; that, when plugged into the logistic function multiplied by the factors &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt;, the observed results match as closely as possible to the results determined by our model. In this case, our logistic function looks like &lt;code class=&quot;highlighter-rouge&quot;&gt;f(X_i) = 1 / (1+e^-(b1 * xi_1 + ... bn * xi_n)&lt;/code&gt;, where &lt;code class=&quot;highlighter-rouge&quot;&gt;Xi = [xi_1, ... xi_n]&lt;/code&gt; are the observed &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; factors at point &lt;code class=&quot;highlighter-rouge&quot;&gt;i&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We will further define our problem like this:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Xi = [xi_1 ... xi_n]&lt;/code&gt; - factors, with i between 1 and k. Attention, one of the factors needs to be &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;, the intercept - see the excel example below&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;B = [b1 ... bn]&lt;/code&gt; - coefficients&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Y = [y1 ... yk]&lt;/code&gt; - a vector of 1 and 0 of k elements&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dot(Xi, B) == Xi_1 * b1 + ... Xi_n * bn&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This is a fancy way of describing a table with n colums defined by X, the regression factors, and 1 column defined by Y, the observed result, with k rows.&lt;/p&gt;
-
-&lt;p&gt;The core of the model is assuming that the probability of Y being 1 is given by the logistic function:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(1|Xi) = f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Which makes:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(0|Xi) = 1 - P(1|Xi)&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;So, in compact form:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | Xi) = (P(1 | Xi) ^ yi) * (P(0 | Xi) ^ (1 - yi)&lt;/code&gt;), since &lt;code class=&quot;highlighter-rouge&quot;&gt;yi&lt;/code&gt; is either &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We conclude that &lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | X)&lt;/code&gt; is another column, that of probabilities, but we cannot fully compute it because we are missing the vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;A perfect fit means &lt;code class=&quot;highlighter-rouge&quot;&gt;P(yi | Xi) == 1&lt;/code&gt;, whatever &lt;code class=&quot;highlighter-rouge&quot;&gt;i=1..k&lt;/code&gt;, which reads &lt;em&gt;given the set of inputs Xi we estimate with absolute certainty that the result is yi, 0 or 1, just as observed in the real world.&lt;/em&gt; This leads to a &lt;em&gt;real world&lt;/em&gt; equation of &lt;code class=&quot;highlighter-rouge&quot;&gt;PRODUCT(P(yi | Xi), for i = 0..k) == 1&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;But since we only aim to model the real world, we are happy if this product is merely maximized by our estimated probability function (logistic) with &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; plugged in. That is,&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PRODUCT(P(yi | Xi), for i = 0..k) = P(y1 | X1) * P(y2 | X2) * ...&lt;/code&gt; is maximized, as close as possible to 1.&lt;/p&gt;
-
-&lt;p&gt;which is equivalent to&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM(yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;f(Xi) = 1 / (1+e^-dot(Xi,B))&lt;/code&gt; is maximized as close as possible to 0.&lt;/p&gt;
-
-&lt;p&gt;Now we can use gradient descent to find the vector &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;. Unfortunately this method might be slow for large datasets because, for every incremental change in any &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt;, all the exponentials and the logarithms for each line in the dataset need to be recomputed.&lt;/p&gt;
-
-&lt;h3 id=&quot;implementation-in-excel-on-the-iris-dataset&quot;&gt;Implementation in Excel on the Iris dataset&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;We download the Iris dataset.&lt;/li&gt;
-  &lt;li&gt;We setup 3 variables, one for each type of flower. They are 1 if the flower is of that type and 0 otherwise.&lt;/li&gt;
-  &lt;li&gt;We split the data into trainig and test dataset.&lt;/li&gt;
-  &lt;li&gt;Add a new column for intercept.&lt;/li&gt;
-  &lt;li&gt;Add a new row for the &lt;code class=&quot;highlighter-rouge&quot;&gt;B&lt;/code&gt; vector. These are the values we want to find.&lt;/li&gt;
-  &lt;li&gt;Add a new column for &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa)&lt;/code&gt;, the probabilities we want as result from the logistic regression. &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 1 / (1 + EXP(-SUMPRODUCT(B, X))&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;Add a new column, the log column, &lt;code class=&quot;highlighter-rouge&quot;&gt;log(P(yi | Xi)&lt;/code&gt;, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is &lt;code class=&quot;highlighter-rouge&quot;&gt;yi * LN(P(setosa) + 0.0001) + (1 - yi) * LN( 1 - P(setosa) + 0.0001)&lt;/code&gt;. I added a &lt;code class=&quot;highlighter-rouge&quot;&gt;0.0001&lt;/code&gt; correction factor because, as the maximization algorithm goes on, we might end up with &lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt; values due to computing &lt;code class=&quot;highlighter-rouge&quot;&gt;P(setosa) = 0&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(0)&lt;/code&gt; which is &lt;code class=&quot;highlighter-rouge&quot;&gt;-infinity&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Add a summary value for the column at 7, as &lt;code class=&quot;highlighter-rouge&quot;&gt;SUM(log(P(yi | Xi)))&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Use Excel Solver plugin to maximize the value of this summary value to as close to 0 as possible.&lt;/li&gt;
-  &lt;li&gt;Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the &lt;code class=&quot;highlighter-rouge&quot;&gt;1/1+EXP(-SUMPRODUCT)&lt;/code&gt; not to overflow, I added a constraint for the &lt;code class=&quot;highlighter-rouge&quot;&gt;-SUMPRODUCT()&lt;/code&gt; to be less or equal to 50. This does not seem to impact the quality of the regression.&lt;/li&gt;
-  &lt;li&gt;Check the test data.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Excel file &lt;a href=&quot;https://alexandrugris.github.io/assets/iris.xlsx&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_1.png&quot; alt=&quot;Solver Dialog&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Performing the same steps for &lt;em&gt;virginica&lt;/em&gt; leads also to very good results, while for &lt;em&gt;versicolor&lt;/em&gt; the results are barely above random choice.&lt;/p&gt;
-
-&lt;p&gt;In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the &lt;code class=&quot;highlighter-rouge&quot;&gt;log(odds)&lt;/code&gt; vs &lt;code class=&quot;highlighter-rouge&quot;&gt;most important factor&lt;/code&gt; chart, sorted by &lt;code class=&quot;highlighter-rouge&quot;&gt;odds = P(1) / P(0)&lt;/code&gt;, the ratio between the probability of &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt;. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_2.png&quot; alt=&quot;Standardized Data&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;The factor we are minimizing, &lt;code class=&quot;highlighter-rouge&quot;&gt;ce = -(y * ln(p) + (1 - y) * ln(1-p))&lt;/code&gt;, where y is the observed value (0 or 1) and &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; is the probability given by our model, is called &lt;em&gt;cross entropy&lt;/em&gt;. &lt;a href=&quot;https://www.quora.com/Whats-an-intuitive-way-to-think-of-cross-entropy&quot;&gt;Awesome explanation here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;linear-regression-and-logistic-regression&quot;&gt;Linear Regression and Logistic Regression&lt;/h3&gt;
-
-&lt;p&gt;By the choice for the logistic function, &lt;code class=&quot;highlighter-rouge&quot;&gt;p = 1 / (1+EXP(-SUMPROD(Beta, X)))&lt;/code&gt;, with &lt;code class=&quot;highlighter-rouge&quot;&gt;Beta&lt;/code&gt; the coefficients for each of the factors X included in the regression, including the intercept, Logistic Regression hints stongly towards the linear regression.&lt;/p&gt;
-
-&lt;p&gt;We introduce the function &lt;code class=&quot;highlighter-rouge&quot;&gt;Odds(p) = p / 1-p&lt;/code&gt; with its inverse, &lt;code class=&quot;highlighter-rouge&quot;&gt;p = Odds / (1+Odds)&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;By simple arithmetic, we conclude that &lt;code class=&quot;highlighter-rouge&quot;&gt;Odds(p) = EXP(SUMPRODUCT(Beta, X))&lt;/code&gt; which leads to &lt;code class=&quot;highlighter-rouge&quot;&gt;LN(Odds(p)) = SUMPRODUCT(Beta, X)&lt;/code&gt; which is a linear function.&lt;/p&gt;
-
-&lt;p&gt;Please remember that &lt;code class=&quot;highlighter-rouge&quot;&gt;p&lt;/code&gt; is the probability for the event to happen, that is proability for the flower to be setosa, in the example above.&lt;/p&gt;
-
-&lt;p&gt;This function, &lt;code class=&quot;highlighter-rouge&quot;&gt;ln(Odds(p)) = ln(p/1-p)&lt;/code&gt;, called the &lt;em&gt;logit function&lt;/em&gt;, maps the probability space &lt;code class=&quot;highlighter-rouge&quot;&gt;[0,1]&lt;/code&gt; to a linear space &lt;code class=&quot;highlighter-rouge&quot;&gt;[-inf, inf]&lt;/code&gt; in which we can do the regression.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_3.png&quot; alt=&quot;Logit function&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In order to use linear regression to compute the probabilities and thus build our classifier, we need in our input data probabilities as well. The Iris dataset, as presented above, has only 0 and 1 inputs, so we need to collapse it to intervals on which meaninful probabilities can be computed.&lt;/p&gt;
-
-&lt;p&gt;In this example we will use another dataset which is already collapsed:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_4.png&quot; alt=&quot;Hypertensive men&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The data is described as follows:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Number of men analysed&lt;/li&gt;
-  &lt;li&gt;Number of men with hypertension&lt;/li&gt;
-  &lt;li&gt;Wether the man is smoking, obese or snores&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We want to:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Find the real probabilities for a man to be hypertensive given the factors above - please note that we are talking about a small sample of the population, so the real probabilities are not simply the division between men with hypertension and men.&lt;/li&gt;
-  &lt;li&gt;Map these probabilities to individual conditions of a patient - he may be fat but not obese or he might just be a casual smoker, metrics which can be represented as fractions of the smoking, obese, snores variables above.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;steps&quot;&gt;Steps&lt;/h3&gt;
-
-&lt;p&gt;&lt;em&gt;Linear regression on the raw, unprocessed, original data, just to have a benchmark&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;If we include an intercept, the intercept will reflect the amount of men included in the test, so, for a single man, the results for the prediction will be completely off. We will see that these results are pretty close to what we will obtain from logistic regression, because the probabilities themselves are in the lower part of the spectrum, where the logistic regression itself is quite linear. However, we expect that, as the risk factors increase significantly, for instance by codifying a “heavy smoker” or a “highly obese”, the results from the linear regression to diverge from the real probabilities.&lt;/p&gt;
-
-&lt;p&gt;Please see how the variables for smoking, obese and snoring are codified. We want them to affect the slope of the regression, not the intercept.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_5.png&quot; alt=&quot;Linear Regression&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Logistic Regression&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;We will do two types of logistic regression - one that does not account for the amount of men included in the sample and one which does. The problem with not ballancing the regression for the amount of men is equivalent to discarding the precision of the initial estimation of probability given by the sample (no of hypertensives / no of men). E.g., the more men we include, the more confident one can be that the expected value of the sample is closer to the actual expected value of the population.&lt;/p&gt;
-
-&lt;p&gt;First step for both regression is to remove from the regression the line where only 2 men are counted. This line does not contain enough information to be able to codify a probability out of it or, better said, the margin of error is too high.&lt;/p&gt;
-
-&lt;p&gt;The second step, also for both regressions, is to add the following columns:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Log(Odds Observed) = LN(P_observed / 1 - (P_observed))&lt;/code&gt; where &lt;code class=&quot;highlighter-rouge&quot;&gt;P_observed = hypertensives / total number of men in that category&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Smoking, obesity, snoring, codified as 1 if the person is smoking, obese or snoring.&lt;/li&gt;
-  &lt;li&gt;Intercept, all values equal to 1.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;As result, we have:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Log(Odds regressed)&lt;/code&gt;, the result of the linear regression&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;P Logistic&lt;/code&gt; which is the probability as computed from the logistic regression.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We also added two more tables:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;One under the logistic regression for drawing and validating how probabilities change for various fractions of Snoring, Smoking and Obese predictor variables.&lt;/li&gt;
-  &lt;li&gt;One under the linear regression to validate how many standard deviations the observed ratio (probability) is from the theoretical probability obtained from the logistic regression. That is, assuming the probabilities from the regression are correct, how likely it is to have observed the value we have observed. For this, we used the theoretical mean and variance for the &lt;em&gt;binomial distribution&lt;/em&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;mean = sample_size * p&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;variance = sample_size * p * (1-p)&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;First run, the results without taking into consideration the sample size: &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_6.png&quot;&gt;Logistic Regression&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_6.png&quot; alt=&quot;Logistic Regression&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the &lt;code class=&quot;highlighter-rouge&quot;&gt;Bs&lt;/code&gt; by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_7.png&quot;&gt;Weighted Logistic Regression&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_7.png&quot; alt=&quot;Weighted Logistic Regression&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Excel file &lt;a href=&quot;(https://alexandrugris.github.io/assets/hypertensives.xlsx)&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;using-of-linear-regression-to-determe-the-coefficients-for-iris-dataset&quot;&gt;Using of linear regression to determe the coefficients for Iris dataset&lt;/h3&gt;
-
-&lt;p&gt;In order to use linear regression to determine the coefficients, the data needs to be binned, put in a form from which we can extract probabilities. For the Iris dataset, I did this with the following Python script:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# -*- coding: utf-8 -*-&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
-Created on Fri Aug 26 15:07:47 2018
-
-@author: alexandru gris
-&quot;&quot;&quot;&lt;/span&gt;
-
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pandas&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;functools&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;partial&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;reduce&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# columns used as predictors&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'sepal_length'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;s&quot;&gt;'sepal_width'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;s&quot;&gt;'petal_length'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;s&quot;&gt;'petal_width'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# columns for the result on which we train the algorithm&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'setosa'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;s&quot;&gt;'versicolor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;s&quot;&gt;'virginica'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;iris.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# split each dimension intro two groups, low and high&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# each group should have a representative number of elements in it&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# had we had more items in the dataset, we could have simply increased the group count to 3&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# by binning, part of the information is lost but we hope to compensate through &lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# the curvy form of the logistic function&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;groups&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# 1e-10 below is a small hack to include the last item in the last group&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# the split could / should have been done based on percentiles, not range&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# we will do by range just to keep the code simple&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;stats&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'range'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'min'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'grp_range'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groups&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; \
-            &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mn&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1e-10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# the function which will compute the new index for grouping&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;x - column. idx - current index for the row&quot;&quot;&quot;&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stats&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'min'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groups&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stats&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'range'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;stats&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'grp_range'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stats&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'min'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-    
-&lt;span class=&quot;c&quot;&gt;# create the summary table&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;agg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;partial&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;agg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;agg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# add the totals and the probabilities column for each vector&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# totals:&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'totals'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# probabilities for setosa, versicolor, virginica:&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;col&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p_&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;col&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'totals'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# print a csv file for further processing in excel&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;iris_processed.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;w&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;    
-    &lt;span class=&quot;n&quot;&gt;pf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;partial&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;pf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;,&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-    
-    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iterrows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;pf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;,&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Summarized data looks like this:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_9.png&quot; alt=&quot;Summarized table&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The predictor rows contain the middle of the group range for that particular bin, which does not reflect the actual mean of the data inside the bin. This is highly sensitive to outliers and thus a bad choice. A better way would have been to first split each predictor in equal-sized groups, compute the median for each group, and then use this number as part of the index for each bin.&lt;/p&gt;
-
-&lt;p&gt;When we compute the odds and log(odds) to use in the regression we notice 3 possible error scenarios:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;too little data in one bin - we remove that bin from the regression&lt;/li&gt;
-  &lt;li&gt;all data in a bin is in the category we want to predict - which leads to the odds being computed to infinity&lt;/li&gt;
-  &lt;li&gt;all data in a bin is not in the cateogory we want to predict - which leads to the logaritm being infinite&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Neither of the two last scenarios account for a usable probability, but we have enough data in those bins to draw a conclusion that we cannot simply discard. I used two approaches and the results for the regression were very similar:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Use the beta distribution and start from an a-priori value of 50%-50% (alpha=1, beta=1), which is equivalent to saying &lt;em&gt;just before we started to count we have observed an opposite value&lt;/em&gt; and adjust the probability based on this formula - this gives us an upper (or lower) bound for the probability of 1 in that particular bin.&lt;/li&gt;
-  &lt;li&gt;Assume that the string of 0s or 1s was a random extraction from the all possible extractiobs but that it had a rather high probability to occur (of 50% in this case, a value which seemed right to me :) ). Thus consider &lt;code class=&quot;highlighter-rouge&quot;&gt;p^bin_size = 0.5&lt;/code&gt; and compute &lt;code class=&quot;highlighter-rouge&quot;&gt;p=EXP(LN(0.5) / bin_size)&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Excel file &lt;a href=&quot;https://alexandrugris.github.io/assets/iris_processed.xlsx&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Results for the regression at a &lt;code class=&quot;highlighter-rouge&quot;&gt;0.5&lt;/code&gt; threshold were not as good as with direct maximization of the log-of-probabilities, but rasing the threshhold at &lt;code class=&quot;highlighter-rouge&quot;&gt;0.8&lt;/code&gt; leads to perfect prediction. Picture below:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/logistic_regression_10.png&quot; alt=&quot;Logistic regression&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;And link here: &lt;a href=&quot;https://alexandrugris.github.io/assets/logistic_regression_10.png&quot;&gt;Logistic regression&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h3&gt;
-
-&lt;p&gt;We used logistic regression to build a clasifier on the Iris dataset and to predict the probability of a person having hypertension given a set of predictors. We used two ways to compute the regression coefficients: one by maximizing directly a probability function using the gradient descent, the other by applying linear regression to the log-odds function and then computing the probabilities from it. The third example was to process the Iris dataset used in the first regression and to compute the coefficients in a similar manner to that used for determining hypertensives.&lt;/p&gt;
-
-&lt;h3 id=&quot;additional-notes---decision-boundary&quot;&gt;Additional notes - decision boundary&lt;/h3&gt;
-
-&lt;p&gt;If we set the classification decision to &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; when &lt;code class=&quot;highlighter-rouge&quot;&gt;p(1) &amp;gt; 0.5&lt;/code&gt;, given the equation of the logistic function, it is equivalent to saying &lt;code class=&quot;highlighter-rouge&quot;&gt;y = b0 + ... bn*xn &amp;gt; 0&lt;/code&gt;. &lt;em&gt;This is the equation of a line which divides the factor space in two sections.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;If we want to divide the space into an enclosed area, with outside and inside spaces,&lt;/em&gt; we can set, for instance, the regression to include squares of its factors, like &lt;code class=&quot;highlighter-rouge&quot;&gt;y = b0 + b1*x1 + b2*x2 + b3*x1^2 + b4 *x2^1&lt;/code&gt;. In this example, for instance, if we set &lt;code class=&quot;highlighter-rouge&quot;&gt;b0 = -1, b1 = 0, b2 = 0, b3 = 1, b4 = 1&lt;/code&gt;, at the boundary condition we arrive precisely at the equation for a cirle, &lt;code class=&quot;highlighter-rouge&quot;&gt;1 = x1^2 + x2^2&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The beauty of logistic regression is that the decision boundary can be visualised by just comparing the regression term to 0, since we know that in that particular point &lt;code class=&quot;highlighter-rouge&quot;&gt;P=1/(1+e^0) = 0.5&lt;/code&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">While linear regression is about predicting effects given a set of causes, logistic regression predicts the probability of certain effects. This way, its main applications are classification and forecasting. Logistic regression helps find how probabilities are changed by our actions or by various changes in the factors included in the regression.</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/postgres_3.png&quot; alt=&quot;Running the queries&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">An introduction to PostgreSQL, including an example of full text indexing and search at the end of the article.</summary></entry></feed>
