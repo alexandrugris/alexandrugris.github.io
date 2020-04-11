@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Nature Inspired Optimizations</title>
+  <meta name="description" content="This post is about optimization algorithms. I am going to present the general structure of a nature-inspired algorithm which blends several methods in a sing...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/statistics/2017/04/03/optimizations.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Nature Inspired Optimizations</h1>
+    <p class="post-meta"><time datetime="2017-04-03T13:15:16+03:00" itemprop="datePublished">Apr 3, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This post is about optimization algorithms. I am going to present the general structure of a nature-inspired 
+algorithm which blends several methods in a single code base: population evolution (mutation) based on a stochastic process, elite selection and maintenance and 
+variable mutation rate to escape local optima.</p>
+
+<h3 id="algorithm-usage">Algorithm usage</h3>
+
+<p>Several steps involved:</p>
+
+<ol>
+  <li>Define the function that you want to optimize. The function can have several variables and should contain also the set of constraints.</li>
+  <li>Define the interval on which the algorithm is run. There should be an interval for each variable.</li>
+  <li>Initialize the process and run it for a certain number of steps.</li>
+  <li>Observe the results.</li>
+</ol>
+
+<p>Optionally, one can run the algorithm several times to compute the error distribution.</p>
+
+<p>Below is an example which includes all the steps above. We want to calculate the maximum for a function of two parameters given a set of constraints that need to be optimized. 
+We run the algorithm several times, compute the expected value and the standard variation and then plot the result.</p>
+
+<p>Notes:</p>
+
+<ol>
+  <li>In the function to optimize we return <code class="highlighter-rouge">np.finfo(dtype=np.float).min</code> for the values of x and y not satisfy the constraints as <code class="highlighter-rouge">np.finfo(dtype=np.float).min</code>. <code class="highlighter-rouge">X</code> and <code class="highlighter-rouge">y</code> are in <code class="highlighter-rouge">solution[0]</code> and <code class="highlighter-rouge">solution[1]</code> respectively.</li>
+  <li>The function below demonstrates the algorithm works even on very tight solution intervals. Once the first possible solution is found, the algorithm knows how to evolve it.</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">evaluate_population_with_constraints</span><span class="p">(</span><span class="n">solution</span><span class="p">):</span>
+    <span class="s">"""The function with constraints that we want to maximize"""</span>
+
+    <span class="c"># conditions    </span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_greater</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">25</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span>
+        
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_less</span> <span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">solution</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">160</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span>
+        
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="n">no_of_variables</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">lower_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">])</span>
+<span class="n">upper_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+
+<span class="n">returns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">returns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">optim_evolve</span> <span class="o">=</span> <span class="n">create_optimization</span><span class="p">(</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">no_of_variables</span><span class="p">,</span> 
+            <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">evaluate_population_with_constraints</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span> <span class="o">=</span> <span class="n">optim_evolve</span><span class="p">()</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">evaluate_population_with_constraints</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>        
+        <span class="n">returns</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+        
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">returns</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    
+<span class="k">print</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">y1</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mi">25</span>    
+<span class="n">y2</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">160</span><span class="p">)</span> <span class="o">/</span> <span class="mi">20</span>
+<span class="n">y3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">)])</span>
+<span class="n">y4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">100</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">)])</span>
+<span class="n">y5</span> <span class="o">=</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span><span class="mi">3</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">"Should be higher than this"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">"Should be lower than this"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y4</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">"The line we want to optimize"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Output:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/optimizations_1_1.png" alt="Image" /></p>
+
+<p>In the image above it is visible the solution space is very small (the triangle) yet the point for which the target function is maximized is found.</p>
+
+<h3 id="algorithm-description">Algorithm description</h3>
+
+<p>The algorithm has two main parts: initialization and the evolutionary step.</p>
+
+<h4 id="initialization">Initialization</h4>
+
+<ol>
+  <li>Randomly initialize the population within the given interval - for this we use the uniform distribution.</li>
+  <li>Compute the target function result for the randomly selected population.</li>
+  <li>Initialize the randomness of the initial evolutionary step to be performed later.</li>
+  <li>Compute the worst and best indices and initialize the elite population.</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">create_optimization</span><span class="p">(</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">no_of_variables</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">evaluate</span><span class="p">):</span>
+
+     <span class="k">def</span> <span class="nf">generate_population</span><span class="p">(</span><span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">pop_size</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">lower_bound</span> <span class="o">+</span> 
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">lower_bound</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">worst_best</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+
+        <span class="n">min_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">min</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> 
+
+        <span class="c"># avoid exception</span>
+        <span class="k">if</span> <span class="n">min_array</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span><span class="p">:</span>
+            <span class="n">min_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array</span> <span class="o">==</span> <span class="n">min_array</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># tunable parameter below</span>
+            <span class="n">min_idxs</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">min_array</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">array</span><span class="p">))</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">)</span> 
+
+        <span class="n">max_idx</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">min_idxs</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">)</span>
+
+    <span class="n">population</span>      <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">values</span>          <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">iteration</span>       <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">best_so_far</span>     <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">init_population</span><span class="p">():</span>
+        <span class="n">nonlocal</span> <span class="n">population</span>
+        <span class="n">nonlocal</span> <span class="n">values</span>
+        <span class="n">nonlocal</span> <span class="n">iteration</span>
+        
+        <span class="n">population</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">generate_population</span><span class="p">(</span><span class="n">lower_bound</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">upper_bound</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pop_size</span><span class="p">)</span> 
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">no_of_variables</span><span class="p">)])</span>
+        <span class="n">values</span>     <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>    
+        <span class="n">iteration</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">no_of_variables</span><span class="p">)</span> <span class="o">*</span> <span class="n">pop_size</span>
+        
+    <span class="n">init_population</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"No initial population found"</span><span class="p">)</span>
+    
+    <span class="p">(</span><span class="n">worst</span><span class="p">,</span> <span class="n">best</span><span class="p">)</span>   <span class="o">=</span> <span class="n">worst_best</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">elite_value</span>     <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">best</span><span class="p">]</span>
+    <span class="n">elite_tuple</span>     <span class="o">=</span> <span class="n">population</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">best</span><span class="p">]</span>
+
+    <span class="n">best_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">elite_value</span><span class="p">,</span> <span class="n">elite_tuple</span><span class="p">))</span>
+
+    <span class="p">[</span><span class="o">....</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>The code above already contains the first parameters to play with, in the form of the following statement: 
+<code class="highlighter-rouge">min_idxs = np.where(array &lt;= (4.0 * min_array + np.max(array)) / 5.0) </code>. This means the function returns as worst indices all indices for which the function value is lower than the specific value set by the formula.</p>
+
+<h4 id="evolutionary-step">Evolutionary step</h4>
+
+<ol>
+  <li>Evolve the population by adding random Gaussian noise to it.</li>
+  <li>Clip to the interval - this is an optional step. Another solution would be to have the function to optimize return <code class="highlighter-rouge">MIN_FLOAT</code> 
+for all values outside the domain, which would allow in specific conditions the algorithm to drift to a optimum outside of the initial interval.</li>
+  <li>Evaluate the function for each member of the population.</li>
+  <li>Find the worst and the best. Add the best to the elite group, sort the group in reverse order and only preserve the top X values.</li>
+  <li>Replace the worst with a selection from the best group. An option for steps 4 and 5 is to only preserve the best value to replace the worst.</li>
+  <li>Decrease the interval for the Gaussian noise that will be added in step 1.</li>
+  <li>Repeat until the solution is satisfactory or until a certain number of steps has been performed.</li>
+</ol>
+
+<p>Here is the code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="p">[</span><span class="o">....</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">):</span>
+        
+        <span class="n">nonlocal</span> <span class="n">iteration</span>        
+        
+        <span class="c"># add random Gaussian noise</span>
+        <span class="n">rnd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">lower_bound</span><span class="p">)</span> 
+                            <span class="o">/</span> <span class="n">iteration</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">population</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pop_evolved</span> <span class="o">=</span> <span class="n">population</span> <span class="o">+</span> <span class="n">rnd</span>
+
+        <span class="c"># to delete</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Iteration: "</span><span class="p">,</span> <span class="p">(</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">lower_bound</span><span class="p">)</span> <span class="o">/</span> <span class="n">iteration</span><span class="p">)</span>
+        
+        <span class="c"># bring everything in range</span>
+        <span class="c"># this part is not necessary; depends on the algorithm</span>
+        <span class="c"># conditions could be put in the function we want to optimize, remove this part, </span>
+        <span class="c"># consider the interval only in the beginning</span>
+        <span class="c"># then let the solution drift towards the optimum</span>
+        <span class="n">clip</span><span class="p">(</span><span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">pop_evolved</span><span class="p">)</span>
+                
+        <span class="c"># prepare next iteration; try to decrease a little bit the randomness</span>
+        <span class="c"># all this part can be changed to something else. The idea is to have some decreasing randomness.</span>
+        <span class="c"># another good function might be |sin(x) / x|</span>
+        <span class="n">increment</span>   <span class="o">=</span>  <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">iteration</span><span class="p">)</span>
+        <span class="n">std_rnd</span>     <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rnd</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">diff</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">pop_evolved</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">min</span><span class="p">(</span><span class="n">pop_evolved</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">population</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>        
+        <span class="n">idx_to_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">increment</span> <span class="o">&lt;</span> <span class="mf">1e-2</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">std_rnd</span> <span class="o">&lt;</span> <span class="n">diff</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">iteration</span> <span class="o">=</span> <span class="n">iteration</span> <span class="o">+</span> <span class="n">increment</span>        
+        <span class="k">if</span> <span class="n">idx_to_change</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">iteration</span><span class="p">[</span><span class="n">idx_to_change</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration</span><span class="p">[</span><span class="n">idx_to_change</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.75</span> <span class="o">+</span> <span class="mf">0.25</span>
+            
+        <span class="k">return</span> <span class="n">pop_evolved</span>
+
+    <span class="k">def</span> <span class="nf">replace_from_best_so_far</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+        <span class="n">nonlocal</span> <span class="n">best_so_far</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+            <span class="c"># fake a little bit a Pareto distribution with 5 buckets -&gt; tunable parameter</span>
+            <span class="c"># best_so_far is sorted backwards, so we want to increase the probability of </span>
+            <span class="c"># selecting from the first part</span>
+            <span class="c"># if there are two or more very close maximums, </span>
+            <span class="c"># one of them will gain dominance over the other.</span>
+            <span class="n">bucket</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>  <span class="nb">min</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">best_so_far</span><span class="p">)</span> <span class="o">/</span> <span class="n">bucket</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_so_far</span><span class="p">)))</span>
+
+            <span class="n">population</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_so_far</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">evolve_algorithm</span><span class="p">():</span>
+        
+        <span class="n">nonlocal</span> <span class="n">elite_value</span>
+        <span class="n">nonlocal</span> <span class="n">elite_tuple</span>
+        <span class="n">nonlocal</span> <span class="n">population</span>
+        <span class="n">nonlocal</span> <span class="n">iteration</span>
+        <span class="n">nonlocal</span> <span class="n">values</span>
+        <span class="n">nonlocal</span> <span class="n">best_so_far</span>        
+                        
+        <span class="n">population</span>  <span class="o">=</span> <span class="n">evolve</span> <span class="p">(</span><span class="n">population</span><span class="p">)</span>        
+        <span class="n">values</span>      <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+        
+        <span class="c"># remove all values outside the range</span>
+        <span class="n">outsite_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">outsite_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">inside_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="nb">min</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">inside_range</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_so_far</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">init_population</span><span class="p">()</span>
+
+            <span class="n">replace_from_best_so_far</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">outsite_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                                
+            <span class="c"># all should be OK now</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+        
+        <span class="p">[</span><span class="n">worst_idxs</span><span class="p">,</span> <span class="n">best_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">worst_best</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    
+        <span class="n">elite_value</span>     <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span>
+        <span class="n">elite_tuple</span>     <span class="o">=</span> <span class="n">population</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span>
+
+        <span class="n">best_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">elite_value</span><span class="p">,</span> <span class="n">elite_tuple</span><span class="p">))</span>
+        <span class="n">best_so_far</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="nb">tuple</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># another tunable parameter</span>
+        <span class="c"># larger numbers will decrease the probability of atractors, but will also decrease convergence</span>
+        <span class="n">best_so_far</span> <span class="o">=</span> <span class="n">best_so_far</span><span class="p">[</span> <span class="p">:</span>  <span class="nb">int</span><span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">population</span><span class="o">.</span><span class="n">size</span><span class="p">)]</span>
+
+        <span class="n">replace_from_best_so_far</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">worst_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="p">(</span><span class="n">elite_value</span><span class="p">,</span> <span class="n">elite_tuple</span><span class="p">)</span> <span class="o">=</span> <span class="n">best_so_far</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            
+        <span class="k">return</span> <span class="p">(</span><span class="n">elite_tuple</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">evolve_algorithm</span>    
+</code></pre></div></div>
+
+<p>In the code above, other options for tuning the algorithm become apparent:</p>
+
+<ol>
+  <li>As mentioned before, clipping to the domain of reference for each of the variables can be deferred to the supplied <code class="highlighter-rouge">evaluate</code> function.</li>
+  <li>The function of decreasing the randomness for the Gaussian noise can be changed. In this case I opted for a slight decrease given by the formula <code class="highlighter-rouge">(upper_bound - lower_bound) / iteration</code> with 
+<code class="highlighter-rouge">iteration</code> slowly increasing by an increment <code class="highlighter-rouge">increment   =  1 / np.sqrt(iteration)</code>. I also provisioned a back-out condition, which cuts <code class="highlighter-rouge">iteration</code> to a lower value in case the search interval is not properly covered.</li>
+  <li>Picking from the <code class="highlighter-rouge">best</code> array could be also changed. I opted for a Pareto distribution with higher probability for numbers to be selected from the bucket closer to index 0. This, however, has side effects. Provided that the distribution has two maximums, one of them will gain dominance over the other and will become attractor for all points in subsequent iterations - see example with <code class="highlighter-rouge">x*sin(x)</code>.</li>
+  <li>The size of the <code class="highlighter-rouge">best_so_far</code> array. The choice of 1.5 times the population size is based on experiments I made myself. Larger numbers will decrease the probability of attractors but will also decrease the convergence of the algorithm.</li>
+</ol>
+
+<h3 id="two-other-usecases">Two other usecases</h3>
+
+<h3 id="computing-the-minkovsky-center">Computing the Minkovsky center</h3>
+
+<p>Here is a link to <a href="https://en.wikipedia.org/wiki/Minkowski_distance">Mikvosky space</a>. This can be very handy in statistics for linearized regression models for exponential or power-law distributions (logarithms are applied to change the distribution model from exponential or power law to linear and then linear coefficients are computed for this model). 
+In these cases, the least squares method (Minkovsky of order 2) may give much larger errors than simply minimizing the model error (Minkovsky of order 1).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">no_of_variables</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">lower_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">100</span><span class="p">])</span>
+<span class="n">upper_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">])</span>          
+        
+<span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">mink_ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">pop_size</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">evaluate_population_minkovski_center</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">exponent</span><span class="p">):</span>    
+   <span class="k">global</span> <span class="n">arr</span>
+   <span class="k">global</span> <span class="n">mink_ret</span>
+   
+   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">solution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+       <span class="n">mink_ret</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">arr</span> <span class="o">-</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">**</span> <span class="n">exponent</span><span class="p">)</span>
+   
+   <span class="k">return</span> <span class="o">-</span><span class="n">mink_ret</span>
+
+<span class="n">optim_evolve</span> <span class="o">=</span> <span class="n">create_optimization</span><span class="p">(</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">no_of_variables</span><span class="p">,</span> 
+        <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> 
+        <span class="k">lambda</span> <span class="n">solution</span> <span class="p">:</span> <span class="n">evaluate_population_minkovski_center</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span> <span class="o">=</span> <span class="n">optim_evolve</span><span class="p">()</span>
+    
+<span class="k">print</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h3 id="computing-the-maximum-for-a-function-with-two-maximums">Computing the maximum for a function with two maximums</h3>
+
+<p>The function we consider is <code class="highlighter-rouge">x * sin(x)</code> on the [-15, 15] interval. Below is the code, then the comments.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">no_of_variables</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c"># attention also to the population size - </span>
+<span class="c"># a population size too close to the nyquist rate may miss some possible maximums</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">lower_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">15</span><span class="p">])</span>
+<span class="n">upper_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">15</span><span class="p">])</span>          
+
+<span class="n">solution</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">evaluate_x_sin_x</span><span class="p">(</span><span class="n">solution</span><span class="p">):</span>
+   <span class="k">return</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">population</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">evaluate_x_sin_x</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">evaluate_x_sin_x</span><span class="p">(</span><span class="n">population</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="n">optim_evolve</span> <span class="o">=</span> <span class="n">create_optimization</span><span class="p">(</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">no_of_variables</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">evaluate_x_sin_x</span><span class="p">)</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span> <span class="o">=</span> <span class="n">optim_evolve</span><span class="p">()</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">evaluate_x_sin_x</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Second iteration - we already see some signs of clustering towards higher values.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/optimizations_1_3.png" alt="Second iteration" /></p>
+
+<p>Several iterations later clustering towards higher values is more pronounced but we also notice the side effect of the left peak becoming an attractor.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/optimizations_1_4.png" alt="Several iterations later" /></p>
+
+<p>Several more iterations we still have values in the right peak, but the attraction of the left peak is already very strong.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/optimizations_1_5.png" alt="Many iteratiosn later" /></p>
+
+<p>A new snip towards the end of the evolution and one after the algorithm has dynamically increased the randomness added to the population to explore new possible solution spaces.</p>
+
+<p><img src="https://alexandrugris.github.io/assets/optimizations_1_6.png" alt="Towards the end" />
+<img src="https://alexandrugris.github.io/assets/optimizations_1_7.png" alt="Increase in randomness in the population" /></p>
+
+<h3 id="next-steps">Next Steps</h3>
+
+<p>Tweaking an optimization algorithm can take a lot of time. Some ideas on how to continue:</p>
+<ul>
+  <li>In the evolve population step, for multiple variable optimization problems, consider generating new solutions based on mixing two or more existing solutions (eventually taken from the <code class="highlighter-rouge">best_so_far array</code>). Eg. Take two solution vectors from the population <code class="highlighter-rouge">[solution[i][0], solution[i][1], ... solution[i][n]]</code> and <code class="highlighter-rouge">[solution[j][0], solution[j][1], ... solution[j][n]]</code> and, in the evolve step, instead of (or in addition to) adding random noise to these two solutions, consider other two combinations (children) for the next step. An example of a child could be: <code class="highlighter-rouge">[solution[i][0], solution[j][1], solution[i][2], ...]</code>. (this is a genetic algorithm inspired step).</li>
+  <li>Look deeper at the clustering. Think about evolving the step around clusters instead of the whole population vector (<code class="highlighter-rouge">pop_evolved</code> in <code class="highlighter-rouge">def evolve(population)</code>). This would give better precision in the final steps where the standard deviation of the random array should be very small (if we look at the sine example, the standard deviation is very high when the two extreme points are considered in the solution). Eventually consider dropping some points when they are too close to improve speed and have more iteration steps.</li>
+  <li>Consider <a href="https://en.wikipedia.org/wiki/Gradient_descent">gradient descent</a> for the function in the later steps, when / if dicontinuities have been avoided and clusters have been formed. Gradient descent is evolves faster towards the solution but has problems escaping local maximums or discontinuities.</li>
+</ul>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

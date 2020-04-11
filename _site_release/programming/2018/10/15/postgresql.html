@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Postgres</title>
+  <meta name="description" content="An introduction to PostgreSQL, including an example of full text indexing and search at the end of the article.">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://alexandrugris.github.io/programming/2018/10/15/postgresql.html">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <div class="site-nav"><a class="site-title" href="/">From The Trenches - The Code</a> </div>
+
+    <nav class="site-nav">
+      <span class="menu-icon">        
+      </span>
+
+      <div class="trigger">
+
+        <a class="page-link" href="https://alexandrugris.github.io">Home</a>
+
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/sm/">Social Media</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Postgres</h1>
+    <p class="post-meta"><time datetime="2018-10-15T14:15:16+03:00" itemprop="datePublished">Oct 15, 2018</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>An introduction to PostgreSQL, including an example of full text indexing and search at the end of the article.</p>
+
+<h3 id="installation-mac">Installation (Mac)</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; brew install postgresql
+</code></pre></div></div>
+
+<p>Then, if upgrading from an older database version:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; brew postgresql-upgrade-database
+</code></pre></div></div>
+
+<p>To launch at login:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;  brew services start postgresql
+</code></pre></div></div>
+
+<p>Or to start in console:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; pg_ctl -D /usr/local/var/postgres start
+</code></pre></div></div>
+
+<p>You may want to create a database:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; createdb your_database_name
+</code></pre></div></div>
+
+<p>or drop it</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; dropdb your_database_name
+</code></pre></div></div>
+
+<p>or connect to it using <code class="highlighter-rouge">psql</code>, the command line client:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; psql your_database_name
+</code></pre></div></div>
+
+<p>or list the databases one can connect to:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; psql -l
+</code></pre></div></div>
+
+<p>Then the list of basic commands:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">\c</code> - shows current database and username or connects to another database</li>
+  <li><code class="highlighter-rouge">\l</code> - lists all databases</li>
+  <li><code class="highlighter-rouge">\d</code> - describes current database, with variants <code class="highlighter-rouge">\dt</code> for tables, <code class="highlighter-rouge">\dv</code> for views or <code class="highlighter-rouge">\d table_name</code> to describe a specific table</li>
+  <li><code class="highlighter-rouge">\c database_name</code> - connects to <code class="highlighter-rouge">database_name</code></li>
+  <li><code class="highlighter-rouge">\x</code> - transposes the results from queries</li>
+  <li><code class="highlighter-rouge">\q</code> - exit</li>
+  <li><code class="highlighter-rouge">\p</code> - shows the query buffer</li>
+  <li><code class="highlighter-rouge">\e</code> - opens the query buffer in vim for editing.</li>
+  <li><code class="highlighter-rouge">\i</code> - reads the query from a file</li>
+  <li><code class="highlighter-rouge">\!</code> - run shell commands from <code class="highlighter-rouge">psql</code></li>
+  <li><code class="highlighter-rouge">help &lt;command&gt;</code> - inline help</li>
+</ul>
+
+<p>A more involved example, exporting the results of a query to a CSV file (or, in the case below, dumping it to the stdout and piping it through more):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;psql alexandrugris -c '\copy (select * from test_ids) to stdout with csv' | more
+</code></pre></div></div>
+
+<p>The same command, if <code class="highlighter-rouge">to</code> is replaced with <code class="highlighter-rouge">from</code>, can be used to import csv files into postgres.</p>
+
+<p>If I want to output to CSV the results of a complex query I have stored in a file, I can do as follows:</p>
+
+<ol>
+  <li>Create a <code class="highlighter-rouge">tmp-export.sql</code> containing a complex query like <code class="highlighter-rouge">create view tmp_export_view as select ... [complex sql query]</code></li>
+  <li>Run <code class="highlighter-rouge">psql</code> as follows:</li>
+</ol>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psql alexandrugris -c '\i ~/tmp-export.sql' -c '\copy (select * from tmp_export) to stdout with csv' -c 'drop view tmp_export'
+</code></pre></div></div>
+
+<h3 id="creating-a-table-with-automatically-generated-ids">Creating a table with automatically generated IDs:</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">rowid</span> <span class="n">serial</span><span class="p">,</span> <span class="n">myname</span> <span class="n">character</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>will create one relation and one sequence:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>alexandrugris=# \d
+                   List of relations
+ Schema |        Name        |   Type   |     Owner     
+--------+--------------------+----------+---------------
+ public | test_ids           | table    | alexandrugris
+ public | test_ids_rowid_seq | sequence | alexandrugris
+(2 rows)
+</code></pre></div></div>
+
+<p>Inserting data into the table will automatically generate ID:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">'Alexandru Gris`);
+</span></code></pre></div></div>
+
+<p>The sequence values will be unique and reserved for each connection, thus one can do on each connection</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="n">currval</span><span class="p">(</span><span class="nv">`test_ids_rowid_seq`</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>to get the latest inserted ID.</p>
+
+<p>or</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="n">nextval</span><span class="p">(</span><span class="nv">`test_ids_rowid_seq`</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>to reserve a unique ID only for this connection.</p>
+
+<h3 id="character-encoding">Character encoding</h3>
+
+<p>Postgres automatically encodes characters as UTF-8, thus there is no need for distinction between <code class="highlighter-rouge">varchar</code> and <code class="highlighter-rouge">nvarchar</code>.</p>
+
+<h3 id="adding-a-new-timestamp-column">Adding a new timestamp column</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">test_ids</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">borndate</span> <span class="k">timestamp</span> <span class="k">CHECK</span> <span class="p">(</span><span class="n">borndate</span> <span class="o">&gt;</span> <span class="s1">'1/1/1940'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>with the result</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>alexandrugris=# \d test_ids
+                                         Table "public.test_ids"
+  Column  |            Type             | Collation | Nullable |                 Default                 
+----------+-----------------------------+-----------+----------+-----------------------------------------
+ rowid    | integer                     |           | not null | nextval('test_ids_rowid_seq'::regclass)
+ myname   | character(50)               |           |          | 
+ borndate | timestamp without time zone |           |          | 
+Check constraints:
+    "test_ids_borndate_check" CHECK (borndate &gt; '1940-01-01 00:00:00'::timestamp without time zone)
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">check</code> keyword is beautiful addition to adding constraints to a column.</p>
+
+<p>For date types there are special keywords like <code class="highlighter-rouge">'yesterday'</code>, <code class="highlighter-rouge">'today'</code>, <code class="highlighter-rouge">'tomorrow'</code>, <code class="highlighter-rouge">'now'</code>, <code class="highlighter-rouge">'Infinity'</code>  to make inserts simpler. Note: <code class="highlighter-rouge">'Infinity'</code> can be used, for instance, to mark an unscheduled event in the future.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">myname</span><span class="p">,</span> <span class="n">borndate</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'New Born'</span><span class="p">,</span> <span class="s1">'yesterday'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>To add timezone support, just use <code class="highlighter-rouge">timestampz</code> instead of <code class="highlighter-rouge">timestamp</code> when creating the table.</p>
+
+<h3 id="table-inheritance">Table inheritance</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">awesome_ids</span> <span class="p">(</span><span class="n">description</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="n">turned_on</span> <span class="n">bit</span><span class="p">)</span> <span class="k">INHERITS</span> <span class="p">(</span><span class="n">test_ids</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>then</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">awesome_ids</span><span class="p">(</span><span class="n">myname</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">'Inherited'</span><span class="p">,</span> <span class="s1">'This is inherited'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>then</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">awesome_ids</span><span class="p">;</span>
+<span class="n">psql</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">row_ids</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And we get the following two results:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>alexandrugris=# select * from awesome_ids;
+ rowid |                       myname                       | borndate |    description    | turned_on 
+-------+----------------------------------------------------+----------+-------------------+-----------
+    15 | Inherited                                          |          | This is inherited | 
+(1 row)
+
+alexandrugris=# select * from test_ids;
+ rowid |                       myname                       |          borndate          
+-------+----------------------------------------------------+----------------------------
+     7 | Alexandru Gris                                     | 
+     8 | Alexandru Gris                                     | 
+     9 | Alexandru Gris                                     | 
+    10 | Alexandru Gris                                     | 
+    12 | Alexandru Gris                                     | 
+    13 | New Born                                           | 2018-09-22 00:00:00
+    14 | New Born 2                                         | 2018-09-23 12:30:13.424582
+    15 | Inherited                                          | 
+(8 rows)
+</code></pre></div></div>
+
+<p>The inserted row appears in the select from the original table. If we want to see only the <code class="highlighter-rouge">test_ids</code> without the <code class="highlighter-rouge">awesome_ids</code>, we should add the <code class="highlighter-rouge">only</code> keyword to the <code class="highlighter-rouge">select</code> query:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="k">ONLY</span> <span class="n">test_ids</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="performance-tuning">Performance tuning</h3>
+
+<p>pgAdmin is a great tool to play around and visualize query execution plans:</p>
+
+<p><img src="https://alexandrugris.github.io/assets/postgres_1.png" alt="pgAdmin" /></p>
+
+<p>Postgres has the ability to set per-query parameters to optimize execution.</p>
+
+<p>Inheritance is the foundation for vertical partitioning in Postgres and it brings the extra benefit of adding a semantic twist to it. One shouldn’t try to add inheritance to an existing table, but rather create a new set of tables and move the data over to them.</p>
+
+<h3 id="full-text-search">Full Text Search</h3>
+
+<p>GIN (generalized inverted index) creation:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">ALTER</span> <span class="n">TEST</span> <span class="n">test_ids</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">my_text</span> <span class="n">TEXT</span><span class="p">;</span>
+<span class="n">psql</span><span class="o">&gt;</span><span class="k">CREATE</span> <span class="k">INDEX</span> <span class="n">ftidx_myname</span> <span class="k">ON</span> <span class="n">test_ids</span> <span class="k">USING</span> <span class="n">GIN</span> <span class="p">(</span><span class="n">to_tsvector</span><span class="p">(</span><span class="s1">'english'</span><span class="p">::</span><span class="n">regconfig</span><span class="p">,</span> <span class="n">my_text</span><span class="p">::</span><span class="n">text</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>Full read <a href="https://www.postgresql.org/docs/10/static/datatype-textsearch.html">here</a></p>
+
+<p>How does the <code class="highlighter-rouge">to_tsvector()</code> work?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">select</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'this is the best thing I have seen in my life'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>outputs</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'best':4 'life':11 'seen':8 'thing':5
+</code></pre></div></div>
+
+<p>where the number is the word in the sentence I entered as parameter. And a small variation:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psql&gt;select to_tsvector('english', 'this is the best thing I have seen in my life, oh my life, again my life';
+</code></pre></div></div>
+
+<p>outputs</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'best':4 'life':11,14,17 'oh':12 'seen':8 'thing':5
+</code></pre></div></div>
+
+<p>The next step, of course, is to query the <code class="highlighter-rouge">ts_vector</code>. For this, postgres offers the <code class="highlighter-rouge">ts_query</code> function together with <a href="https://www.postgresql.org/docs/10/static/functions-textsearch.html">a set of operators to match the vector and the query</a>.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">select</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'this is the best thing I have seen in my life, oh my life again my life'</span><span class="p">)</span> <span class="o">@@</span> <span class="n">to_tsquery</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'life'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>returns true.</p>
+
+<p>Ranking the results:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psql</span><span class="o">&gt;</span><span class="k">select</span> <span class="n">ts_rank</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">from</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'this is the best thing I have seen in my life, life, life, super life'</span><span class="p">)</span> <span class="n">v</span><span class="p">,</span> <span class="n">to_tsquery</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'life &amp; best'</span><span class="p">)</span> <span class="n">q</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>or, using an already existing table:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'Hello, Hello'</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'Hello World'</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'Hello Alexandru'</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'Hello Alexandru Gris'</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">test_ids</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'Hello Alexandru Hello Gris Hello World'</span><span class="p">);</span>
+
+<span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">my_text</span><span class="p">,</span>  <span class="n">ts_rank</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">as</span> <span class="n">rank</span> 
+    <span class="k">from</span> <span class="n">test_ids</span> <span class="n">t</span><span class="p">,</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="n">t</span><span class="p">.</span><span class="n">my_text</span><span class="p">)</span> <span class="n">v</span><span class="p">,</span> <span class="n">to_tsquery</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'hello'</span><span class="p">)</span> <span class="n">q</span> 
+    <span class="k">where</span> <span class="n">v</span> <span class="o">@@</span> <span class="n">q</span> 
+    <span class="k">order</span> <span class="k">by</span> <span class="n">rank</span> <span class="k">desc</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>If we want to make things even faster and skip the generation of <code class="highlighter-rouge">tsvector</code> at query runtime, we can do the following:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">--- add a column with type tsvector</span>
+<span class="k">alter</span> <span class="k">table</span> <span class="n">test_ids</span> <span class="k">add</span> <span class="k">column</span> <span class="n">words_vector</span> <span class="n">tsvector</span><span class="p">;</span>
+
+<span class="c1">--- index it</span>
+<span class="k">create</span> <span class="k">index</span> <span class="n">idxtxt</span> <span class="k">on</span> <span class="n">test_ids</span> <span class="k">using</span> <span class="n">gin</span><span class="p">(</span><span class="n">words_vector</span><span class="p">);</span>
+
+<span class="c1">--- create a trigger to update this column with tsvectors</span>
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">update_words_vector</span> <span class="k">before</span> <span class="k">insert</span> <span class="k">or</span> <span class="k">update</span> <span class="k">on</span> <span class="n">test_ids</span>
+  <span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">tsvector_update_trigger</span><span class="p">(</span><span class="s1">'words_vector'</span><span class="p">,</span> <span class="s1">'pg_catalog.english'</span><span class="p">,</span> <span class="s1">'my_text'</span><span class="p">);</span>
+
+<span class="c1">--- force self update the table</span>
+<span class="k">update</span> <span class="n">test_ids</span> <span class="k">set</span> <span class="n">my_text</span> <span class="o">=</span> <span class="n">my_text</span><span class="p">;</span>
+
+<span class="c1">--- run the query on this particular column</span>
+<span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">my_text</span><span class="p">,</span> <span class="n">ts_rank</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">words_vector</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">as</span> <span class="n">rank</span> <span class="k">from</span> <span class="n">test_ids</span> <span class="n">t</span><span class="p">,</span> <span class="n">to_tsquery</span><span class="p">(</span><span class="s1">'english'</span><span class="p">,</span> <span class="s1">'hello'</span><span class="p">)</span> <span class="n">q</span>
+    <span class="k">where</span> <span class="n">t</span><span class="p">.</span><span class="n">words_vector</span> <span class="o">@@</span> <span class="n">q</span>
+    <span class="k">order</span> <span class="k">by</span> <span class="n">rank</span> <span class="k">desc</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="analyse-and-explain">Analyse and Explain</h3>
+
+<p><code class="highlighter-rouge">ANALYZE</code> collects statistics about the contents of tables in the database, and stores the results in the pg_statistic system catalog. Subsequently, the query planner uses these statistics to help determine the most efficient execution plans for queries.</p>
+
+<p><code class="highlighter-rouge">EXPLAIN</code> shows the execution plan of a statement.</p>
+
+<p>From postgresql documentation, regarding cost:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>The most critical part of the display is the estimated statement execution cost, which is the planner’s guess at how long it will take to run the statement (measured in cost units that are arbitrary, but conventionally mean disk page fetches). Actually two numbers are shown: the start-up cost before the first row can be returned, and the total cost to return all the rows. For most queries the total cost is what matters, but in contexts such as a subquery in EXISTS, the planner will choose the smallest start-up cost instead of the smallest total cost (since the executor will stop after getting one row, anyway). Also, if you limit the number of rows to return with a LIMIT clause, the planner makes an appropriate interpolation between the endpoint costs to estimate which plan is really the cheapest.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="https://alexandrugris.github.io/assets/postgres_2.png" alt="Running Explain From PyCharm" /></p>
+
+<h3 id="triggers">Triggers</h3>
+
+<ul>
+  <li>Before triggers: invoked before the constraints are checked</li>
+  <li>Instead of triggers: the trigger can skip the insert / update operations</li>
+  <li>Afer triggers: after the event has occured fuly</li>
+  <li>For each row: called once for each row that is affected by the operation</li>
+  <li>For each statement: once for each statement that is executed</li>
+</ul>
+
+<p>Triggers for the same event will fire in alphabetical order.</p>
+
+<p>A small example using before and after triggers, with conditions. The example consists of two tables, one named <code class="highlighter-rouge">employees</code> with employee’s name and salary and an audit table where all changes to the salary are logged.</p>
+
+<p>Table creation:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">create</span> <span class="k">table</span> <span class="n">employees</span><span class="p">(</span>
+    <span class="n">id</span> <span class="n">serial</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span> 
+    <span class="n">name</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span> <span class="k">unique</span><span class="p">,</span> 
+    <span class="n">salary</span> <span class="n">numeric</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">2</span><span class="p">));</span>
+
+<span class="k">create</span> <span class="k">table</span> <span class="n">salary_audit</span><span class="p">(</span>
+        <span class="n">emp_id</span> <span class="n">integer</span> <span class="k">references</span> <span class="n">employees</span><span class="p">(</span><span class="n">id</span><span class="p">),</span> 
+        <span class="n">old_salary</span> <span class="n">decimal</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> 
+        <span class="n">new_salary</span> <span class="n">decimal</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> 
+        <span class="n">updated</span> <span class="k">timestamp</span><span class="p">);</span>
+
+<span class="k">create</span> <span class="k">index</span> <span class="n">idx_emp_salary_audit</span> <span class="k">on</span> <span class="n">salary_audit</span><span class="p">(</span><span class="n">emp_id</span><span class="p">);</span>
+<span class="k">create</span> <span class="k">index</span> <span class="n">idx_emp</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="k">LOWER</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>A ‘before’ trigger to validate some complex business rules:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- enforce some constraints, for proving how before triggers work</span>
+<span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">emp_constraints</span><span class="p">()</span> <span class="k">returns</span> <span class="k">trigger</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">begin</span>
+
+    <span class="n">if</span> <span class="k">new</span><span class="p">.</span><span class="n">name</span> <span class="k">is</span> <span class="k">null</span> <span class="k">or</span> <span class="k">new</span><span class="p">.</span><span class="n">salary</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span>
+
+      <span class="n">raise</span> <span class="n">exception</span> <span class="s1">'% employee cannot have name or salary null'</span><span class="p">,</span> <span class="k">new</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+
+    <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+    <span class="n">if</span> <span class="k">new</span><span class="p">.</span><span class="n">salary</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">then</span>
+      <span class="n">raise</span> <span class="n">exception</span> <span class="s1">'% employee cannot have negative salary'</span><span class="p">,</span> <span class="k">new</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+    <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="k">new</span><span class="p">;</span>
+  <span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="k">drop</span> <span class="k">trigger</span> <span class="n">if</span> <span class="k">exists</span> <span class="n">emp_constraints</span> <span class="k">on</span> <span class="n">employees</span><span class="p">;</span>
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">emp_constraints</span> <span class="k">before</span> <span class="k">insert</span> <span class="k">or</span> <span class="k">update</span> <span class="k">on</span> <span class="n">employees</span>
+	<span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">emp_constraints</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>An after trigger, for when all business conditions have been checked, in order to log the changes. The trigger is only executed when changes to the salary occur, not when name changes.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- trigger to insert in the audit table all the changes to this table</span>
+<span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">salary_audit</span><span class="p">()</span> <span class="k">returns</span> <span class="k">trigger</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">declare</span>
+  <span class="n">old_salary</span> <span class="n">integer</span> <span class="k">default</span> <span class="k">null</span><span class="p">;</span>
+<span class="k">begin</span>
+
+  <span class="c1">--- if insert, old does not exist</span>
+  <span class="n">if</span> <span class="n">TG_OP</span> <span class="o">=</span> <span class="s1">'UPDATE'</span> <span class="k">then</span>
+    <span class="n">old_salary</span> <span class="p">:</span><span class="o">=</span> <span class="k">old</span><span class="p">.</span><span class="n">salary</span><span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="k">insert</span> <span class="k">into</span> <span class="n">salary_audit</span><span class="p">(</span><span class="n">emp_id</span><span class="p">,</span> <span class="n">old_salary</span><span class="p">,</span> <span class="n">new_salary</span><span class="p">,</span> <span class="n">updated</span><span class="p">)</span> 
+    <span class="k">values</span> <span class="p">(</span><span class="k">new</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">old_salary</span><span class="p">,</span> <span class="k">new</span><span class="p">.</span><span class="n">salary</span><span class="p">,</span> <span class="n">now</span><span class="p">());</span>
+
+    <span class="k">return</span> <span class="k">null</span><span class="p">;</span> <span class="c1">-- results are discarded since this is an after trigger</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="c1">-- execute audit trigger only when salary changes, not when name changes and only if different</span>
+<span class="k">drop</span> <span class="k">trigger</span> <span class="n">if</span> <span class="k">exists</span> <span class="n">emp_salary_audit</span> <span class="k">on</span> <span class="n">employees</span><span class="p">;</span>
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">emp_salary_audit</span> <span class="k">after</span> <span class="k">update</span> <span class="k">of</span> <span class="n">salary</span> <span class="k">on</span> <span class="n">employees</span>
+  <span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">when</span> <span class="p">(</span><span class="k">old</span><span class="p">.</span><span class="o">*</span> <span class="k">is</span> <span class="k">distinct</span> <span class="k">from</span> <span class="k">new</span><span class="p">.</span><span class="o">*</span><span class="p">)</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">salary_audit</span><span class="p">();</span>
+
+<span class="c1">-- old does not exist, thus we need a separate trigger for insert</span>
+<span class="k">drop</span> <span class="k">trigger</span> <span class="n">if</span> <span class="k">exists</span> <span class="n">emp_salary_audit_insert</span> <span class="k">on</span> <span class="n">employees</span><span class="p">;</span>
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">emp_salary_audit_insert</span> <span class="k">after</span> <span class="k">insert</span> <span class="k">on</span> <span class="n">employees</span>
+  <span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">salary_audit</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>And, of course, tests:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">insert</span> <span class="k">into</span> <span class="n">employees</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">salary</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'AG6'</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="s1">'OM7'</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<span class="k">update</span> <span class="n">employees</span> <span class="k">set</span> <span class="n">salary</span> <span class="o">=</span> <span class="n">salary</span> <span class="o">*</span> <span class="mi">1</span><span class="p">.</span><span class="mi">5</span> <span class="k">where</span> <span class="k">LOWER</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">=</span> <span class="k">LOWER</span><span class="p">(</span><span class="s1">'OM7'</span><span class="p">);</span>
+
+<span class="c1">-- see the increases for all employees in percentage change</span>
+<span class="k">select</span> <span class="n">e</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">.</span><span class="n">old_salary</span><span class="o">+</span><span class="n">a</span><span class="p">.</span><span class="n">new_salary</span><span class="p">)</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">old_salary</span> <span class="k">as</span> <span class="n">pct_change</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">updated</span> 
+    <span class="k">from</span> <span class="n">employees</span> <span class="n">e</span> <span class="k">inner</span> <span class="k">join</span> <span class="n">salary_audit</span> <span class="n">a</span> 
+    <span class="k">on</span> <span class="n">e</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">emp_id</span> 
+    <span class="k">where</span> <span class="n">a</span><span class="p">.</span><span class="n">old_salary</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">and</span> <span class="n">a</span><span class="p">.</span><span class="n">old_salary</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="updating-views-through-triggers">Updating views through triggers</h3>
+
+<p>We are going to continue the example above and extend it with a log of employee positions within our organization database. We want to be able to do the following:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">insert</span> <span class="k">into</span> <span class="n">employee_current_position</span> <span class="p">(</span><span class="n">emp_name</span><span class="p">,</span> <span class="n">position_name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'AG10'</span><span class="p">,</span> <span class="s1">'Director'</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">employee_current_position</span> <span class="p">(</span><span class="n">emp_name</span><span class="p">,</span> <span class="n">position_name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'AG11'</span><span class="p">,</span> <span class="s1">'Developer'</span><span class="p">);</span>
+
+<span class="k">update</span> <span class="n">employee_current_position</span> <span class="k">set</span> <span class="n">position_name</span><span class="o">=</span><span class="s1">'Developer'</span> <span class="k">where</span> <span class="n">emp_name</span><span class="o">=</span><span class="s1">'AG10'</span><span class="p">;</span>
+
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">employee_current_position</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>and get the last position of that particular employee. Also, we don’t want the position to change its start / end date if the insert or update refers to the same position the employee currently holds.</p>
+
+<p>First of all, the model:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">create</span> <span class="k">table</span> <span class="n">positions</span> <span class="p">(</span><span class="n">id</span> <span class="n">serial</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span> <span class="n">name</span> <span class="n">varchar</span><span class="p">);</span>
+
+<span class="k">create</span> <span class="k">table</span> <span class="n">employee_position</span><span class="p">(</span>
+  <span class="n">id</span> <span class="n">serial</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span>
+  <span class="n">emp_id</span> <span class="n">integer</span> <span class="k">references</span> <span class="n">employees</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+  <span class="n">pos_id</span> <span class="n">integer</span> <span class="k">references</span> <span class="n">positions</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+  <span class="n">s</span> <span class="k">timestamp</span><span class="p">,</span> <span class="n">e</span> <span class="k">timestamp</span><span class="p">);</span>
+
+<span class="c1">--- some seed values</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">positions</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="s1">'architect'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'developer'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'manager'</span><span class="p">);</span>
+
+<span class="c1">--- our view</span>
+<span class="k">create</span> <span class="k">view</span> <span class="n">employee_current_position</span> <span class="k">as</span>
+  <span class="k">select</span> <span class="n">e</span><span class="p">.</span><span class="n">id</span> <span class="n">emp_id</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">name</span> <span class="n">emp_name</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">name</span> <span class="n">position_name</span><span class="p">,</span> <span class="n">ep</span><span class="p">.</span><span class="n">s</span> <span class="n">start_date</span> <span class="k">from</span>
+    <span class="n">employees</span> <span class="n">e</span>
+    <span class="k">inner</span> <span class="k">join</span> <span class="n">employee_position</span> <span class="n">ep</span> <span class="k">on</span> <span class="n">e</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">ep</span><span class="p">.</span><span class="n">emp_id</span>
+    <span class="k">inner</span> <span class="k">join</span> <span class="n">positions</span> <span class="n">p</span> <span class="k">on</span> <span class="n">ep</span><span class="p">.</span><span class="n">pos_id</span> <span class="o">=</span> <span class="n">p</span><span class="p">.</span><span class="n">id</span> <span class="k">where</span> <span class="n">ep</span><span class="p">.</span><span class="n">e</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>If we try to insert directly into this view, Postgres will throw an error complaining that it doesn’t know how to insert. Therefore, we need to create a trigger what will help us with our mission.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">update_into_emp_position</span><span class="p">()</span> <span class="k">returns</span> <span class="k">trigger</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">declare</span>
+  <span class="n">pos</span> <span class="n">integer</span> <span class="k">default</span> <span class="k">null</span><span class="p">;</span> <span class="c1">-- id of the position</span>
+  <span class="n">emp</span> <span class="n">integer</span> <span class="k">default</span> <span class="k">null</span><span class="p">;</span> <span class="c1">-- id of the employee</span>
+<span class="k">begin</span>
+
+  <span class="c1">-- strict keyword to return exactly one; if it doen't exist =&gt; raise exception and exit</span>
+  <span class="k">select</span> <span class="n">id</span> <span class="k">into</span> <span class="k">strict</span> <span class="n">emp</span> <span class="k">from</span> <span class="n">employees</span> <span class="k">where</span> <span class="n">name</span> <span class="o">=</span> <span class="k">new</span><span class="p">.</span><span class="n">emp_name</span><span class="p">;</span>
+
+  <span class="c1">-- try to see if we already have a position inserted in the database that matches our wish</span>
+  <span class="k">select</span> <span class="n">id</span> <span class="k">into</span> <span class="n">pos</span> <span class="k">from</span> <span class="n">positions</span> <span class="k">where</span> <span class="n">name</span> <span class="o">=</span> <span class="k">new</span><span class="p">.</span><span class="n">position_name</span><span class="p">;</span>
+
+  <span class="c1">-- if not, we create it</span>
+  <span class="n">if</span> <span class="n">pos</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span>
+    <span class="k">insert</span> <span class="k">into</span> <span class="n">positions</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="k">new</span><span class="p">.</span><span class="n">position_name</span><span class="p">);</span>
+    <span class="k">select</span> <span class="n">currval</span><span class="p">(</span><span class="s1">'positions_id_seq'</span><span class="p">)</span> <span class="k">into</span> <span class="n">pos</span><span class="p">;</span> <span class="c1">-- this will give us the id from the insert above</span>
+  <span class="n">elsif</span> <span class="p">(</span><span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="n">ep</span><span class="p">.</span><span class="n">emp_id</span><span class="p">)</span> <span class="k">from</span> <span class="n">employee_position</span> <span class="n">ep</span> 
+        <span class="k">where</span> <span class="n">ep</span><span class="p">.</span><span class="n">emp_id</span> <span class="o">=</span> <span class="n">emp</span> <span class="k">and</span> <span class="n">ep</span><span class="p">.</span><span class="n">pos_id</span> <span class="o">=</span> <span class="n">pos</span> <span class="k">and</span> <span class="n">ep</span><span class="p">.</span><span class="n">e</span> <span class="k">is</span> <span class="k">null</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span>
+    <span class="k">return</span> <span class="k">null</span><span class="p">;</span> <span class="c1">-- same position, no update. silent fail. another option would be to raise exception</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="c1">-- set the end time to the previous position (if any) to current time</span>
+  <span class="k">update</span> <span class="n">employee_position</span> <span class="n">ep</span> <span class="k">set</span> <span class="n">e</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span> <span class="k">where</span> <span class="n">ep</span><span class="p">.</span><span class="n">emp_id</span> <span class="o">=</span> <span class="n">emp</span> <span class="k">and</span> <span class="n">ep</span><span class="p">.</span><span class="n">e</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+
+  <span class="c1">-- start a new position</span>
+  <span class="k">insert</span> <span class="k">into</span> <span class="n">employee_position</span><span class="p">(</span><span class="n">emp_id</span><span class="p">,</span> <span class="n">pos_id</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="n">emp</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">now</span><span class="p">());</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="p">;</span> <span class="c1">-- this does not matter</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="c1">-- create the trigger instead of insert or update</span>
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">update_emp_pos</span> <span class="k">instead</span> <span class="k">of</span> <span class="k">insert</span> <span class="k">or</span> <span class="k">update</span> <span class="k">on</span> <span class="n">employee_current_position</span>
+  <span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">update_into_emp_position</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Note: similar behavior can be obtained through rules. If many rows are updated in a trigger which is invoked for each row, a better solution might be to use rules directly which basically behave as a rewriting of the original query.</p>
+
+<h3 id="a-more-comprehensive-example">A more comprehensive example:</h3>
+
+<p>We are going to do a fun exercise. Consider a set of teams from various cities. We are going to implement a function that takes string input and finds the best matches for that particular string. We are also going to consider synonyms, like <code class="highlighter-rouge">(Bucharest, Bucuresti)</code>, <code class="highlighter-rouge">(Kiev, Kyiv)</code>, <code class="highlighter-rouge">(Dynamo, Dinamo)</code>. We are going to be able to correctly identify <code class="highlighter-rouge">(New York Ranges)</code> based on this input string. It will work fast even for incomplete strings, like <code class="highlighter-rouge">Dyna</code>.</p>
+
+<p>Postgres has its synonyms dictionaries which can be altered when spliting into lexemes, but let’s see how to implement such a dictionary ourselves.</p>
+
+<p>The dictionary with synonyms. We are going to call them <code class="highlighter-rouge">auto_tags</code> below because we are going to tag the teams with them in an automatic manner.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">create</span> <span class="k">table</span> <span class="n">auto_tags</span><span class="p">(</span>
+  <span class="n">id</span> <span class="n">serial</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span> <span class="c1">-- the tag index, we will use this for tagging teams</span>
+  <span class="k">index</span> <span class="n">tsvector</span> <span class="c1">-- create a gin index on this</span>
+<span class="p">);</span>
+
+<span class="k">create</span> <span class="k">index</span> <span class="n">fts</span> <span class="k">on</span> <span class="n">auto_tags</span> <span class="k">using</span> <span class="n">gin</span><span class="p">(</span><span class="k">index</span><span class="p">);</span>
+
+<span class="c1">--- The function below creates new tags or maps synonyms to existing tags (or creates a tag in the process)</span>
+<span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">update_tags</span><span class="p">(</span><span class="n">t1</span> <span class="n">text</span><span class="p">,</span> <span class="n">t2</span> <span class="n">text</span> <span class="o">=</span> <span class="k">null</span><span class="p">)</span> <span class="k">returns</span> <span class="n">integer</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">declare</span>
+
+  <span class="n">t1_q</span> <span class="n">tsquery</span><span class="p">;</span>
+  <span class="n">t2_q</span> <span class="n">tsquery</span><span class="p">;</span>
+  <span class="n">t1_v</span> <span class="n">tsvector</span><span class="p">;</span>
+  <span class="n">t2_v</span> <span class="n">tsvector</span><span class="p">;</span>
+
+  <span class="n">ret</span> <span class="n">integer</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="k">begin</span>
+
+  <span class="n">if</span> <span class="n">t1</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span>
+    <span class="n">raise</span> <span class="n">exception</span> <span class="s1">'First term must not be null'</span><span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="n">if</span> <span class="n">t2</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span>
+    <span class="n">t2</span> <span class="p">:</span><span class="o">=</span> <span class="n">t1</span><span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="n">t1_q</span> <span class="p">:</span><span class="o">=</span> <span class="n">plainto_tsquery</span><span class="p">(</span><span class="n">t1</span><span class="p">);</span>
+  <span class="n">t2_q</span> <span class="p">:</span><span class="o">=</span> <span class="n">plainto_tsquery</span><span class="p">(</span><span class="n">t2</span><span class="p">);</span>
+  <span class="n">t1_v</span> <span class="p">:</span><span class="o">=</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="n">t1</span><span class="p">);</span>
+  <span class="n">t2_v</span> <span class="p">:</span><span class="o">=</span> <span class="n">to_tsvector</span><span class="p">(</span><span class="n">t2</span><span class="p">);</span>
+
+  <span class="c1">-- one of the two tags already exist in the database</span>
+  <span class="n">if</span> <span class="k">exists</span><span class="p">(</span><span class="k">select</span> <span class="mi">1</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="p">(</span><span class="n">t1_q</span> <span class="o">||</span> <span class="n">t2_q</span><span class="p">)</span> <span class="k">limit</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span>
+
+    <span class="c1">-- search / update for the left tag, no new tag is created</span>
+    <span class="k">with</span> <span class="n">t</span> <span class="k">as</span> <span class="p">(</span><span class="k">update</span> <span class="n">auto_tags</span> <span class="k">set</span> <span class="k">index</span> <span class="o">=</span> <span class="n">strip</span><span class="p">(</span><span class="k">index</span> <span class="o">||</span> <span class="n">t2_v</span><span class="p">)</span>
+      <span class="k">where</span> <span class="n">id</span> <span class="k">in</span> <span class="p">(</span><span class="k">select</span> <span class="n">id</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="p">(</span><span class="k">select</span> <span class="n">t1_q</span> <span class="o">&amp;&amp;</span> <span class="o">!!</span><span class="n">t2_q</span><span class="p">))</span>
+      <span class="n">returning</span> <span class="mi">1</span><span class="p">)</span> <span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">t</span> <span class="k">into</span> <span class="n">ret</span><span class="p">;</span>
+
+    <span class="c1">-- search / update for the right tag</span>
+    <span class="n">if</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">then</span>
+      <span class="k">with</span> <span class="n">t</span> <span class="k">as</span> <span class="p">(</span><span class="k">update</span> <span class="n">auto_tags</span> <span class="k">set</span> <span class="k">index</span> <span class="o">=</span> <span class="n">strip</span><span class="p">(</span><span class="k">index</span> <span class="o">||</span> <span class="n">t1_v</span><span class="p">)</span>
+        <span class="k">where</span> <span class="n">id</span> <span class="k">in</span> <span class="p">(</span><span class="k">select</span> <span class="n">id</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="p">(</span><span class="k">select</span> <span class="n">t2_q</span> <span class="o">&amp;&amp;</span> <span class="o">!!</span><span class="n">t1_q</span><span class="p">))</span>
+        <span class="n">returning</span> <span class="mi">1</span><span class="p">)</span> <span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">t</span> <span class="k">into</span> <span class="n">ret</span><span class="p">;</span>
+
+      <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="k">else</span>
+    <span class="c1">-- create the tags as they do not exist</span>
+    <span class="k">insert</span> <span class="k">into</span> <span class="n">auto_tags</span><span class="p">(</span><span class="k">index</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="n">strip</span><span class="p">(</span><span class="n">t1_v</span> <span class="o">||</span> <span class="n">t2_v</span><span class="p">));</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="c1">--- The function below returns the index for a specifc tag. </span>
+<span class="c1">--- If the tag is not found, it inserts it and returns its new index</span>
+<span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">get_or_insert_tag</span><span class="p">(</span><span class="n">tag</span> <span class="n">text</span><span class="p">)</span> <span class="k">returns</span> <span class="n">integer</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">declare</span>
+  <span class="n">ret</span> <span class="n">integer</span> <span class="k">default</span> <span class="k">null</span><span class="p">;</span>
+<span class="k">begin</span>
+
+  <span class="k">select</span> <span class="n">id</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="n">plainto_tsquery</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="k">limit</span> <span class="mi">1</span> <span class="k">into</span> <span class="n">ret</span><span class="p">;</span>
+
+  <span class="n">if</span> <span class="n">ret</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span>
+    <span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="k">into</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="n">if</span> <span class="n">ret</span> <span class="o">&lt;&gt;</span> <span class="mi">1</span> <span class="k">then</span>
+      <span class="n">raise</span> <span class="n">exception</span> <span class="s1">'Something bad happened, procedure not correct. Should have at least 1 insert here.'</span><span class="p">;</span>
+    <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+    <span class="k">select</span> <span class="n">currval</span><span class="p">(</span><span class="s1">'auto_tags_id_seq'</span><span class="p">)</span> <span class="k">into</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>The functiosn above can be used as follows:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="s1">'Dynamo'</span><span class="p">,</span> <span class="s1">'Dinamo'</span><span class="p">);</span>
+<span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="s1">'Kiev'</span><span class="p">,</span> <span class="s1">'Kyiv'</span><span class="p">);</span>
+<span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="s1">'Bucharest'</span><span class="p">,</span> <span class="s1">'Bucuresti'</span><span class="p">);</span>
+<span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="s1">'Poly'</span><span class="p">,</span> <span class="s1">'Politehnica'</span><span class="p">);</span>
+<span class="k">select</span> <span class="n">update_tags</span><span class="p">(</span><span class="s1">'New York'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>The function <code class="highlighter-rouge">get_or_insert_tag()</code> is used when inserting a new team. Let’s look at the team table.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">create</span> <span class="k">table</span> <span class="n">teams</span> <span class="p">(</span>
+  <span class="n">id</span>       <span class="n">serial</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span> <span class="c1">-- teamid</span>
+  <span class="n">name</span>     <span class="n">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="c1">-- name of the team</span>
+  <span class="k">location</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="c1">-- the location of the team</span>
+  <span class="n">index_name</span>    <span class="n">integer</span> <span class="k">references</span> <span class="n">auto_tags</span><span class="p">(</span><span class="n">id</span><span class="p">),</span> <span class="c1">-- link to the auto_tags for name</span>
+  <span class="n">index_location</span> <span class="n">integer</span> <span class="k">references</span> <span class="n">auto_tags</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="c1">-- link for auto_tags for location</span>
+<span class="p">);</span>
+
+<span class="c1">-- since the index is basically an arbitrary token and range searches do not make sense for it</span>
+<span class="c1">-- we use has indexes</span>
+<span class="k">create</span> <span class="k">index</span> <span class="n">idx_team_name</span> <span class="k">on</span> <span class="n">teams</span> <span class="k">using</span> <span class="n">hash</span><span class="p">(</span><span class="n">index_name</span><span class="p">);</span>
+<span class="k">create</span> <span class="k">index</span> <span class="n">idx_team_location</span> <span class="k">on</span> <span class="n">teams</span> <span class="k">using</span> <span class="n">hash</span><span class="p">(</span><span class="n">index_location</span><span class="p">);</span>
+
+<span class="c1">-- trigger to update the tag (index in the auto_tags table)</span>
+<span class="k">create</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">insert_or_update_teams</span><span class="p">()</span> <span class="k">returns</span> <span class="k">trigger</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">begin</span>
+
+  <span class="k">select</span> <span class="n">get_or_insert_tag</span><span class="p">(</span><span class="k">new</span><span class="p">.</span><span class="n">name</span><span class="p">::</span><span class="n">text</span><span class="p">)</span> <span class="k">into</span> <span class="k">new</span><span class="p">.</span><span class="n">index_name</span><span class="p">;</span>
+  <span class="k">select</span> <span class="n">get_or_insert_tag</span><span class="p">(</span><span class="k">new</span><span class="p">.</span><span class="k">location</span><span class="p">::</span><span class="n">text</span><span class="p">)</span> <span class="k">into</span> <span class="k">new</span><span class="p">.</span><span class="n">index_location</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="k">new</span><span class="p">;</span>
+
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="k">create</span> <span class="k">trigger</span> <span class="n">trg_insert_or_update_teams</span> <span class="k">before</span> <span class="k">insert</span> <span class="k">or</span> <span class="k">update</span> <span class="k">on</span> <span class="n">teams</span>
+  <span class="k">for</span> <span class="k">each</span> <span class="k">row</span> <span class="k">execute</span> <span class="k">procedure</span> <span class="n">insert_or_update_teams</span><span class="p">();</span>
+
+<span class="k">insert</span> <span class="k">into</span> <span class="n">teams</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="k">location</span><span class="p">)</span> <span class="k">values</span>
+                                          <span class="p">(</span><span class="s1">'Poly'</span><span class="p">,</span> <span class="s1">'Iasi'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Poly'</span><span class="p">,</span> <span class="s1">'Timisoara'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Dinamo'</span><span class="p">,</span> <span class="s1">'Bucuresti'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Dinamo'</span><span class="p">,</span> <span class="s1">'Kiev'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Rangers'</span><span class="p">,</span> <span class="s1">'New York'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Steaua'</span><span class="p">,</span> <span class="s1">'Bucuresti'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Rapid'</span><span class="p">,</span> <span class="s1">'Bucuresti'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Arsenal'</span><span class="p">,</span> <span class="s1">'Kyiv'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Locomotiv'</span><span class="p">,</span> <span class="s1">'Kyiv'</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="s1">'Arsenal'</span><span class="p">,</span> <span class="s1">'London'</span><span class="p">);</span>
+
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">teams</span><span class="p">;</span>
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">auto_tags</span><span class="p">;</span> <span class="c1">-- we see that new tags are created for the team names</span>
+</code></pre></div></div>
+
+<p>And now, the function that will return the sorted list of the teams that are the most relevant for my search.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ate</span> <span class="k">or</span> <span class="k">replace</span> <span class="k">function</span> <span class="n">get_team_by_prefix</span><span class="p">(</span><span class="k">prefix</span> <span class="n">text</span><span class="p">)</span> <span class="k">returns</span> <span class="k">setof</span> <span class="n">teams</span> <span class="k">language</span> <span class="n">plpgsql</span> <span class="k">as</span> <span class="err">$$</span>
+<span class="k">declare</span>
+  <span class="n">arr_query_terms</span> <span class="n">text</span> <span class="n">array</span><span class="p">;</span>
+  <span class="n">l</span> <span class="n">integer</span><span class="p">;</span>
+<span class="k">begin</span>
+
+  <span class="k">select</span> <span class="n">string_to_array</span><span class="p">(</span><span class="k">prefix</span><span class="p">,</span> <span class="s1">' '</span><span class="p">)</span> <span class="k">into</span> <span class="n">arr_query_terms</span><span class="p">;</span>
+  <span class="n">l</span> <span class="p">:</span><span class="o">=</span> <span class="n">array_length</span><span class="p">(</span><span class="n">arr_query_terms</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+  <span class="k">create</span> <span class="k">temp</span> <span class="k">table</span> <span class="n">if</span> <span class="k">not</span> <span class="k">exists</span> <span class="n">indices</span> <span class="p">(</span><span class="n">idx</span> <span class="n">integer</span><span class="p">)</span> <span class="k">on</span> <span class="k">commit</span> <span class="k">drop</span><span class="p">;</span>
+  <span class="k">truncate</span> <span class="n">indices</span><span class="p">;</span>
+
+  <span class="k">for</span> <span class="n">i</span> <span class="k">in</span>  <span class="mi">1</span> <span class="p">..</span> <span class="n">l</span><span class="o">-</span><span class="mi">1</span> <span class="n">loop</span>
+    <span class="k">insert</span> <span class="k">into</span> <span class="n">indices</span> <span class="k">select</span> <span class="n">id</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="n">plainto_tsquery</span><span class="p">(</span><span class="n">arr_query_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+  <span class="k">end</span> <span class="n">loop</span><span class="p">;</span>
+
+  <span class="n">if</span> <span class="k">char_length</span><span class="p">(</span><span class="n">arr_query_terms</span><span class="p">[</span><span class="n">l</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span>
+     <span class="k">insert</span> <span class="k">into</span> <span class="n">indices</span> <span class="k">select</span> <span class="n">id</span> <span class="k">from</span> <span class="n">auto_tags</span> <span class="k">where</span> <span class="k">index</span> <span class="o">@@</span> <span class="n">to_tsquery</span><span class="p">(</span><span class="n">arr_query_terms</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">||</span> <span class="s1">':*'</span><span class="p">)</span> <span class="p">;</span>
+  <span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">query</span>
+    <span class="k">select</span> <span class="n">r</span><span class="p">.</span><span class="o">*</span> <span class="k">from</span> <span class="n">teams</span> <span class="n">r</span> <span class="k">inner</span> <span class="k">join</span>
+            <span class="p">(</span><span class="k">select</span> <span class="n">x</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="k">as</span> <span class="n">rank</span> <span class="k">from</span>
+                  <span class="p">(</span><span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">id</span> <span class="k">from</span> <span class="n">teams</span> <span class="n">t</span> <span class="k">inner</span> <span class="k">join</span> <span class="n">indices</span> <span class="n">i</span> <span class="k">on</span> <span class="n">t</span><span class="p">.</span><span class="n">index_name</span> <span class="o">=</span> <span class="n">i</span><span class="p">.</span><span class="n">idx</span>
+                   <span class="k">union</span> <span class="k">all</span>
+                  <span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">id</span> <span class="k">from</span> <span class="n">teams</span> <span class="n">t</span> <span class="k">inner</span> <span class="k">join</span> <span class="n">indices</span> <span class="n">i</span> <span class="k">on</span>
+            <span class="n">t</span><span class="p">.</span><span class="n">index_location</span> <span class="o">=</span> <span class="n">i</span><span class="p">.</span><span class="n">idx</span><span class="p">)</span> <span class="n">x</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="n">x</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="n">q</span> <span class="k">on</span> <span class="n">r</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">q</span><span class="p">.</span><span class="n">id</span>
+    <span class="k">order</span> <span class="k">by</span> <span class="n">q</span><span class="p">.</span><span class="n">rank</span>
+    <span class="k">desc</span> <span class="k">limit</span> <span class="mi">10</span><span class="p">;</span>
+
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>with usages:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">get_team_by_prefix</span><span class="p">(</span><span class="s1">'Kie'</span><span class="p">);</span> <span class="c1">-- will return everything that is Kiev and Kyiv</span>
+<span class="k">select</span> <span class="n">get_team_by_prefix</span><span class="p">(</span><span class="s1">'Kyi'</span><span class="p">);</span> <span class="c1">-- will return everything that is Kiev and Kyiv</span>
+<span class="k">select</span> <span class="n">get_team_by_prefix</span><span class="p">(</span><span class="s1">'Dynamo Kyi'</span><span class="p">);</span> <span class="c1">-- will return Dinamo Kiev, followed by a the dinamo bucharest and other teams from Kiev</span>
+<span class="k">select</span> <span class="n">get_team_by_prefix</span><span class="p">(</span><span class="s1">'New York Ran'</span><span class="p">);</span> <span class="c1">-- will return Rangers New York</span>
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/postgres_3.png" alt="Running the queries" /></p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              From The Trenches - The Code
+            
+            </li>
+            
+            <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/alexandrugris"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/alexandrugris"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">alexandrugris</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Alexandru Gris - Personal Blog
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
