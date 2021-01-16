@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2021-01-16T18:44:32+02:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
-</subtitle><entry><title type="html">First Steps In Go - Web Services</title><link href="https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services.html" rel="alternate" type="text/html" title="First Steps In Go - Web Services" /><published>2021-01-12T09:15:16+02:00</published><updated>2021-01-12T09:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services.html">&lt;p&gt;These are my first steps in Go. This time, learning how to build web services in golang.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.3">Jekyll</generator><link href="https://alexandrugris.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandrugris.github.io/" rel="alternate" type="text/html" /><updated>2021-01-16T20:07:16+02:00</updated><id>https://alexandrugris.github.io/feed.xml</id><title type="html">From The Trenches - The Code</title><subtitle>Alexandru Gris - Personal Blog
+</subtitle><entry><title type="html">First Steps In Go - Web Services</title><link href="https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services.html" rel="alternate" type="text/html" title="First Steps In Go - Web Services" /><published>2021-01-12T09:15:16+02:00</published><updated>2021-01-12T09:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services.html">&lt;p&gt;These are my first steps in Go. This time learning how to build web services in golang. I will touch handling requests, json serialization, middleware, logging, database access, concurrency, websockets and templates.&lt;/p&gt;
 
 &lt;h3 id=&quot;listening-to-incoming-requests&quot;&gt;Listening to Incoming Requests&lt;/h3&gt;
+
+&lt;p&gt;For building HTTP services, golang comes with all batteries included. There’s no need to install any additional package, everything is already available in the standard library. The APIs are straight forward and the code is short and fast.&lt;/p&gt;
 
 &lt;div class=&quot;language-golang highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;package&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 
@@ -305,9 +307,9 @@ Content-Length: 0
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$curl -D - -X PUT -H &quot;Content-Type: application/json&quot; -d '{&quot;productId&quot;: 0, &quot;manufacturer&quot;: &quot;Microsoft&quot;, &quot;productName&quot;: &quot;MS Surface&quot;}' localhost:8080/products/2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;h3 id=&quot;adding-middlewares&quot;&gt;Adding Middlewares&lt;/h3&gt;
+&lt;h3 id=&quot;adding-middlewares---cors-example&quot;&gt;Adding Middlewares - CORS Example&lt;/h3&gt;
 
-&lt;p&gt;The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. We will modify our code to add a CORS middleware&lt;/p&gt;
+&lt;p&gt;The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. For this example, we will modify our code to add a CORS middleware.&lt;/p&gt;
 
 &lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;corsMiddleware&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 
@@ -335,11 +337,8 @@ Content-Length: 0
 
 &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 
-	&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// [missing some code]&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
-
 	&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// handler for GET all and POST&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/products&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;corsMiddleware&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HandlerFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;productsHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
-
 	&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// handler for GET id and PUT&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/products/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;corsMiddleware&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HandlerFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;productHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 
@@ -349,7 +348,25 @@ Content-Length: 0
 &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;The full code, refactored with persitence in an in-memory map can be found &lt;a href=&quot;https://github.com/alexandrugris/learngolang1/tree/persistence_in_memory_map&quot;&gt;here&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">These are my first steps in Go. This time, learning how to build web services in golang.</summary></entry><entry><title type="html">First Steps In Go</title><link href="https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps.html" rel="alternate" type="text/html" title="First Steps In Go" /><published>2021-01-09T09:15:16+02:00</published><updated>2021-01-09T09:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps.html">&lt;p&gt;My first steps in Go, largely based on the Golang tutorial and Internet side searches.&lt;/p&gt;
+&lt;p&gt;The full code, refactored with persitence in an in-memory map can be found &lt;a href=&quot;https://github.com/alexandrugris/learngolang1/tree/persistence_in_memory_map&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;database-access&quot;&gt;Database Access&lt;/h3&gt;
+
+&lt;p&gt;First thing, we are going to install Postgres. Assuming docker is installed and running, we do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now I am running the Postgres server portmapped on 5432, with usename &lt;code class=&quot;highlighter-rouge&quot;&gt;posgres&lt;/code&gt; having the password &lt;code class=&quot;highlighter-rouge&quot;&gt;mysecretpassword&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;To connect to the server we do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$psql -p 5432 -h localhost -U postgres
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the screenshot below, I have also created a database called &lt;code class=&quot;highlighter-rouge&quot;&gt;products&lt;/code&gt; and connected to it using the &lt;code class=&quot;highlighter-rouge&quot;&gt;\c&lt;/code&gt; command&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://alexandrugris.github.io/assets/gows2.png&quot; alt=&quot;Postgres running&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">These are my first steps in Go. This time learning how to build web services in golang. I will touch handling requests, json serialization, middleware, logging, database access, concurrency, websockets and templates.</summary></entry><entry><title type="html">First Steps In Go</title><link href="https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps.html" rel="alternate" type="text/html" title="First Steps In Go" /><published>2021-01-09T09:15:16+02:00</published><updated>2021-01-09T09:15:16+02:00</updated><id>https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps</id><content type="html" xml:base="https://alexandrugris.github.io/programming/2021/01/09/golang-first-steps.html">&lt;p&gt;My first steps in Go, largely based on the Golang tutorial and Internet side searches.&lt;/p&gt;
 
 &lt;h3 id=&quot;hello-world&quot;&gt;Hello World&lt;/h3&gt;
 

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>First Steps In Go - Web Services</title>
-  <meta name="description" content="These are my first steps in Go. This time, learning how to build web services in golang.">
+  <meta name="description" content="These are my first steps in Go. This time learning how to build web services in golang. I will touch handling requests, json serialization, middleware, loggi...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/programming/2021/01/12/golang-first-web-services.html">
@@ -66,9 +66,11 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>These are my first steps in Go. This time, learning how to build web services in golang.</p>
+    <p>These are my first steps in Go. This time learning how to build web services in golang. I will touch handling requests, json serialization, middleware, logging, database access, concurrency, websockets and templates.</p>
 
 <h3 id="listening-to-incoming-requests">Listening to Incoming Requests</h3>
+
+<p>For building HTTP services, golang comes with all batteries included. There’s no need to install any additional package, everything is already available in the standard library. The APIs are straight forward and the code is short and fast.</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">main</span><span class="x">
 
@@ -372,9 +374,9 @@ Content-Length: 0
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X PUT -H "Content-Type: application/json" -d '{"productId": 0, "manufacturer": "Microsoft", "productName": "MS Surface"}' localhost:8080/products/2
 </code></pre></div></div>
 
-<h3 id="adding-middlewares">Adding Middlewares</h3>
+<h3 id="adding-middlewares---cors-example">Adding Middlewares - CORS Example</h3>
 
-<p>The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. We will modify our code to add a CORS middleware</p>
+<p>The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. For this example, we will modify our code to add a CORS middleware.</p>
 
 <div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">handler</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="p">)</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="x"> </span><span class="p">{</span><span class="x">
 
@@ -402,11 +404,8 @@ Content-Length: 0
 
 </span><span class="k">func</span><span class="x"> </span><span class="n">main</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
 
-	</span><span class="c">// [missing some code]</span><span class="x">
-
 	</span><span class="c">// handler for GET all and POST</span><span class="x">
 	</span><span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products"</span><span class="p">,</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productsHandler</span><span class="p">)))</span><span class="x">
-
 	</span><span class="c">// handler for GET id and PUT</span><span class="x">
 	</span><span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products/"</span><span class="p">,</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productHandler</span><span class="p">)))</span><span class="x">
 
@@ -417,6 +416,24 @@ Content-Length: 0
 </span></code></pre></div></div>
 
 <p>The full code, refactored with persitence in an in-memory map can be found <a href="https://github.com/alexandrugris/learngolang1/tree/persistence_in_memory_map">here</a></p>
+
+<h3 id="database-access">Database Access</h3>
+
+<p>First thing, we are going to install Postgres. Assuming docker is installed and running, we do</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+</code></pre></div></div>
+
+<p>Now I am running the Postgres server portmapped on 5432, with usename <code class="highlighter-rouge">posgres</code> having the password <code class="highlighter-rouge">mysecretpassword</code></p>
+
+<p>To connect to the server we do</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$psql -p 5432 -h localhost -U postgres
+</code></pre></div></div>
+
+<p>In the screenshot below, I have also created a database called <code class="highlighter-rouge">products</code> and connected to it using the <code class="highlighter-rouge">\c</code> command</p>
+
+<p><img src="https://alexandrugris.github.io/assets/gows2.png" alt="Postgres running" /></p>
 
 
   </div>
