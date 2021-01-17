@@ -435,6 +435,129 @@ Content-Length: 0
 
 <p><img src="https://alexandrugris.github.io/assets/gows2.png" alt="Postgres running" /></p>
 
+<p>The next thing to do is to get the Postgres Go driver.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$go get github.com/lib/pq
+</code></pre></div></div>
+
+<p>At the time of this writing, the recommended database driver for go is <a href="https://github.com/jackc/pgx">pgx</a>. Its authors recommend to use its own API instead of the standard go SQL package due to higher performance in most Postgres-specific scenarios. For the purpose of this demo we will use the standard SQL package though, as it is portable across databases.</p>
+
+<p>In a production scenario we’d also be using an external connection pooler, the recommended solution being <a href="https://www.pgbouncer.org/">pgbouncer</a>. This is because for each new connection to the database server pgsql launches a new Postgres database backend, a new system process, with its launching system heavy and memory intensive.</p>
+
+<p>Let’s dive into the code.</p>
+
+<p>First step is to blank import the driver into our <code class="highlighter-rouge">main.go</code> file. That is because drivers need to register themselves with the SQL package in their <code class="highlighter-rouge">init function</code>(https://golang.org/doc/effective_go.html#init)</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span><span class="x"> </span><span class="n">_</span><span class="x"> </span><span class="s">"github.com/lib/pq"</span><span class="x">
+</span></code></pre></div></div>
+
+<p>The next step is to declare a database connection pool and open it. The names are exported hence capitalized.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">database</span><span class="x">
+
+</span><span class="k">import</span><span class="x"> </span><span class="p">(</span><span class="x">
+	</span><span class="s">"database/sql"</span><span class="x">
+	</span><span class="s">"log"</span><span class="x">
+</span><span class="p">)</span><span class="x">
+
+</span><span class="c">// DbConn is our database connection pool</span><span class="x">
+</span><span class="k">var</span><span class="x"> </span><span class="n">DbConn</span><span class="x"> </span><span class="o">*</span><span class="n">sql</span><span class="o">.</span><span class="n">DB</span><span class="x">
+
+</span><span class="c">// Connect opens the connection to the database</span><span class="x">
+</span><span class="k">func</span><span class="x"> </span><span class="n">Connect</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="k">var</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="kt">error</span><span class="x">
+	</span><span class="n">DbConn</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s">"postgres"</span><span class="p">,</span><span class="x"> </span><span class="s">"user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword"</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
+<p>We are going to create the Products table and seed our database, but only if a <code class="highlighter-rouge">--dbinit</code> flag is sent to our executable. We add to our main function the following:</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">]</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="k">switch</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="k">case</span><span class="x"> </span><span class="s">"--dbinit"</span><span class="o">:</span><span class="x">
+		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">Init</span><span class="p">();</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+			</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
+		</span><span class="p">}</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
+<p>To create our database, we are going to play a bit with reflection and automatically discover the fields from our <code class="highlighter-rouge">Product</code> type. This discovery by reflection is something that all ORMs do. Since we are not going to build our own ORM here, this is the only place where we will play with reflection.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">Init</span><span class="p">()</span><span class="x"> </span><span class="kt">error</span><span class="x"> </span><span class="p">{</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">DbConn</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">errors</span><span class="o">.</span><span class="n">New</span><span class="p">(</span><span class="s">"Database not opened"</span><span class="p">)</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="n">query</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="s">"CREATE TABLE IF NOT EXISTS Products ("</span><span class="x">
+
+	</span><span class="n">t</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">reflect</span><span class="o">.</span><span class="n">TypeOf</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">Product</span><span class="p">{})</span><span class="x">
+
+	</span><span class="k">for</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="m">0</span><span class="p">;</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">&lt;</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">();</span><span class="x"> </span><span class="n">i</span><span class="o">++</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">f</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="x">
+		</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Name</span><span class="x"> </span><span class="o">+</span><span class="x"> </span><span class="s">" "</span><span class="x">
+
+		</span><span class="k">switch</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="k">case</span><span class="x"> </span><span class="s">"string"</span><span class="o">:</span><span class="x">
+			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">"varchar (100)"</span><span class="x">
+		</span><span class="k">default</span><span class="o">:</span><span class="x">
+			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span><span class="x">
+		</span><span class="p">}</span><span class="x">
+
+		</span><span class="k">if</span><span class="x"> </span><span class="n">i</span><span class="o">+</span><span class="m">1</span><span class="x"> </span><span class="o">&lt;</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">", "</span><span class="x">
+		</span><span class="p">}</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+	</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">");"</span><span class="x">
+	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="n">query</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"DELETE FROM Products"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"ALTER TABLE Products ADD PRIMARY KEY (ProductID)"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"CREATE SEQUENCE IF NOT EXISTS pk_product CACHE 100 OWNED BY Product.ProductID"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">return</span><span class="x"> </span><span class="no">nil</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
+<p>The next step is to implement the full <code class="highlighter-rouge">product.Map</code> interface and switch from an in-memory map to database calls. A better name would have been <code class="highlighter-rouge">product.Repository</code> but we will not refactor the code now. The full code can be found <a href="https://github.com/alexandrugris/learngolang1/blob/with_database/product/product.data.go">here</a> and we are only going to exemplify in this blogpost how to create a new product.</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">m</span><span class="x"> </span><span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span><span class="x"> </span><span class="n">CreateNew</span><span class="p">(</span><span class="n">p</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+
+	</span><span class="n">stmt</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">Prepare</span><span class="p">(</span><span class="s">`INSERT INTO 
+		Products(Manufacturer, PricePerUnit, UnitsAvailable, ProductName, ProductID) 
+		VALUES ($1, $2, $3, $4, nextval('pk_product')) RETURNING ProductID`</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">stmt</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="o">||</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="n">sqlRow</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">stmt</span><span class="o">.</span><span class="n">QueryRow</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">sqlRow</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="o">.</span><span class="n">ProductID</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
+<p>The full source code for this implementation can be found <a href="https://github.com/alexandrugris/learngolang1/tree/with_database">here</a>.</p>
+
 
   </div>
 
