@@ -384,9 +384,9 @@ Content-Length: 0
 
 		</span><span class="c">// before the handler</span><span class="x">
 		</span><span class="c">// add the cors middleware headers</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Origin"</span><span class="p">,</span><span class="x"> </span><span class="s">"*"</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Methods"</span><span class="p">,</span><span class="x"> </span><span class="s">"POST, GET, OPTIONS, PUT, DELETE"</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Headers"</span><span class="p">,</span><span class="x"> </span><span class="s">"Accept, Content-Type, Content-Length"</span><span class="p">)</span><span class="x">
+		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Origin"</span><span class="p">,</span><span class="s">"*"</span><span class="p">)</span><span class="x">
+		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Methods"</span><span class="p">,</span><span class="s">"POST, GET, OPTIONS, PUT, DELETE"</span><span class="p">)</span><span class="x">
+		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Headers"</span><span class="p">,</span><span class="s">"Accept, Content-Type, Content-Length"</span><span class="p">)</span><span class="x">
 		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span><span class="x"> </span><span class="s">"application/json"</span><span class="p">)</span><span class="x">
 
 		</span><span class="k">if</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodOptions</span><span class="x"> </span><span class="p">{</span><span class="x">
@@ -466,7 +466,10 @@ Content-Length: 0
 </span><span class="c">// Connect opens the connection to the database</span><span class="x">
 </span><span class="k">func</span><span class="x"> </span><span class="n">Connect</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
 	</span><span class="k">var</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="kt">error</span><span class="x">
-	</span><span class="n">DbConn</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s">"postgres"</span><span class="p">,</span><span class="x"> </span><span class="s">"user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword"</span><span class="p">)</span><span class="x">
+	</span><span class="n">DbConn</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="x">
+	</span><span class="s">"postgres"</span><span class="p">,</span><span class="x"> 
+	</span><span class="s">"user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword"</span><span class="x">
+	</span><span class="p">)</span><span class="x">
 
 	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
 		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
@@ -528,7 +531,9 @@ Content-Length: 0
 		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
 	</span><span class="p">}</span><span class="x">
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"CREATE SEQUENCE IF NOT EXISTS pk_product CACHE 100 OWNED BY Product.ProductID"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="x">
+		</span><span class="s">`CREATE SEQUENCE IF NOT EXISTS pk_product 
+		CACHE 100 OWNED BY Product.ProductID`</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
 		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
 	</span><span class="p">}</span><span class="x">
 
