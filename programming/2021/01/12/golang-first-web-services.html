@@ -563,6 +563,54 @@ Content-Length: 0
 
 <p>The full source code for this implementation can be found <a href="https://github.com/alexandrugris/learngolang1/tree/with_database">here</a>.</p>
 
+<h3 id="contexts">Contexts</h3>
+
+<p>If we want to setup a timeout for a query, golang provides the <code class="highlighter-rouge">Context</code> mechanism. Each database function has a <code class="highlighter-rouge">Context</code> method. The call to <code class="highlighter-rouge">cancel()</code> when the operation is completed successfully allows to end the context and release all associated resources.</p>
+
+<p>An example below:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">m</span><span class="x"> </span><span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span><span class="x"> </span><span class="n">GetAll</span><span class="p">()</span><span class="x"> </span><span class="p">[]</span><span class="o">*</span><span class="n">Product</span><span class="x"> </span><span class="p">{</span><span class="x">
+
+	</span><span class="c">// this will allow the queries to timeout</span><span class="x">
+	</span><span class="n">ctx</span><span class="p">,</span><span class="x"> </span><span class="n">cancel</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">context</span><span class="o">.</span><span class="n">WithTimeout</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">Background</span><span class="p">(),</span><span class="x"> </span><span class="m">15</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span><span class="x">
+	</span><span class="k">defer</span><span class="x"> </span><span class="n">cancel</span><span class="p">()</span><span class="x">
+
+	</span><span class="n">results</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">QueryContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="x"> </span><span class="s">`
+	SELECT 
+		ProductID, 
+		Manufacturer, 
+		PricePerUnit, 
+		UnitsAvailable, 
+		ProductName 
+	FROM Products
+	`</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
+		</span><span class="k">return</span><span class="x"> </span><span class="no">nil</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">defer</span><span class="x"> </span><span class="n">results</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span><span class="x">
+
+	</span><span class="n">ret</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">([]</span><span class="o">*</span><span class="n">Product</span><span class="p">,</span><span class="x"> </span><span class="m">0</span><span class="p">,</span><span class="x"> </span><span class="m">100</span><span class="p">)</span><span class="x">
+
+	</span><span class="k">for</span><span class="x"> </span><span class="n">results</span><span class="o">.</span><span class="n">Next</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+		</span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">Product</span><span class="p">{}</span><span class="x">
+
+		</span><span class="n">results</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="x">
+			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductID</span><span class="p">,</span><span class="x">
+			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span><span class="x">
+			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span><span class="x">
+			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span><span class="x">
+			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span><span class="x">
+
+		</span><span class="n">ret</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">append</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">)</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+
+	</span><span class="k">return</span><span class="x"> </span><span class="n">ret</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
 
   </div>
 
