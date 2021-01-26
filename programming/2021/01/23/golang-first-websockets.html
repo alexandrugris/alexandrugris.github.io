@@ -6,8 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>First Steps In Go - Web Sockets</title>
-  <meta name="description" content="These are my first steps in Go, this time learning how to extend my previous web service with WebSocket support. The brower subscribes to changes to a series...">
+  <title>First Steps In Go - WebSockets</title>
+  <meta name="description" content="These are my first steps in Go, this time learning how to extend my previous web service with WebSockets. The brower subscribes to changes to a set of produc...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="https://alexandrugris.github.io/programming/2021/01/23/golang-first-websockets.html">
@@ -61,12 +61,12 @@
         <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">First Steps In Go - Web Sockets</h1>
+    <h1 class="post-title" itemprop="name headline">First Steps In Go - WebSockets</h1>
     <p class="post-meta"><time datetime="2021-01-23T09:15:16+02:00" itemprop="datePublished">Jan 23, 2021</time></p>
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>These are my first steps in Go, this time learning how to extend my previous web service with WebSocket support. The brower subscribes to changes to a series of product IDs. Subscription requestes and subsequent updates go over WebSockets.</p>
+    <p>These are my first steps in Go, this time learning how to extend my previous web service with WebSockets. The brower subscribes to changes to a set of products by sending one or more Subscribe or Unsubscribe JSON messages to the service, through a WebSocket connection. Each message contains a series of product IDs. The server maintains the map connection - subscriptions and listens to notifications on product changes from a Postgres database.</p>
 
 <h3 id="testing">Testing</h3>
 
@@ -87,7 +87,7 @@
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">req</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p>Meanwhile, on the server side, we will be doing <code class="highlighter-rouge">POST</code>, <code class="highlighter-rouge">PUT</code> and <code class="highlighter-rouge">DELETE</code> requests to change the products in the database. These request have the following form:</p>
+<p>Meanwhile, from a different console, we will be performing <code class="highlighter-rouge">POST</code>, <code class="highlighter-rouge">PUT</code> and <code class="highlighter-rouge">DELETE</code> requests to change the products in the database. These requests are similar to the following:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>POST http://localhost:8080/products
 Content-Type: application/json
@@ -105,7 +105,7 @@ Content-Type: application/json
 
 <h3 id="database-changes">Database Changes</h3>
 
-<p>In order to be able to listen to changes in the database, we will use the <code class="highlighter-rouge">LISTEN</code> / <code class="highlighter-rouge">NOTIFY</code> system from Postgresql. We are going to create a trigger which sends <code class="highlighter-rouge">JSON</code> messages whenever an update to the Products table occurs and we are going to initialize a listener in our service code for such events.</p>
+<p>In order to be able to listen to changes in the database, we will use the <code class="highlighter-rouge">LISTEN</code> / <code class="highlighter-rouge">NOTIFY</code> system from Postgresql. We are going to create a trigger which sends <code class="highlighter-rouge">JSON</code> messages whenever an update to the Products table occurs and we are going to initialize a listener in our service code to such events.</p>
 
 <p>The trigger procedure below:</p>
 
@@ -136,7 +136,7 @@ Content-Type: application/json
 	<span class="k">FOR</span> <span class="k">EACH</span> <span class="k">ROW</span> <span class="k">EXECUTE</span> <span class="k">PROCEDURE</span> <span class="n">notify_event_on_products_update</span><span class="p">();</span>
 </code></pre></div></div>
 
-<p>Now that we have this procedure, the code that listens to the emitted events goes as follows. This is invoked as a goroutine and acts as a backgorund service. It uses directly the <code class="highlighter-rouge">pq</code> package instead of the <code class="highlighter-rouge">sql</code> package because it relies on native Postgres functionality - the listen/notify mechanism.</p>
+<p>Now, that we have this procedure, the code that listens to the emitted events, is listed below. It is invoked as a goroutine and acts as a backgorund service. It uses directly the <code class="highlighter-rouge">pq</code> package instead of the <code class="highlighter-rouge">sql</code> package because it relies on native Postgres functionality - the listen/notify mechanism.</p>
 
 <div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// ListenForNotifications should be invoked as a goroutine</span><span class="x">
 </span><span class="k">func</span><span class="x"> </span><span class="n">ListenForNotifications</span><span class="p">(</span><span class="n">event</span><span class="x"> </span><span class="kt">string</span><span class="p">,</span><span class="x"> </span><span class="n">notif</span><span class="x"> </span><span class="k">func</span><span class="p">(</span><span class="n">json</span><span class="x"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">))</span><span class="x"> </span><span class="kt">error</span><span class="x"> </span><span class="p">{</span><span class="x">
@@ -181,7 +181,7 @@ Content-Type: application/json
 </span><span class="p">}()</span><span class="x">
 </span></code></pre></div></div>
 
-<h3 id="websockets-endpoint">WebSockets Endpoint</h3>
+<h3 id="the-websocket-endpoint">The WebSocket Endpoint</h3>
 
 <p>First, initialize the route. Please notice the <code class="highlighter-rouge">websocket</code> package instead of the <code class="highlighter-rouge">http</code> used above.</p>
 
@@ -196,7 +196,7 @@ Content-Type: application/json
 </span><span class="p">}</span><span class="x">
 </span></code></pre></div></div>
 
-<p>And the handler itself. The structure is straight forward:</p>
+<p>And then the handler itself. Its structure is straight forward:</p>
 <ul>
   <li>Exit the function when the connection closes.</li>
   <li>Register a cleanup sequence for when the connection finished.</li>
@@ -266,11 +266,11 @@ Content-Type: application/json
 </span><span class="p">}</span><span class="x">
 </span></code></pre></div></div>
 
-<h3 id="algorithm">Algorithm</h3>
+<h3 id="the-algorithm">The Algorithm</h3>
 
-<p>The algorithm is straight forward. It keeps a map of productIDs - channels listening for updates. When an update comes for a specific product ID, all the channels are notified. The only interesting part is the use of goroutines for synchronization between processes. The map is local to a goroutine which is launched as a service when the application starts and all communications with it happen over channels. There is no shared memory involved and no shared-memory specific synchronization primitives. Commented code below.</p>
+<p>The algorithm is straight forward. It keeps a map of productIDs - channels listening for updates. When an update comes for a specific product ID, all the channels are notified. The interesting part is the use of goroutines for synchronization between processes. The map is local to a goroutine, which is launched as a service when the application starts, and all communications with it happen over channels. There is no shared memory involved and no shared-memory-specific synchronization primitives. The commented ode below.</p>
 
-<p>A notable mention is the fact that clearing the subscription on <code class="highlighter-rouge">connclose</code> event is very slow as the algorithm has to iterate through all the registered products. In a production scenario, I’d keep another map, a reversed index, so that I the relationship channel -&gt; productID is faster to navigate. In our case it would have only make the code longer and less readable.</p>
+<p>A notable mention is the fact that clearing the subscription on <code class="highlighter-rouge">connclose</code> event is very slow as the function has to iterate through all the registered products. In a production scenario, I’d keep another map, a reversed index, so that I the relationship channel -&gt; productID is faster to navigate. In our case it would have only make the code longer and less readable.</p>
 
 <div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// shared channel on which the listen-notify db mechanism sends the products</span><span class="x">
 </span><span class="k">var</span><span class="x"> </span><span class="n">prodChan</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">chan</span><span class="x"> </span><span class="n">productNotification</span><span class="p">,</span><span class="x"> </span><span class="m">1024</span><span class="p">)</span><span class="x">
@@ -325,6 +325,8 @@ Content-Type: application/json
 			</span><span class="k">case</span><span class="x"> </span><span class="s">"closeconn"</span><span class="o">:</span><span class="x">
 
 				</span><span class="c">// empty the rest</span><span class="x">
+				</span><span class="c">// we might wrap the following in a goroutine </span><span class="x">
+				</span><span class="c">// so we don't block futher incoming messages </span><span class="x">
 				</span><span class="n">emptyKeys</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span><span class="x"> </span><span class="m">0</span><span class="p">,</span><span class="x"> </span><span class="m">100</span><span class="p">)</span><span class="x">
 
 				</span><span class="k">for</span><span class="x"> </span><span class="n">k</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">notifyUpdates</span><span class="x"> </span><span class="p">{</span><span class="x">
