@@ -270,7 +270,7 @@
 </span><span class="n">scaler</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="m">10.0</span><span class="p">)</span><span class="x">
 </span></code></pre></div></div>
 
-<p>Beside interfaces that have functions, go offers a very interesting concept, the empty interface. Any object can be assigned to the empty interface, including the scalar types. Here is an example:</p>
+<p>Beside interfaces that have functions, go offers the empty interface as a method to hold a variable of any type. Any object can be assigned to the empty interface, including the scalar types. Here is an example:</p>
 
 <div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// empty interface</span><span class="x">
 </span><span class="k">var</span><span class="x"> </span><span class="n">intf</span><span class="x"> </span><span class="k">interface</span><span class="p">{}</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="s">"Hello World"</span><span class="x">
@@ -297,6 +297,71 @@
 		</span><span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"It's a float!"</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="p">)</span><span class="x">
 </span><span class="p">}</span><span class="x">
 </span></code></pre></div></div>
+
+<p>When it comes to interfaces, golang offers a very elegant solution to encapsulation and type aggregation. It reminds me of power of <code class="highlighter-rouge">IUnknown::QueryInterface()</code> from <code class="highlighter-rouge">COM</code>, but embedded in the language itself. It relies on type assertions and embedded types.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">main</span><span class="x">
+
+</span><span class="c">/*Beautiful method for embedding types and exposing interfaces in Golang. */</span><span class="x">
+
+</span><span class="k">import</span><span class="x"> </span><span class="p">(</span><span class="x">
+	</span><span class="s">"fmt"</span><span class="x">
+	</span><span class="s">"unsafe"</span><span class="x">
+</span><span class="p">)</span><span class="x">
+
+</span><span class="k">type</span><span class="x"> </span><span class="n">Writer</span><span class="x"> </span><span class="k">interface</span><span class="p">{</span><span class="x">
+	</span><span class="n">Write</span><span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">type</span><span class="x"> </span><span class="n">Reader</span><span class="x"> </span><span class="k">interface</span><span class="p">{</span><span class="x">
+	</span><span class="n">Read</span><span class="p">()</span><span class="x"> </span><span class="kt">string</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">type</span><span class="x"> </span><span class="n">ReaderWriter</span><span class="x"> </span><span class="k">struct</span><span class="p">{</span><span class="x">
+	</span><span class="n">Reader</span><span class="x">
+	</span><span class="n">Writer</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">type</span><span class="x"> </span><span class="n">rwImplType</span><span class="x"> </span><span class="k">struct</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="n">str</span><span class="x"> </span><span class="kt">string</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">rw</span><span class="x"> </span><span class="o">*</span><span class="n">rwImplType</span><span class="p">)</span><span class="x"> </span><span class="n">Read</span><span class="p">()</span><span class="x"> </span><span class="kt">string</span><span class="x"> </span><span class="p">{</span><span class="x">
+	</span><span class="c">// same underlying pointer</span><span class="x">
+	</span><span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">unsafe</span><span class="o">.</span><span class="n">Pointer</span><span class="p">(</span><span class="n">rw</span><span class="p">))</span><span class="x">
+	</span><span class="k">return</span><span class="x"> </span><span class="n">rw</span><span class="o">.</span><span class="n">str</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">rw</span><span class="o">*</span><span class="x"> </span><span class="n">rwImplType</span><span class="p">)</span><span class="x"> </span><span class="n">Write</span><span class="p">(</span><span class="n">msg</span><span class="x"> </span><span class="kt">string</span><span class="p">){</span><span class="x">
+	</span><span class="c">// same underlying pointer</span><span class="x">
+	</span><span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">unsafe</span><span class="o">.</span><span class="n">Pointer</span><span class="p">(</span><span class="n">rw</span><span class="p">))</span><span class="x">
+	</span><span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"%v: %v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="x"> </span><span class="n">rw</span><span class="o">.</span><span class="n">str</span><span class="p">,</span><span class="x"> </span><span class="n">msg</span><span class="p">)</span><span class="x">
+</span><span class="p">}</span><span class="x">
+
+</span><span class="k">func</span><span class="x"> </span><span class="n">main</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+
+	</span><span class="c">// Instatiante a concrete implementation</span><span class="x">
+	</span><span class="n">rwImpl</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">rwImplType</span><span class="p">{</span><span class="n">str</span><span class="o">:</span><span class="x"> </span><span class="s">"Hello World"</span><span class="p">}</span><span class="x">
+	
+	</span><span class="c">// expose it in an aggregate public interface which</span><span class="x">
+	</span><span class="c">// implements several interfaces</span><span class="x">
+	</span><span class="n">rwIntf</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">ReaderWriter</span><span class="p">{</span><span class="x">
+		</span><span class="n">Reader</span><span class="o">:</span><span class="x"> </span><span class="o">&amp;</span><span class="n">rwImpl</span><span class="p">,</span><span class="x">
+		</span><span class="n">Writer</span><span class="o">:</span><span class="x"> </span><span class="o">&amp;</span><span class="n">rwImpl</span><span class="p">,</span><span class="x"> </span><span class="c">// can be another implementation</span><span class="x">
+	</span><span class="p">}</span><span class="x">
+	
+	</span><span class="k">var</span><span class="x"> </span><span class="n">anon</span><span class="x"> </span><span class="k">interface</span><span class="p">{}</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">rwIntf</span><span class="x">
+	
+	</span><span class="c">// QueryInterface()</span><span class="x">
+	</span><span class="n">r</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">anon</span><span class="o">.</span><span class="p">(</span><span class="n">Reader</span><span class="p">)</span><span class="x">
+	</span><span class="n">w</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">anon</span><span class="o">.</span><span class="p">(</span><span class="n">Writer</span><span class="p">)</span><span class="x">
+	
+	</span><span class="c">// works like a charm :)</span><span class="x">
+	</span><span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">Read</span><span class="p">())</span><span class="x">
+</span><span class="p">}</span><span class="x">
+</span></code></pre></div></div>
+
+<p>Go playground link <a href="https://play.golang.org/p/lBDFao9Yo4G">here</a></p>
 
 <p>Speaking of the <code class="highlighter-rouge">switch</code> construct, it is quite flexible:</p>
 
