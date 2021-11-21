@@ -124,8 +124,6 @@
 <span class="k">print</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p><img src="https://alexandrugris.github.io/assets/tsa_adf.jpg" alt="ADF" /></p>
-
 <p>For detecting auto correlation, we introduce two measures:</p>
 <ul>
   <li>The <em>ACF</em> - the autocorrelation between the value at <code class="highlighter-rouge">t</code> and <code class="highlighter-rouge">t-n</code>, <em>including</em> the intermediary values, <code class="highlighter-rouge">(t-1 .. t-n-1)</code>. E.g. the effect of prices 2 months ago vs the prices today, including the effect of the prices 2 months ago on the prices 1 month ago and the prices from 1 month ago on today’s prices.</li>
@@ -155,16 +153,16 @@
 <span class="n">lynx_ts</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p><img src="https://alexandrugris.github.io/assets/tsa_lynx.jpg" alt="Lynx TS" /></p>
+<p><img src="https://alexandrugris.github.io/assets/tsa_lynx.png" alt="Lynx TS" /></p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.graphics.tsaplots</span> <span class="kn">import</span> <span class="n">plot_acf</span><span class="p">,</span> <span class="n">plot_pacf</span>
 <span class="n">plot_acf</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p><img src="https://alexandrugris.github.io/assets/tsa_acf.jpg" alt="ACF" /></p>
+<p><img src="https://alexandrugris.github.io/assets/tsa_acf.png" alt="ACF" /></p>
 
-<p><img src="https://alexandrugris.github.io/assets/tsa_pacf.jpg" alt="PACF" /></p>
+<p><img src="https://alexandrugris.github.io/assets/tsa_pacf.png" alt="PACF" /></p>
 
 <p>We see in these charts that autocorrelation decreases as we look backwards in the series. This means that we are likely dealing with an auto-regressive process. If we are to build an auto-regressive model for this series we’ll probably consider the coefficients for the 1, 2, 4 and 6 lags. The blue bands are the error margin; everything within the bands are not statistically significant. The coefficient with index 0 is always 1, as it is the correlation of the timeseries with itself.</p>
 
@@ -250,12 +248,12 @@
 <p>To summarize, when trying to identify what kind of model we try to fit, we have the following rules:</p>
 
 <ul>
-  <li><em>AR(p)</em> - ACF falls off slowly, PACF has sharp drop after lag = p</li>
-  <li><em>MA(q)</em> - ACF has a sharp drop after lag = q,  PACF falls off slowly</li>
-  <li><em>ARMA(p,q)</em> - No sharp cutoff, neither for ACF nor for PACF</li>
+  <li><code class="highlighter-rouge">AR(p)</code> - ACF falls off slowly, PACF has sharp drop after lag = p</li>
+  <li><code class="highlighter-rouge">MA(q)</code> - ACF has a sharp drop after lag = q,  PACF falls off slowly</li>
+  <li><code class="highlighter-rouge">ARMA(p,q)</code> - No sharp cutoff, neither for ACF nor for PACF</li>
 </ul>
 
-<h1 id="fitting-arima-models">Fitting ARIMA Models</h1>
+<h3 id="fitting-arima-models">Fitting ARIMA Models</h3>
 
 <p>An ARIMA model has 3 parameters:</p>
 
@@ -274,7 +272,7 @@
   <li><code class="highlighter-rouge">ARIMA(p=0, d=1, q=1)</code> is an exponential smoothing model</li>
 </ul>
 
-<p># ARIMA Model Parameter Selection</p>
+<p>### ARIMA Model Parameter Selection</p>
 
 <p>First step is to check for stationarity using the Augmented Dickey-Fuller test. If the data is not stationary, we need to set the <code class="highlighter-rouge">d</code> parameter.</p>
 
@@ -354,6 +352,21 @@
 <p><img src="https://alexandrugris.github.io/assets/ts_residuals_acf.png" alt="Residuals ACF" /></p>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_residuals_pacf.png" alt="Residuals PACF" /></p>
+
+<p>Returning to our Lynx timeseries which was shown earlier, let’s train an ARIMA model and see how it fits.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.tsa.arima.model</span> <span class="kn">import</span> <span class="n">ARIMA</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">ARIMA</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">arparams</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><img src="https://alexandrugris.github.io/assets/tsa_lynx_arima.png" alt="Lynx model fit" /></p>
+
+<p>Exported notebook is <a href="https://alexandrugris.ro/timeseries.html">here</a></p>
+
 
   </div>
 
