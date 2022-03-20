@@ -66,7 +66,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>In this post we are going to look again at the 2018-2019 Premier League season and try to reverse engineer bookmakers odds in order to obtain the expected goals for each match. Then, we are going to try to improve on these models and reduce our reliance on bookmakers odds. In the process, I will present two ways of implementing the Poisson regression in Python - one from scratch and one based on the the <code class="highlighter-rouge">statsmodel</code> library.</p>
+    <p>In this post we are going to look again at the 2018-2019 Premier League season and try to reverse engineer bookmakers odds in order to obtain the expected goals for each match. Then, we are going to try to improve on these models and reduce our reliance on bookmakers odds. In the process, I will present two ways of implementing the Poisson regression in Python - one from scratch and one based on the the <code class="language-plaintext highlighter-rouge">statsmodel</code> library.</p>
 
 <p>The expected goals is a very important number for compiling odds because, if plugged into the Poisson distribution, it gives is the possibility to compute any goal-based markets.</p>
 
@@ -82,32 +82,32 @@
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
 
-<span class="c"># https://datahub.io/sports-data/english-premier-league#readme</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1819_csv.csv"</span><span class="p">)</span> <span class="c"># todo: add index on team names!</span>
-
+<span class="c1"># https://datahub.io/sports-data/english-premier-league#readme
+</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1819_csv.csv"</span><span class="p">)</span> <span class="c1"># todo: add index on team names!
+</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<span class="n">teams</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">teams</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
 
-<span class="c">###</span>
-<span class="c"># BbAvH = Betbrain average home win odds</span>
-<span class="c"># BbAvD = Betbrain average draw win odds</span>
-<span class="c"># BbAvA = Betbrain average away win odds</span>
-
-<span class="c"># BbAv&gt;2.5 = Betbrain average over 2.5 goals</span>
-<span class="c"># BbAv&lt;2.5 = Betbrain average under 2.5 goals</span>
-
-<span class="c"># FTHG and HG = Full Time Home Team Goals</span>
-<span class="c"># FTAG and AG = Full Time Away Team Goals</span>
-<span class="c">###</span>
-
+<span class="c1">###
+# BbAvH = Betbrain average home win odds
+# BbAvD = Betbrain average draw win odds
+# BbAvA = Betbrain average away win odds
+</span>
+<span class="c1"># BbAv&gt;2.5 = Betbrain average over 2.5 goals
+# BbAv&lt;2.5 = Betbrain average under 2.5 goals
+</span>
+<span class="c1"># FTHG and HG = Full Time Home Team Goals
+# FTAG and AG = Full Time Away Team Goals
+###
+</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[[</span><span class="s">'HomeTeam'</span><span class="p">,</span> <span class="s">'AwayTeam'</span><span class="p">,</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">,</span> <span class="s">'FTHG'</span><span class="p">,</span>  <span class="s">'FTAG'</span><span class="p">]]</span>
 
-<span class="c">### xG reverse engineering</span>
-<span class="k">def</span> <span class="nf">hda_ou25</span><span class="p">(</span><span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">):</span>
+<span class="c1">### xG reverse engineering
+</span><span class="k">def</span> <span class="nf">hda_ou25</span><span class="p">(</span><span class="n">xGH</span><span class="p">,</span> <span class="n">xGA</span><span class="p">):</span>
     
-    <span class="n">h_distrib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGH</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
-    <span class="n">a_distrib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGA</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+    <span class="n">h_distrib</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="p">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGH</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+    <span class="n">a_distrib</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">poisson</span><span class="p">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xGA</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
     
     <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
     
@@ -115,33 +115,33 @@
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_distrib</span><span class="p">)):</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">h_distrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">a_distrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
             
-            <span class="c"># hda part</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">:</span>
+            <span class="c1"># hda part
+</span>            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">:</span>
                 <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
             <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
                 <span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
             <span class="k">elif</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
                 <span class="n">ret</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
                 
-            <span class="c"># ou 2.5 part</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mf">2.5</span><span class="p">:</span>
+            <span class="c1"># ou 2.5 part
+</span>            <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mf">2.5</span><span class="p">:</span>
                 <span class="n">ret</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
             <span class="k">elif</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mf">2.5</span><span class="p">:</span>
                 <span class="n">ret</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
                 
-    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">loss_hdaou</span><span class="p">(</span><span class="n">xG</span><span class="p">,</span><span class="n">hda_ou_target</span><span class="p">):</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">hda_ou25</span><span class="p">(</span><span class="n">xG</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xG</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">hda_ou_target</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="c"># square the error</span>
-    
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="c1"># square the error
+</span>    
 
 <span class="k">def</span> <span class="nf">compute_xg</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>    
-    <span class="n">hda_ou_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-    <span class="n">ret</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss_hdaou</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.25</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">hda_ou_target</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s">'COBYLA'</span><span class="p">)</span><span class="o">.</span><span class="n">x</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s">'xGH'</span><span class="p">,</span> <span class="s">'xGA'</span><span class="p">])</span>
+    <span class="n">hda_ou_target</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]]).</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss_hdaou</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.25</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">hda_ou_target</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s">'COBYLA'</span><span class="p">).</span><span class="n">x</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="p">.</span><span class="n">Series</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s">'xGH'</span><span class="p">,</span> <span class="s">'xGA'</span><span class="p">])</span>
     
-<span class="n">xg</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">compute_xg</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">xg</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">compute_xg</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">data</span><span class="p">[</span><span class="s">'xGH_optim'</span><span class="p">]</span> <span class="o">=</span> <span class="n">xg</span><span class="p">[</span><span class="s">'xGH'</span><span class="p">]</span>
 <span class="n">data</span><span class="p">[</span><span class="s">'xGA_optim'</span><span class="p">]</span> <span class="o">=</span> <span class="n">xg</span><span class="p">[</span><span class="s">'xGA'</span><span class="p">]</span>
@@ -149,36 +149,36 @@
 
 <h3 id="reverse-engineering-expected-goals-from-bookmakers-odds-using-the-poisson-regression">Reverse Engineering Expected Goals From Bookmakers Odds Using The Poisson Regression</h3>
 
-<p>The next step is to do exactly the same thing, but this time using Poisson regression. Poisson regression is very useful for things like counts. It aims to compute a set of regression coefficients such that <code class="highlighter-rouge">lambda = sum(regression_coef_i * predictor_variable_i)</code>. Poisson regression is solved through the Maximum Likelihood Estimate method, as shown below:</p>
+<p>The next step is to do exactly the same thing, but this time using Poisson regression. Poisson regression is very useful for things like counts. It aims to compute a set of regression coefficients such that <code class="language-plaintext highlighter-rouge">lambda = sum(regression_coef_i * predictor_variable_i)</code>. Poisson regression is solved through the Maximum Likelihood Estimate method, as shown below:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># poisson regression:</span>
-<span class="k">def</span> <span class="nf">poisson_compute_xg</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">goals</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># poisson regression:
+</span><span class="k">def</span> <span class="nf">poisson_compute_xg</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">goals</span><span class="p">):</span>
 
-    <span class="c"># compute the lambda for each row based on the proposed betas </span>
-    <span class="n">lmbdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">factors</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="c1"># compute the lambda for each row based on the proposed betas 
+</span>    <span class="n">lmbdas</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">factors</span><span class="p">.</span><span class="n">T</span><span class="p">)</span>
     
-    <span class="k">if</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">min</span><span class="p">(</span><span class="n">lmbdas</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0e-5</span><span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">min</span><span class="p">(</span><span class="n">lmbdas</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0e-5</span><span class="p">):</span>
         <span class="k">print</span><span class="p">(</span><span class="s">"violated constraint"</span><span class="p">)</span>
         <span class="k">return</span> <span class="mf">1e10</span>
     
-    <span class="c"># compute the probability for obtaining the observed counts (goals)</span>
-    <span class="c"># given the lambda</span>
-    <span class="n">psn</span> <span class="o">=</span>  <span class="p">[</span><span class="n">poisson</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="n">l</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">goals</span><span class="p">,</span> <span class="n">lmbdas</span><span class="p">)]</span>
+    <span class="c1"># compute the probability for obtaining the observed counts (goals)
+</span>    <span class="c1"># given the lambda
+</span>    <span class="n">psn</span> <span class="o">=</span>  <span class="p">[</span><span class="n">poisson</span><span class="p">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="n">l</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">goals</span><span class="p">,</span> <span class="n">lmbdas</span><span class="p">)]</span>
 
-    <span class="c"># return the MLE sum of logarithms</span>
-    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">psn</span><span class="p">))</span>
+    <span class="c1"># return the MLE sum of logarithms
+</span>    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">psn</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">poisson_regress</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="n">factors</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">X</span><span class="p">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
-    <span class="c"># start with 1 for all factors</span>
-    <span class="n">betas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">factors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># start with 1 for all factors
+</span>    <span class="n">betas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">factors</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="c"># MLE</span>
-    <span class="k">return</span> <span class="n">minimize</span><span class="p">(</span><span class="n">poisson_compute_xg</span><span class="p">,</span> <span class="n">betas</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s">'cobyla'</span><span class="p">)</span><span class="o">.</span><span class="n">x</span>
+    <span class="c1"># MLE
+</span>    <span class="k">return</span> <span class="n">minimize</span><span class="p">(</span><span class="n">poisson_compute_xg</span><span class="p">,</span> <span class="n">betas</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s">'cobyla'</span><span class="p">).</span><span class="n">x</span>
 
-<span class="c"># transform from odds to probabilities to get a better regression</span>
-<span class="n">X</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">data</span><span class="p">[[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]]</span>
+<span class="c1"># transform from odds to probabilities to get a better regression
+</span><span class="n">X</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">data</span><span class="p">[[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]]</span>
 
 <span class="n">y_h</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span>
 <span class="n">y_a</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span>
@@ -186,8 +186,8 @@
 <span class="n">betas_h</span> <span class="o">=</span> <span class="n">poisson_regress</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_h</span><span class="p">)</span>
 <span class="n">betas_a</span> <span class="o">=</span> <span class="n">poisson_regress</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_a</span><span class="p">)</span> 
 
-<span class="n">data</span><span class="p">[</span><span class="s">'xGH_regress'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">betas_h</span><span class="p">)</span>
-<span class="n">data</span><span class="p">[</span><span class="s">'xGA_regress'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">betas_a</span><span class="p">)</span>
+<span class="n">data</span><span class="p">[</span><span class="s">'xGH_regress'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">betas_h</span><span class="p">)</span>
+<span class="n">data</span><span class="p">[</span><span class="s">'xGA_regress'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">betas_a</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>The results for the two methods are highlighted in the dataframe below:</p>
@@ -196,8 +196,8 @@
 
 <p>Now let’s look at the RMSE for the two methods. For in-sample RMSE we obtain lower RMSE for the Poisson regression. However, the difference is very small:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">rmse_optim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGH_optim'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGA_optim'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-<span class="n">rmse_regress</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGH_regress'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGA_regress'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">rmse_optim</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGH_optim'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGA_optim'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+<span class="n">rmse_regress</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGH_regress'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s">'xGA_regress'</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
 <span class="n">rmse_optim</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">190</span><span class="p">]:</span> <span class="mf">1.5902709407482063</span>
@@ -212,12 +212,12 @@
 <span class="n">X_train_h</span><span class="p">,</span> <span class="n">X_test_h</span><span class="p">,</span> <span class="n">y_train_h</span><span class="p">,</span> <span class="n">y_test_h</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_h</span><span class="p">)</span>
 
 <span class="n">betas_h</span> <span class="o">=</span> <span class="n">poisson_regress</span><span class="p">(</span><span class="n">X_train_h</span><span class="p">[[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]],</span> <span class="n">y_train_h</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]],</span> <span class="n">betas_h</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[[</span><span class="s">'BbAvH'</span><span class="p">,</span> <span class="s">'BbAvD'</span><span class="p">,</span> <span class="s">'BbAvA'</span><span class="p">,</span> <span class="s">'BbAv&gt;2.5'</span><span class="p">,</span> <span class="s">'BbAv&lt;2.5'</span><span class="p">]],</span> <span class="n">betas_h</span><span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_squared_error</span>
 
-<span class="n">rmse_optim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">],</span> <span class="n">X_test_h</span><span class="p">[</span><span class="s">'xGH_optim'</span><span class="p">]))</span>
-<span class="n">rmse_regress</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">],</span> <span class="n">result</span><span class="p">))</span>
+<span class="n">rmse_optim</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">],</span> <span class="n">X_test_h</span><span class="p">[</span><span class="s">'xGH_optim'</span><span class="p">]))</span>
+<span class="n">rmse_regress</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">X_test_h</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">],</span> <span class="n">result</span><span class="p">))</span>
 
 <span class="n">rmse_optim</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">196</span><span class="p">]:</span> <span class="mf">1.162618442066351</span>
@@ -228,64 +228,64 @@
 
 <h3 id="computing-the-expected-goals-using-team-ranking">Computing the Expected Goals Using Team Ranking</h3>
 
-<p>In <a href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">Odds And Models</a>, we used a factor-based system for determining the expected goals. In this post we will take a different approach and create a team rank based model for the same thing. We will start with a basic model, <code class="highlighter-rouge">lambda = b0 + b1 * home_team_rank + b2 * away_team_rank</code>. Out of laziness, I will only do the in-sample analysis which has the potential to skew the results quite heavily.</p>
+<p>In <a href="https://alexandrugris.github.io/statistics/2019/07/26/odds-and-models.html">Odds And Models</a>, we used a factor-based system for determining the expected goals. In this post we will take a different approach and create a team rank based model for the same thing. We will start with a basic model, <code class="language-plaintext highlighter-rouge">lambda = b0 + b1 * home_team_rank + b2 * away_team_rank</code>. Out of laziness, I will only do the in-sample analysis which has the potential to skew the results quite heavily.</p>
 
-<p>For ranking the teams, we are going to use the power function and define the probability of one team winning as <code class="highlighter-rouge">p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))</code>, where the ranks for each team are the variables we want to compute using MLE.</p>
+<p>For ranking the teams, we are going to use the power function and define the probability of one team winning as <code class="language-plaintext highlighter-rouge">p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))</code>, where the ranks for each team are the variables we want to compute using MLE.</p>
 
 <p>For encoding the result of the winning team I tried two different definitions:</p>
 <ul>
-  <li><code class="highlighter-rouge">HomeWins = (X['FTHG'] &gt; X['FTAG']).to_numpy().flatten()</code> - simply assigns <code class="highlighter-rouge">1</code> to the variable if the home team wins or draws, to count for the home field advantage.</li>
-  <li><code class="highlighter-rouge">HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5</code> - spreads a little bit the unclear wins while taking into account the home team advantage (zscore will normalize for home team advantage).</li>
+  <li><code class="language-plaintext highlighter-rouge">HomeWins = (X['FTHG'] &gt; X['FTAG']).to_numpy().flatten()</code> - simply assigns <code class="language-plaintext highlighter-rouge">1</code> to the variable if the home team wins or draws, to count for the home field advantage.</li>
+  <li><code class="language-plaintext highlighter-rouge">HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5</code> - spreads a little bit the unclear wins while taking into account the home team advantage (zscore will normalize for home team advantage).</li>
 </ul>
 
 <p>I was surprised to observe that the second function produces more extreme results for the ranking, so we will keep the first definition of a win for this exercise.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># starting with fresh data</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1819_csv.csv"</span><span class="p">)</span> 
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># starting with fresh data
+</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"season-1819_csv.csv"</span><span class="p">)</span> 
 
-<span class="c"># only keep in our dataframe the interesting variables</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="p">[[</span><span class="s">'HomeTeam'</span><span class="p">,</span> <span class="s">'AwayTeam'</span><span class="p">,</span> <span class="s">'FTHG'</span><span class="p">,</span> <span class="s">'FTAG'</span><span class="p">]]</span>
+<span class="c1"># only keep in our dataframe the interesting variables
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="p">[[</span><span class="s">'HomeTeam'</span><span class="p">,</span> <span class="s">'AwayTeam'</span><span class="p">,</span> <span class="s">'FTHG'</span><span class="p">,</span> <span class="s">'FTAG'</span><span class="p">]]</span>
 
-<span class="c"># power_function</span>
-<span class="c"># p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))</span>
+<span class="c1"># power_function
+# p(x&gt;y) = x / (x+y) = rank(t1) / (rank(t1) + rank(t2))
+</span>
+<span class="c1"># make sure we don't miss any team names
+</span><span class="n">teams</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">].</span><span class="n">combine_first</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]).</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">teams</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">teams</span><span class="p">)</span>
 
-<span class="c"># make sure we don't miss any team names</span>
-<span class="n">teams</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]</span><span class="o">.</span><span class="n">combine_first</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">])</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
-<span class="n">teams</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">teams</span><span class="p">)</span>
+<span class="c1"># initialize the team ranks
+</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
 
-<span class="c"># initialize the team ranks</span>
-<span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
-
-<span class="c"># give an advantage to the away</span>
-<span class="n">HomeWins</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">X</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-<span class="c">#HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5</span>
-                  
+<span class="c1"># give an advantage to the away
+</span><span class="n">HomeWins</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s">'FTHG'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">X</span><span class="p">[</span><span class="s">'FTAG'</span><span class="p">]).</span><span class="n">to_numpy</span><span class="p">().</span><span class="n">flatten</span><span class="p">()</span>
+<span class="c1">#HomeWins = np.clip(zscore((X['FTHG'] - X['FTAG']).to_numpy()), -0.5, 0.5) + 0.5
+</span>                  
 <span class="k">def</span> <span class="nf">mle_prob</span><span class="p">(</span><span class="n">ranks</span><span class="p">):</span>
     
     <span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ranks</span>
                     
-    <span class="n">h</span> <span class="o">=</span> <span class="n">teams</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="n">teams</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">teams</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]].</span><span class="n">to_numpy</span><span class="p">().</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">teams</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]].</span><span class="n">to_numpy</span><span class="p">().</span><span class="n">flatten</span><span class="p">()</span>
     
     <span class="n">denom</span> <span class="o">=</span> <span class="n">h</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="mf">1e-5</span>
     
     <span class="n">ph</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="n">denom</span>
     <span class="n">pa</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">denom</span>
     
-    <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ph</span> <span class="o">*</span> <span class="n">HomeWins</span> <span class="o">+</span> <span class="n">pa</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">HomeWins</span><span class="p">)))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">ph</span> <span class="o">*</span> <span class="n">HomeWins</span> <span class="o">+</span> <span class="n">pa</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">HomeWins</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">r</span>
     
-<span class="c"># bounds between 0 and 1</span>
-<span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">mle_prob</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]),</span> <span class="n">bounds</span><span class="o">=</span><span class="n">Bounds</span><span class="p">([</span><span class="mf">1e-5</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">)))</span><span class="o">.</span><span class="n">x</span>
+<span class="c1"># bounds between 0 and 1
+</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">mle_prob</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">]),</span> <span class="n">bounds</span><span class="o">=</span><span class="n">Bounds</span><span class="p">([</span><span class="mf">1e-5</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">))).</span><span class="n">x</span>
 
-<span class="n">teams</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Rank'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">teams</span><span class="p">[</span><span class="s">'LogRank'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">])</span>
+<span class="n">teams</span><span class="p">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Rank'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">teams</span><span class="p">[</span><span class="s">'LogRank'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">teams</span><span class="p">[</span><span class="s">'Rank'</span><span class="p">])</span>
 
 </code></pre></div></div>
 
 <p>The results for our ranks are as follows:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>teams.sort_values('Rank', ascending=False)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>teams.sort_values('Rank', ascending=False)
 Out[183]: 
                     Rank   LogRank
 Liverpool       1.000000  0.000000
@@ -314,19 +314,19 @@ Huddersfield    0.014049 -4.265229
 
 <p><img src="https://alexandrugris.github.io/assets/xg_2.png" alt="Team Ranks" /></p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># put data</span>
-<span class="n">X</span><span class="p">[</span><span class="s">'HomeRank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">teams</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]][</span><span class="s">'LogRank'</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-<span class="n">X</span><span class="p">[</span><span class="s">'AwayRank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">teams</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]][</span><span class="s">'LogRank'</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># put data
+</span><span class="n">X</span><span class="p">[</span><span class="s">'HomeRank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">teams</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'HomeTeam'</span><span class="p">]][</span><span class="s">'LogRank'</span><span class="p">]).</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">X</span><span class="p">[</span><span class="s">'AwayRank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">teams</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'AwayTeam'</span><span class="p">]][</span><span class="s">'LogRank'</span><span class="p">]).</span><span class="n">to_numpy</span><span class="p">()</span>
 
-<span class="n">RegressionData</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">RegressionData</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">X</span><span class="p">.</span><span class="n">index</span><span class="p">)</span>
 
 <span class="n">RegressionData</span> <span class="o">=</span> <span class="n">X</span><span class="p">[[</span><span class="s">'HomeRank'</span><span class="p">,</span> <span class="s">'AwayRank'</span><span class="p">]]</span>
 <span class="n">RegressionData</span><span class="p">[</span><span class="s">'Intercept'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 </code></pre></div></div>
 
-<p>For the next step we will do again a Poisson regression to get the expected goals lambda, but this time we will use the <code class="highlighter-rouge">statsmodel.api</code> package since we have already demonstrated above how Poisson regression works if we are to do it manually. We will predict for both home and away.</p>
+<p>For the next step we will do again a Poisson regression to get the expected goals lambda, but this time we will use the <code class="language-plaintext highlighter-rouge">statsmodel.api</code> package since we have already demonstrated above how Poisson regression works if we are to do it manually. We will predict for both home and away.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import statsmodels.api as sm
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import statsmodels.api as sm
 
 poisson_model_h = sm.GLM(X['FTHG'], RegressionData, family=sm.families.Poisson())
 poisson_results_h = poisson_model_h.fit()

@@ -66,7 +66,7 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>In this post I touch a little bit synchronization primitives and write two different implementations for a reader-writer lock. The code comes from an earlier project, started before <code class="highlighter-rouge">std::shared_lock</code> was introduced to the standard. 
+    <p>In this post I touch a little bit synchronization primitives and write two different implementations for a reader-writer lock. The code comes from an earlier project, started before <code class="language-plaintext highlighter-rouge">std::shared_lock</code> was introduced to the standard. 
 Beside the standard library, RW locks are part of Windows SDK as <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa904937(v=vs.85).aspx">Slim Reader/Writer (SRW) Locks</a> and on Linux, with <a href="https://linux.die.net/man/3/pthread_rwlock_rdlock">pthreads</a>.
 There is no need (and not recommended) to implement them manually, as I do in the code below. But since this is a tech blog and and it is meant to play around with technology, here are two possible implementations.</p>
 
@@ -76,12 +76,12 @@ There is no need (and not recommended) to implement them manually, as I do in th
 they are the building blocks for constructing all synchronzation primitives, as well as non-locking algorithms and data structures. A non-locking algorithm is an algorithm which guarantees safe multithreaded operations without need to make a kernel call. 
 For short operations they should be faster, but speed comes also at a price: they cannot be used in single CPU systems because they basically spin the CPU in a tight loop and, for battery-powered devices, they tend to heat and drain the battery.</p>
 
-<p>In the standard library, CAS is present through <a href="http://en.cppreference.com/w/cpp/atomic/atomic"><code class="highlighter-rouge">std::atomic</code></a>.</p>
+<p>In the standard library, CAS is present through <a href="http://en.cppreference.com/w/cpp/atomic/atomic"><code class="language-plaintext highlighter-rouge">std::atomic</code></a>.</p>
 
 <h3 id="first-the-usage-and-some-foundations">First, the usage and some foundations</h3>
 
-<p>I would like to be able to use <code class="highlighter-rouge">std::unique_lock</code> with my library as it might make my code usable with already existing templates which receive the lock as a template parameter. 
-In my code I played with various types of mutexes to test performance, so <code class="highlighter-rouge">MutexType</code> below is a template parameter. I am going to use the following constructs:</p>
+<p>I would like to be able to use <code class="language-plaintext highlighter-rouge">std::unique_lock</code> with my library as it might make my code usable with already existing templates which receive the lock as a template parameter. 
+In my code I played with various types of mutexes to test performance, so <code class="language-plaintext highlighter-rouge">MutexType</code> below is a template parameter. I am going to use the following constructs:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">MutexType</span> <span class="n">mtx</span><span class="p">;</span>
 
@@ -97,7 +97,7 @@ In my code I played with various types of mutexes to test performance, so <code 
 <span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">read_mutex</span><span class="p">&gt;</span> <span class="nf">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p>In order to build my mutex I need two base classes: <code class="highlighter-rouge">read_mutex</code> and <code class="highlighter-rouge">write_mutex</code> from which to derive and static cast later.</p>
+<p>In order to build my mutex I need two base classes: <code class="language-plaintext highlighter-rouge">read_mutex</code> and <code class="language-plaintext highlighter-rouge">write_mutex</code> from which to derive and static cast later.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">read_lockable</span><span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
@@ -257,7 +257,7 @@ In my code I played with various types of mutexes to test performance, so <code 
 <h3 id="cas-operations-used">CAS operations used:</h3>
 
 <ol>
-  <li>Atomic increment and decrement <code class="highlighter-rouge">std::atomic&lt;int&gt;::operator++()</code> and <code class="highlighter-rouge">std::atomic&lt;int&gt;::operator--()</code></li>
+  <li>Atomic increment and decrement <code class="language-plaintext highlighter-rouge">std::atomic&lt;int&gt;::operator++()</code> and <code class="language-plaintext highlighter-rouge">std::atomic&lt;int&gt;::operator--()</code></li>
   <li>Compare exchange weak. From the <a href="http://en.cppreference.com/w/cpp/atomic/atomic/compare_exchange">documentation</a>:</li>
 </ol>
 
@@ -280,8 +280,8 @@ In those cases, weak compare-and-exchange typically works because it quickly con
 
 <h3 id="a-note-on-performance">A note on performance:</h3>
 
-<p>The code above comes from playing around building a configurable in-process multithreaded cache. I measured performance of various locking primitives and I’ve noticed that actually the fastest code runs on <code class="highlighter-rouge">std::mutex</code> directly. 
-My tests had randomly distributed equally numbered reads and writes, so the reader-writer optimization did not make much of a difference. <code class="highlighter-rouge">std::mutex</code> is implemented on top of the OS mutex which is alread highly optimized. It also uses 
+<p>The code above comes from playing around building a configurable in-process multithreaded cache. I measured performance of various locking primitives and I’ve noticed that actually the fastest code runs on <code class="language-plaintext highlighter-rouge">std::mutex</code> directly. 
+My tests had randomly distributed equally numbered reads and writes, so the reader-writer optimization did not make much of a difference. <code class="language-plaintext highlighter-rouge">std::mutex</code> is implemented on top of the OS mutex which is alread highly optimized. It also uses 
 CAS primitives internally to spin a little before the actual kernel call, but in their case the number come from a wide variety of tests.
 Therefore, my recommendation is not to try to build custom-made synchronization primitives to improve performance. They are fun, however, as programming practice.</p>
 

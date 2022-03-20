@@ -76,11 +76,11 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <p>In order to test the correctness of the application, I will use two types:</p>
 
 <ul>
-  <li>A test type, defined by me, with enough weight inside to allow performance tests to have a baseline to run against (compare the time spent in locking to actual work of copying and moving the object in and out of the queue). I will name this type <code class="highlighter-rouge">TestType</code>. :)</li>
-  <li>A <code class="highlighter-rouge">unique_ptr&lt;TestType&gt;</code> to validate against the common scenario of having a pointer stored in the queue, as well as making sure the move semantics work properly.</li>
+  <li>A test type, defined by me, with enough weight inside to allow performance tests to have a baseline to run against (compare the time spent in locking to actual work of copying and moving the object in and out of the queue). I will name this type <code class="language-plaintext highlighter-rouge">TestType</code>. :)</li>
+  <li>A <code class="language-plaintext highlighter-rouge">unique_ptr&lt;TestType&gt;</code> to validate against the common scenario of having a pointer stored in the queue, as well as making sure the move semantics work properly.</li>
 </ul>
 
-<p>For the <code class="highlighter-rouge">TestType</code> I am going to keep the type as simple as possible, with only move enabled, just to make sure all unnecessary copies are kept under control - deep copy errors will be found at compile time. Here is the definition:</p>
+<p>For the <code class="language-plaintext highlighter-rouge">TestType</code> I am going to keep the type as simple as possible, with only move enabled, just to make sure all unnecessary copies are kept under control - deep copy errors will be found at compile time. Here is the definition:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TestType</span> <span class="p">{</span>
 <span class="k">public</span><span class="p">:</span>
@@ -116,8 +116,8 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <p>A simple multithreaded queue with all operations synchronized with a mutex. I went for some design choices from the beginning:</p>
 
 <ul>
-  <li>I wanted be able to use various synchronization primitives as long as they respect the <code class="highlighter-rouge">std::mutex</code> and <code class="highlighter-rouge">std::condition_variable</code> interface. I wanted to be to play around and alter the default behavior.</li>
-  <li>I wanted to be able to track memory allocations. My initial assumption was that optimizing memory allocations will play a significant part in the process of streamlining the queue. Therefore I built my own allocator, which simply wraps <code class="highlighter-rouge">malloc</code> and <code class="highlighter-rouge">free</code>. More on this later.</li>
+  <li>I wanted be able to use various synchronization primitives as long as they respect the <code class="language-plaintext highlighter-rouge">std::mutex</code> and <code class="language-plaintext highlighter-rouge">std::condition_variable</code> interface. I wanted to be to play around and alter the default behavior.</li>
+  <li>I wanted to be able to track memory allocations. My initial assumption was that optimizing memory allocations will play a significant part in the process of streamlining the queue. Therefore I built my own allocator, which simply wraps <code class="language-plaintext highlighter-rouge">malloc</code> and <code class="language-plaintext highlighter-rouge">free</code>. More on this later.</li>
   <li>I wanted a very straight-forward interface, encapsulating all the behavior.</li>
 </ul>
 
@@ -184,9 +184,9 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <p>Design considerations:</p>
 
 <ul>
-  <li>I specifically omited a method <code class="highlighter-rouge">size()</code> to return the numer of elements in the queue. Being in a multithreaded context, this method would not make much sense.</li>
-  <li>Replacement for the method <code class="highlighter-rouge">size()</code> is the <code class="highlighter-rouge">try_get()</code> which will lock the queue and atomically return an element if one exists. This design will have further implications down the stream, when I will use the queue in a multi-queue configuration and I will be forced to use external locking to obtain the minimum contention. The other option would have been an implementation that follows the pattern <code class="highlighter-rouge">try_lock</code> then <code class="highlighter-rouge">if(size() &gt; 0) return element;</code> but in this case there would have been no hint on the actual size of the queue. So being in doubt on the best design, I kept locking external in the multi-queue and preserved the method as it is.</li>
-  <li>I added two <code class="highlighter-rouge">try_get</code>s. One of them accepts a stack allocated block of memory as input parameter to hint to the caller to avoid default-constructing the receiving object of type <code class="highlighter-rouge">T</code>. The method will invoke the move constructor itself on that memory.</li>
+  <li>I specifically omited a method <code class="language-plaintext highlighter-rouge">size()</code> to return the numer of elements in the queue. Being in a multithreaded context, this method would not make much sense.</li>
+  <li>Replacement for the method <code class="language-plaintext highlighter-rouge">size()</code> is the <code class="language-plaintext highlighter-rouge">try_get()</code> which will lock the queue and atomically return an element if one exists. This design will have further implications down the stream, when I will use the queue in a multi-queue configuration and I will be forced to use external locking to obtain the minimum contention. The other option would have been an implementation that follows the pattern <code class="language-plaintext highlighter-rouge">try_lock</code> then <code class="language-plaintext highlighter-rouge">if(size() &gt; 0) return element;</code> but in this case there would have been no hint on the actual size of the queue. So being in doubt on the best design, I kept locking external in the multi-queue and preserved the method as it is.</li>
+  <li>I added two <code class="language-plaintext highlighter-rouge">try_get</code>s. One of them accepts a stack allocated block of memory as input parameter to hint to the caller to avoid default-constructing the receiving object of type <code class="language-plaintext highlighter-rouge">T</code>. The method will invoke the move constructor itself on that memory.</li>
 </ul>
 
 <h3 id="testing">Testing</h3>
@@ -225,7 +225,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
   <li>Multithreading tests:</li>
 </ol>
 
-<p>Aim is to combine in a simple manner various parameters. Here is an example of a possible <code class="highlighter-rouge">main</code> function:</p>
+<p>Aim is to combine in a simple manner various parameters. Here is an example of a possible <code class="language-plaintext highlighter-rouge">main</code> function:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
@@ -242,13 +242,13 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>I am instatiating the <code class="highlighter-rouge">test_mt_bq</code> with various parameters:</p>
+<p>I am instatiating the <code class="language-plaintext highlighter-rouge">test_mt_bq</code> with various parameters:</p>
 
 <ol>
-  <li>Simple blocking queue (the one I spoke about before) with <code class="highlighter-rouge">TestType</code> - default it uses windows critical sections as synchronization mechanism (see below)</li>
-  <li>Simple blocking queue with <code class="highlighter-rouge">unique_ptr&lt;TestType&gt;</code></li>
-  <li>Simple blocking queue with <code class="highlighter-rouge">std::mutex</code> and <code class="highlighter-rouge">std::condition_variable</code></li>
-  <li>Multi-queue blocking queue with default synchronization (windows critical sections) and <code class="highlighter-rouge">TestType</code></li>
+  <li>Simple blocking queue (the one I spoke about before) with <code class="language-plaintext highlighter-rouge">TestType</code> - default it uses windows critical sections as synchronization mechanism (see below)</li>
+  <li>Simple blocking queue with <code class="language-plaintext highlighter-rouge">unique_ptr&lt;TestType&gt;</code></li>
+  <li>Simple blocking queue with <code class="language-plaintext highlighter-rouge">std::mutex</code> and <code class="language-plaintext highlighter-rouge">std::condition_variable</code></li>
+  <li>Multi-queue blocking queue with default synchronization (windows critical sections) and <code class="language-plaintext highlighter-rouge">TestType</code></li>
 </ol>
 
 <p>Below is the test function:</p>
@@ -336,22 +336,22 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <p>This functio has several parts:</p>
 <ul>
-  <li>It creates <code class="highlighter-rouge">MAX_THREADS</code> which randomly produce and consume events from the queue</li>
-  <li>It creates a watchdog thread to make sure the <code class="highlighter-rouge">MAX_THREADS</code> do not all starve and lock</li>
+  <li>It creates <code class="language-plaintext highlighter-rouge">MAX_THREADS</code> which randomly produce and consume events from the queue</li>
+  <li>It creates a watchdog thread to make sure the <code class="language-plaintext highlighter-rouge">MAX_THREADS</code> do not all starve and lock</li>
   <li>It creates a consumer thread just to make sure the queue does not grow too much.</li>
 </ul>
 
-<p>Initially I have started without this consumer thread and I realized that, at the function exit, there are around 3000 unconsumed elements in the queue when considering 1000000 loops in each of the <code class="highlighter-rouge">MAX_THREADS</code> (monitored in the <code class="highlighter-rouge">elems</code> variable)</p>
+<p>Initially I have started without this consumer thread and I realized that, at the function exit, there are around 3000 unconsumed elements in the queue when considering 1000000 loops in each of the <code class="language-plaintext highlighter-rouge">MAX_THREADS</code> (monitored in the <code class="language-plaintext highlighter-rouge">elems</code> variable)</p>
 
 <h3 id="results-from-the-simple-queue-testing">Results from the simple queue testing:</h3>
 
 <ol>
-  <li>Around 80% of the time it spends in the <code class="highlighter-rouge">mutex::lock</code> function, in kernel. Optimizing the amount of locking brings by far the biggest performance improvements (I used Visual Studio performance analysis tools).</li>
-  <li>The <code class="highlighter-rouge">std::mutex</code> does, by default, more spinning than the defaults in Windows <code class="highlighter-rouge">CRITICAL_SECTION</code>. When using the <code class="highlighter-rouge">std::mutex</code>, the CPU goes to 100% and the system becomes almost unresponsive. When using the Windows <code class="highlighter-rouge">CRITICAL_SECTION</code>, with the default spin count, the CPU stays at around 70% (configuration: 4 cores, MAX_THREADS = 4, no <code class="highlighter-rouge">last_consumer</code> thread).</li>
-  <li>For 1000000 loops, the amount of memory allocations is about 2500. The <code class="highlighter-rouge">std::deque</code> is very memory stable and reuses very nicely the memory already allocated on repeated <code class="highlighter-rouge">pop_front</code>, <code class="highlighter-rouge">push_back</code>.</li>
+  <li>Around 80% of the time it spends in the <code class="language-plaintext highlighter-rouge">mutex::lock</code> function, in kernel. Optimizing the amount of locking brings by far the biggest performance improvements (I used Visual Studio performance analysis tools).</li>
+  <li>The <code class="language-plaintext highlighter-rouge">std::mutex</code> does, by default, more spinning than the defaults in Windows <code class="language-plaintext highlighter-rouge">CRITICAL_SECTION</code>. When using the <code class="language-plaintext highlighter-rouge">std::mutex</code>, the CPU goes to 100% and the system becomes almost unresponsive. When using the Windows <code class="language-plaintext highlighter-rouge">CRITICAL_SECTION</code>, with the default spin count, the CPU stays at around 70% (configuration: 4 cores, MAX_THREADS = 4, no <code class="language-plaintext highlighter-rouge">last_consumer</code> thread).</li>
+  <li>For 1000000 loops, the amount of memory allocations is about 2500. The <code class="language-plaintext highlighter-rouge">std::deque</code> is very memory stable and reuses very nicely the memory already allocated on repeated <code class="language-plaintext highlighter-rouge">pop_front</code>, <code class="language-plaintext highlighter-rouge">push_back</code>.</li>
 </ol>
 
-<p>Here is the Windows <code class="highlighter-rouge">CRITIAL_SECTION</code> and <code class="highlighter-rouge">CONDITION_VARIABLE</code> implementation of the synchronization interface:</p>
+<p>Here is the Windows <code class="language-plaintext highlighter-rouge">CRITIAL_SECTION</code> and <code class="language-plaintext highlighter-rouge">CONDITION_VARIABLE</code> implementation of the synchronization interface:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">critical_section_win</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span>
@@ -445,7 +445,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 
 <h3 id="multi-queue-blocking-queue">Multi-queue blocking queue:</h3>
 
-<p>So the main optimization has to do with locking. The simplest way to achieve it is to have a multi-queue implemented as a collection of several other queues and <code class="highlighter-rouge">try_lock</code> each of them one by one, until the ownership is obtained. In case the ownership cannot be acquired, simply move to the next. With 4 queues and a spin count of 2 (try locking twice all the queues before forcibly locking one of them), the total amount of time spent in synchronization in external code becomes trivial. <code class="highlighter-rouge">mutex::lock</code> completely loses its predominant status in the list of CPU spent-time and is replaced by other functions like accessing the internal <code class="highlighter-rouge">std::deque</code> or inserting a new element in it (<code class="highlighter-rouge">get</code>, <code class="highlighter-rouge">put</code>).</p>
+<p>So the main optimization has to do with locking. The simplest way to achieve it is to have a multi-queue implemented as a collection of several other queues and <code class="language-plaintext highlighter-rouge">try_lock</code> each of them one by one, until the ownership is obtained. In case the ownership cannot be acquired, simply move to the next. With 4 queues and a spin count of 2 (try locking twice all the queues before forcibly locking one of them), the total amount of time spent in synchronization in external code becomes trivial. <code class="language-plaintext highlighter-rouge">mutex::lock</code> completely loses its predominant status in the list of CPU spent-time and is replaced by other functions like accessing the internal <code class="language-plaintext highlighter-rouge">std::deque</code> or inserting a new element in it (<code class="language-plaintext highlighter-rouge">get</code>, <code class="language-plaintext highlighter-rouge">put</code>).</p>
 
 <p>Here is the code:</p>
 
@@ -544,7 +544,7 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 <p>Notes on the implementation:</p>
 
 <ul>
-  <li>To keep the <code class="highlighter-rouge">try_lock</code> semantic as described for the <code class="highlighter-rouge">blocking_queue</code>, I had to trick the underlying <code class="highlighter-rouge">blocking_queues</code> into no locking. For this specific purpose I have created two clases:</li>
+  <li>To keep the <code class="language-plaintext highlighter-rouge">try_lock</code> semantic as described for the <code class="language-plaintext highlighter-rouge">blocking_queue</code>, I had to trick the underlying <code class="language-plaintext highlighter-rouge">blocking_queues</code> into no locking. For this specific purpose I have created two clases:</li>
 </ul>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">no_lock_mtx</span> <span class="p">{</span>
@@ -560,57 +560,57 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 	<span class="k">void</span> <span class="nf">wait</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="p">&lt;</span><span class="n">critical_section_win</span><span class="p">&gt;&amp;</span> <span class="n">csw</span><span class="p">)</span> <span class="p">{}</span>
 <span class="p">};</span>
 </code></pre></div></div>
-<p>and passed them as synchronization primitives to the underlying <code class="highlighter-rouge">blocking_queues</code>. As mentioned before, this was a design choice, to keep <code class="highlighter-rouge">try_get</code> method return <code class="highlighter-rouge">false</code> only if the size of the underlying <code class="highlighter-rouge">std::deque</code> is 0.</p>
+<p>and passed them as synchronization primitives to the underlying <code class="language-plaintext highlighter-rouge">blocking_queues</code>. As mentioned before, this was a design choice, to keep <code class="language-plaintext highlighter-rouge">try_get</code> method return <code class="language-plaintext highlighter-rouge">false</code> only if the size of the underlying <code class="language-plaintext highlighter-rouge">std::deque</code> is 0.</p>
 
 <ul>
   <li>
-    <p><code class="highlighter-rouge">get_next_queue</code> is used to loop through the list of blocking_queues instead of simply starting each time from 0. This is to ballance the queues and not let elements lost too long in queues with numbers 1-&gt;4. In most of the cases locking is possible on queue no. 0, thus the rest of the queues are used less often, resulting in an unbalanced response: some elements will be postponed very much on <code class="highlighter-rouge">get</code> if the implementation does not use the queues in a round-robin fashion.</p>
+    <p><code class="language-plaintext highlighter-rouge">get_next_queue</code> is used to loop through the list of blocking_queues instead of simply starting each time from 0. This is to ballance the queues and not let elements lost too long in queues with numbers 1-&gt;4. In most of the cases locking is possible on queue no. 0, thus the rest of the queues are used less often, resulting in an unbalanced response: some elements will be postponed very much on <code class="language-plaintext highlighter-rouge">get</code> if the implementation does not use the queues in a round-robin fashion.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">try_lock</code> from <code class="highlighter-rouge">CONDITION_VARIABLE</code> uses a very simple atomic flag to quickly return if the ownership is taken. The flag is just a hint which is good enough and is not worth CPU cycles to remove the race condition between the checking of the flag and the <code class="highlighter-rouge">TryEnterCriticalSection</code> call.</p>
+    <p><code class="language-plaintext highlighter-rouge">try_lock</code> from <code class="language-plaintext highlighter-rouge">CONDITION_VARIABLE</code> uses a very simple atomic flag to quickly return if the ownership is taken. The flag is just a hint which is good enough and is not worth CPU cycles to remove the race condition between the checking of the flag and the <code class="language-plaintext highlighter-rouge">TryEnterCriticalSection</code> call.</p>
   </li>
 </ul>
 
 <h3 id="conclusions">Conclusions:</h3>
 
-<p>In the following pictures I am only looking at the <code class="highlighter-rouge">get</code> function. Please note that the <code class="highlighter-rouge">put</code> has very similar characteristics.</p>
+<p>In the following pictures I am only looking at the <code class="language-plaintext highlighter-rouge">get</code> function. Please note that the <code class="language-plaintext highlighter-rouge">put</code> has very similar characteristics.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/queue_1.png" alt="blocking_queue - release" /></p>
 
 <p><em>Blocking queue with CRITICAL_SECTION synchronization in release mode</em></p>
 
-<p>33.73% of CPU time (<code class="highlighter-rouge">get</code> function) spent in external code. Only 4% spent in own code, which includes the pushing / popping from the queue. 
-Together with a similar percentage in the <code class="highlighter-rouge">put</code> function, adds up to about 70% of the time our process in running it spends in code external to our app (mostly synchronization, to be seen below in the debug capture). 
-Also noticeable is that CPUs are used to about 70% of their capacity - here we run <code class="highlighter-rouge">CRITICAL_SECTION</code> syncrhronization, not the <code class="highlighter-rouge">std::mutex</code>.</p>
+<p>33.73% of CPU time (<code class="language-plaintext highlighter-rouge">get</code> function) spent in external code. Only 4% spent in own code, which includes the pushing / popping from the queue. 
+Together with a similar percentage in the <code class="language-plaintext highlighter-rouge">put</code> function, adds up to about 70% of the time our process in running it spends in code external to our app (mostly synchronization, to be seen below in the debug capture). 
+Also noticeable is that CPUs are used to about 70% of their capacity - here we run <code class="language-plaintext highlighter-rouge">CRITICAL_SECTION</code> syncrhronization, not the <code class="language-plaintext highlighter-rouge">std::mutex</code>.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/queue_2.png" alt="multi-queue - release" /></p>
 
 <p><em>Multi queue with CRITICAL_SECTION synchronization in release mode</em></p>
 
-<p>Looking at the same <code class="highlighter-rouge">get</code> function, only about 12% spent is spent in external code with 21% spent in own code. However, unlike the blocking queue, this 21% also includes active waiting while finding the queue to read to. A clearer breakdown in the debug trace.
+<p>Looking at the same <code class="language-plaintext highlighter-rouge">get</code> function, only about 12% spent is spent in external code with 21% spent in own code. However, unlike the blocking queue, this 21% also includes active waiting while finding the queue to read to. A clearer breakdown in the debug trace.
 We also notice a much better usage of the CPU, which stays at almost 100%.</p>
 
-<p>A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the <code class="highlighter-rouge">multi_blocking_queue</code> finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the <code class="highlighter-rouge">blocking_queue</code> takes more than 1 minute and 35 seconds to finish.</p>
+<p>A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the <code class="language-plaintext highlighter-rouge">multi_blocking_queue</code> finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the <code class="language-plaintext highlighter-rouge">blocking_queue</code> takes more than 1 minute and 35 seconds to finish.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/queue_3.png" alt="multi-queue - debug" /></p>
 
 <p><em>Multi queue in debug</em></p>
 
-<p>In the <code class="highlighter-rouge">get</code> method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.</p>
+<p>In the <code class="language-plaintext highlighter-rouge">get</code> method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/queue_4.png" alt="multi-queue - debug" /></p>
 
 <p><em>Single queue in debug, with std::mutex</em></p>
 
-<p>Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the <code class="highlighter-rouge">std::mutex</code> implementation does  more spinning before reaching to the kernel than the <code class="highlighter-rouge">CRITICAL_SECTION</code> implementation with the default spin count.</p>
+<p>Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the <code class="language-plaintext highlighter-rouge">std::mutex</code> implementation does  more spinning before reaching to the kernel than the <code class="language-plaintext highlighter-rouge">CRITICAL_SECTION</code> implementation with the default spin count.</p>
 
 <p><em>In short:</em></p>
 
 <ol>
   <li>A multi queue gives a significant performance improvement by reducing thread contention.</li>
-  <li>In some conditions, using the Windows <code class="highlighter-rouge">CRITICAL_SECTION</code> over <code class="highlighter-rouge">std::thread might</code> improve system responsiveness at the expense of slightly longer execution times.</li>
+  <li>In some conditions, using the Windows <code class="language-plaintext highlighter-rouge">CRITICAL_SECTION</code> over <code class="language-plaintext highlighter-rouge">std::thread might</code> improve system responsiveness at the expense of slightly longer execution times.</li>
   <li>Performance monitoring tools from Visual Studio 2015 and 2017 are really nice. :)</li>
-  <li><code class="highlighter-rouge">std::deque</code> does an awesome job at reducing the number of memory allocation calls, even in cases of high dynamism (lots of pushes and lots of pops)</li>
+  <li><code class="language-plaintext highlighter-rouge">std::deque</code> does an awesome job at reducing the number of memory allocation calls, even in cases of high dynamism (lots of pushes and lots of pops)</li>
   <li>The code might seem long, but getting to it was a process of continuous small steps, iterative, improvements, followed by testing and continuous refactoring.</li>
   <li>My initial assumptions were partly wrong. I was expecting memory allocation to be a much higher performance problem than it was.</li>
   <li>Thread contention and locking, if not performed properly, can dramatically affect performance. However, I would advise incremental development: first a system that works correctly, then incrementally find ways to reduce locking while keeping the system running without crashes caused by race conditions, invalid data or deadlocks.</li>

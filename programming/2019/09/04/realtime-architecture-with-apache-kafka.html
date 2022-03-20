@@ -86,7 +86,7 @@
 <ul>
   <li>A stream control API: can be implemented as a normal REST service, load balanced.</li>
   <li>A stream publisher: it accepts WebSockets connections, load balanced, individual connections can land on any machine.</li>
-  <li>A Redis PUB-SUB component where channels reside. This can, eventually, be sharded or replaced with a RabbitMQ cluster. The stream publisher and the Redis PUB-SUB can be replaced with <code class="highlighter-rouge">socket.io</code>. It uses the same principle underneath.</li>
+  <li>A Redis PUB-SUB component where channels reside. This can, eventually, be sharded or replaced with a RabbitMQ cluster. The stream publisher and the Redis PUB-SUB can be replaced with <code class="language-plaintext highlighter-rouge">socket.io</code>. It uses the same principle underneath.</li>
   <li>A Kafka queue with two topics: one for stream commands, which are distributed to all reducers, and a partitioned topic, from which all reducers consume their individual partitions without overlap (let’s call it the data topic). This topic receives the largest amount of data. For good load balancing, it is recommended that it has a high number of partitions.</li>
   <li>The reducers themselves, consuming non-overlapping partitions from the data topic.</li>
   <li>A state store, can be either a HA Redis cluster, MongoDB or any very fast key-value sture.</li>
@@ -104,7 +104,7 @@
 
 <p>A simple way to use start with Kafka for fun projects at home is to use a docker-compose with a setup similar to the following:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version : '3.5'
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version : '3.5'
 
 services:
   zookeeper:
@@ -133,9 +133,9 @@ networks:
     name: oda
 </code></pre></div></div>
 
-<p>Please note that a race condition in the dockerfile above (Zookeeper starts slower than Kafka) leads Kafka service to fail to start and it must me restarted with <code class="highlighter-rouge">docker-compose scale kafka=1</code>. Once the service is up, we can test the configuration as follows:</p>
+<p>Please note that a race condition in the dockerfile above (Zookeeper starts slower than Kafka) leads Kafka service to fail to start and it must me restarted with <code class="language-plaintext highlighter-rouge">docker-compose scale kafka=1</code>. Once the service is up, we can test the configuration as follows:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run --net=oda --rm confluentinc/cp-kafka bash -c "seq 42 | kafka-console-producer --request-required-acks 1 --broker-list kafka:9092 --topic foo &amp;&amp; echo 'Produced 42 messages.'"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run --net=oda --rm confluentinc/cp-kafka bash -c "seq 42 | kafka-console-producer --request-required-acks 1 --broker-list kafka:9092 --topic foo &amp;&amp; echo 'Produced 42 messages.'"
 
 docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic foo --from-beginning --max-messages 42
 </code></pre></div></div>
@@ -144,12 +144,12 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#!/usr/local/bin/node
 </span>
-<span class="kd">let</span> <span class="nx">child_process</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'child_process'</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">child_process</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">child_process</span><span class="dl">'</span><span class="p">);</span>
 
 <span class="kd">let</span> <span class="nx">cmds</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">'topics'</span> <span class="p">:</span> <span class="p">[</span><span class="s1">'kafka-topics'</span><span class="p">,</span> <span class="s1">'--zookeeper'</span><span class="p">,</span> <span class="s1">'zookeeper:2181'</span><span class="p">],</span>
-    <span class="s1">'produce'</span> <span class="p">:</span> <span class="p">[</span><span class="s1">'kafka-console-producer'</span><span class="p">,</span> <span class="s1">'--broker-list'</span><span class="p">,</span> <span class="s1">'kafka:9092'</span><span class="p">],</span>
-    <span class="s1">'consume'</span> <span class="p">:</span> <span class="p">[</span><span class="s1">'kafka-console-consumer'</span><span class="p">,</span> <span class="s1">'--bootstrap-server'</span><span class="p">,</span> <span class="s1">'kafka:9092'</span><span class="p">]</span>
+    <span class="dl">'</span><span class="s1">topics</span><span class="dl">'</span> <span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">kafka-topics</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--zookeeper</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">zookeeper:2181</span><span class="dl">'</span><span class="p">],</span>
+    <span class="dl">'</span><span class="s1">produce</span><span class="dl">'</span> <span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">kafka-console-producer</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--broker-list</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">kafka:9092</span><span class="dl">'</span><span class="p">],</span>
+    <span class="dl">'</span><span class="s1">consume</span><span class="dl">'</span> <span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">kafka-console-consumer</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--bootstrap-server</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">kafka:9092</span><span class="dl">'</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="kd">let</span> <span class="nx">params</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
@@ -158,7 +158,7 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
     <span class="c1">// first with command</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">params</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="nx">cmds</span><span class="p">[</span><span class="nx">arg</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">let</span> <span class="nx">cmd</span> <span class="o">=</span> <span class="nx">cmds</span><span class="p">[</span><span class="nx">arg</span><span class="p">];</span>
-        <span class="nx">params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'run'</span><span class="p">,</span> <span class="s1">'--net=oda'</span><span class="p">,</span> <span class="s1">'--rm'</span><span class="p">,</span> <span class="s1">'-it'</span><span class="p">,</span> <span class="s1">'confluentinc/cp-kafka'</span><span class="p">,</span> <span class="p">...</span><span class="nx">cmd</span><span class="p">]</span>
+        <span class="nx">params</span> <span class="o">=</span> <span class="p">[</span><span class="dl">'</span><span class="s1">run</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--net=oda</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--rm</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">-it</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">confluentinc/cp-kafka</span><span class="dl">'</span><span class="p">,</span> <span class="p">...</span><span class="nx">cmd</span><span class="p">]</span>
     <span class="p">}</span>
     <span class="c1">// add the rest</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">params</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">){</span>
@@ -166,13 +166,13 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
     <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="kd">let</span> <span class="nx">docker</span> <span class="o">=</span> <span class="nx">child_process</span><span class="p">.</span><span class="nx">spawn</span><span class="p">(</span><span class="s1">'docker'</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="p">{</span><span class="na">stdio</span><span class="p">:</span> <span class="s1">'inherit'</span><span class="p">});</span>
+<span class="kd">let</span> <span class="nx">docker</span> <span class="o">=</span> <span class="nx">child_process</span><span class="p">.</span><span class="nx">spawn</span><span class="p">(</span><span class="dl">'</span><span class="s1">docker</span><span class="dl">'</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="p">{</span><span class="na">stdio</span><span class="p">:</span> <span class="dl">'</span><span class="s1">inherit</span><span class="dl">'</span><span class="p">});</span>
 
-<span class="nx">docker</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Failed to start docker'</span><span class="p">);</span>
+<span class="nx">docker</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">error</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Failed to start docker</span><span class="dl">'</span><span class="p">);</span>
 <span class="p">});</span>
 
-<span class="nx">docker</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'close'</span><span class="p">,</span> <span class="p">(</span><span class="nx">code</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+<span class="nx">docker</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">close</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">code</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Child process exited with code </span><span class="p">${</span><span class="nx">code</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div></div>
@@ -180,23 +180,23 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 <p>This allows easy testing as follows:</p>
 
 <ul>
-  <li>To create a topic named <code class="highlighter-rouge">test</code>: <code class="highlighter-rouge">./kafka.js topics --create --topic test --replication-factor 3 --partitions 3</code></li>
-  <li>To list the topics: <code class="highlighter-rouge">./kafka.js topics --list</code></li>
-  <li>To produce some messages: <code class="highlighter-rouge">./kafka.js produce --topic test</code></li>
-  <li>To read the messages from the beginning: <code class="highlighter-rouge">./kafka.js consume --topic test --from-beginning</code></li>
+  <li>To create a topic named <code class="language-plaintext highlighter-rouge">test</code>: <code class="language-plaintext highlighter-rouge">./kafka.js topics --create --topic test --replication-factor 3 --partitions 3</code></li>
+  <li>To list the topics: <code class="language-plaintext highlighter-rouge">./kafka.js topics --list</code></li>
+  <li>To produce some messages: <code class="language-plaintext highlighter-rouge">./kafka.js produce --topic test</code></li>
+  <li>To read the messages from the beginning: <code class="language-plaintext highlighter-rouge">./kafka.js consume --topic test --from-beginning</code></li>
 </ul>
 
-<p>Zookeeper can and should be scaled also. Due the quorum required, the formula for determining the number of Zookeeper instances to run is <code class="highlighter-rouge">2 * F + 1</code> where <code class="highlighter-rouge">F</code> is the desired fault tolerance factor.</p>
+<p>Zookeeper can and should be scaled also. Due the quorum required, the formula for determining the number of Zookeeper instances to run is <code class="language-plaintext highlighter-rouge">2 * F + 1</code> where <code class="language-plaintext highlighter-rouge">F</code> is the desired fault tolerance factor.</p>
 
-<p>To test that indeed data is moving through the system, let’s write the code for the Kafka Producer. I will use a very basic NodeJS package which connects to Kafka’s REST API. For production use, the more advanced packages like <code class="highlighter-rouge">kafka-node</code> and the fast growing at the moment of writing this <code class="highlighter-rouge">kafkajs</code> should be preferred. I use here the <code class="highlighter-rouge">kafka-rest</code> package for simplicity and convenience.</p>
+<p>To test that indeed data is moving through the system, let’s write the code for the Kafka Producer. I will use a very basic NodeJS package which connects to Kafka’s REST API. For production use, the more advanced packages like <code class="language-plaintext highlighter-rouge">kafka-node</code> and the fast growing at the moment of writing this <code class="language-plaintext highlighter-rouge">kafkajs</code> should be preferred. I use here the <code class="language-plaintext highlighter-rouge">kafka-rest</code> package for simplicity and convenience.</p>
 
-<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">KafkaRest</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kafka-rest'</span><span class="p">);</span>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">KafkaRest</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kafka-rest</span><span class="dl">'</span><span class="p">);</span>
 
 <span class="c1">// kafka rest is exposed from docker-compose on 8082</span>
-<span class="kd">const</span> <span class="nx">kafka</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">KafkaRest</span><span class="p">({</span> <span class="s1">'url'</span><span class="p">:</span> <span class="s1">'http://localhost:8082'</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">kafka</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">KafkaRest</span><span class="p">({</span> <span class="dl">'</span><span class="s1">url</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://localhost:8082</span><span class="dl">'</span> <span class="p">});</span>
 
 <span class="c1">// make sure the topic is created before</span>
-<span class="kd">const</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">kafka</span><span class="p">.</span><span class="nx">topic</span><span class="p">(</span><span class="s1">'random_walk'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">kafka</span><span class="p">.</span><span class="nx">topic</span><span class="p">(</span><span class="dl">'</span><span class="s1">random_walk</span><span class="dl">'</span><span class="p">);</span>
 
 <span class="kd">const</span> <span class="nx">randWalker</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
 
@@ -208,7 +208,7 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
     <span class="kd">let</span> <span class="nx">dir</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="kd">let</span> <span class="nx">prevStep</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kd">const</span> <span class="nx">rnd</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'random'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">rnd</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">random</span><span class="dl">'</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="p">{</span> 
         <span class="nx">randomWalk</span><span class="p">(){</span>
@@ -227,28 +227,28 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 <p>A simple consumer can be implemented as follows:</p>
 
-<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">KafkaRest</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kafka-rest'</span><span class="p">);</span>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">KafkaRest</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kafka-rest</span><span class="dl">'</span><span class="p">);</span>
 
-<span class="kd">const</span> <span class="nx">kafka</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">KafkaRest</span><span class="p">({</span> <span class="s1">'url'</span><span class="p">:</span> <span class="s1">'http://localhost:8082'</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">kafka</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">KafkaRest</span><span class="p">({</span> <span class="dl">'</span><span class="s1">url</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://localhost:8082</span><span class="dl">'</span> <span class="p">});</span>
 
  <span class="c1">// start reading from the beginning</span>
 <span class="kd">let</span> <span class="nx">consumerConfig</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">'auto.offset.reset'</span> <span class="p">:</span> <span class="s1">'smallest'</span>
+    <span class="dl">'</span><span class="s1">auto.offset.reset</span><span class="dl">'</span> <span class="p">:</span> <span class="dl">'</span><span class="s1">smallest</span><span class="dl">'</span>
 <span class="p">};</span>
 
 <span class="c1">// join a consumer group on the matches topic</span>
-<span class="nx">kafka</span><span class="p">.</span><span class="nx">consumer</span><span class="p">(</span><span class="s2">"consumer-group"</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">consumerConfig</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">instance</span><span class="p">)</span> <span class="p">{</span>
+<span class="nx">kafka</span><span class="p">.</span><span class="nx">consumer</span><span class="p">(</span><span class="dl">"</span><span class="s2">consumer-group</span><span class="dl">"</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">consumerConfig</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">instance</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> 
-        <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Failed to create instance in consumer group: "</span> <span class="o">+</span> <span class="nx">err</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">Failed to create instance in consumer group: </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">err</span><span class="p">);</span>
 
-      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Consumer instance initialized: "</span> <span class="o">+</span> <span class="nx">instance</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
-      <span class="kd">const</span> <span class="nx">stream</span> <span class="o">=</span> <span class="nx">instance</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="s2">"random_walk"</span><span class="p">);</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">Consumer instance initialized: </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">instance</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
+      <span class="kd">const</span> <span class="nx">stream</span> <span class="o">=</span> <span class="nx">instance</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="dl">"</span><span class="s2">random_walk</span><span class="dl">"</span><span class="p">);</span>
 
-      <span class="nx">stream</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'data'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msgs</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">stream</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">data</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msgs</span><span class="p">)</span> <span class="p">{</span>
 
           <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">msgs</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-              <span class="kd">let</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">key</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">);</span>
-              <span class="kd">let</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">value</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">);</span>
+              <span class="kd">let</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">key</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="dl">'</span><span class="s1">utf8</span><span class="dl">'</span><span class="p">);</span>
+              <span class="kd">let</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">value</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="dl">'</span><span class="s1">utf8</span><span class="dl">'</span><span class="p">);</span>
               <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">key</span><span class="p">}</span><span class="s2"> : </span><span class="p">${</span><span class="nx">value</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
 
           <span class="p">}</span>
@@ -260,9 +260,9 @@ docker run --net=oda --rm confluentinc/cp-kafka kafka-console-consumer --bootstr
 
 <h3 id="consumer-groups">Consumer Groups</h3>
 
-<p>Consumer Groups provide the core abstraction on which the proposed architecture is built. Consumer Groups allow a set of concurrent processes to consume messages from a Kafka topic while, at the same time, guaranteeing that no two consumers will be allocated the same list of partitions. This allows seamless scaling up and down of the consumer group as the result of fluctuating traffic, as well as due to restarts caused by consumer crashes. Consumers from a consumer group receive a <code class="highlighter-rouge">rebalance</code> notification callback with a list of partitions that are allocated to them, and they can resume consuming either from the beginning of the partition, from the last committed offset by another member of the group or from a self-managed offset.</p>
+<p>Consumer Groups provide the core abstraction on which the proposed architecture is built. Consumer Groups allow a set of concurrent processes to consume messages from a Kafka topic while, at the same time, guaranteeing that no two consumers will be allocated the same list of partitions. This allows seamless scaling up and down of the consumer group as the result of fluctuating traffic, as well as due to restarts caused by consumer crashes. Consumers from a consumer group receive a <code class="language-plaintext highlighter-rouge">rebalance</code> notification callback with a list of partitions that are allocated to them, and they can resume consuming either from the beginning of the partition, from the last committed offset by another member of the group or from a self-managed offset.</p>
 
-<p>The code above allows a very easy way to check how consumer groups work. Just start several competing consumers and kill one of them or restart it later. Since restart policy is set to the beginning of the topic, <code class="highlighter-rouge">'auto.offset.reset' : 'smallest'</code> consuming will start every time from the beginning of each partition.</p>
+<p>The code above allows a very easy way to check how consumer groups work. Just start several competing consumers and kill one of them or restart it later. Since restart policy is set to the beginning of the topic, <code class="language-plaintext highlighter-rouge">'auto.offset.reset' : 'smallest'</code> consuming will start every time from the beginning of each partition.</p>
 
 <h3 id="note-on-redis">Note on Redis</h3>
 

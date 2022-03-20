@@ -72,25 +72,25 @@
 
 <p>heap.c - comments are somewhat self explanatory</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//
-//  heap.h
-//  mmalloc
-//
-//  Created by Alexandru Gris on 1/6/19.
-//  Copyright © 2019 Alexandru Gris. All rights reserved.
-//
-</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//</span>
+<span class="c1">//  heap.h</span>
+<span class="c1">//  mmalloc</span>
+<span class="c1">//</span>
+<span class="c1">//  Created by Alexandru Gris on 1/6/19.</span>
+<span class="c1">//  Copyright © 2019 Alexandru Gris. All rights reserved.</span>
+<span class="c1">//</span>
+
 <span class="cp">#ifndef heap_h
 #define heap_h
 </span>
-<span class="cp">#include &lt;assert.h&gt;
+<span class="cp">#include</span> <span class="cpf">&lt;assert.h&gt;</span><span class="cp">
 </span>
 <span class="cm">/* Index generates the amount of objects that can be stored in this allocator; eg. typeof(Index) == unsigned char =&gt; 256
 AllocUnit generates the minimum size an object can have; e.g. typeof(AllocUnit) == int, minimum block that can be allocated is int and, together with the char above, we can address a maximum of 256 * sizeof(int) bytes.
 alloc_size is the size of the block, number of AllocUnits in this block
 MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to lower than AllocUnit; AllocUnit will allow a single allocation for the whole memory */</span>
 
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="p">,</span> <span class="k">class</span> <span class="nc">MaxBlockCountType</span> <span class="o">=</span> <span class="n">AllocUnit</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">mem_loc</span><span class="p">{</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="p">,</span> <span class="k">class</span> <span class="nc">MaxBlockCountType</span> <span class="o">=</span> <span class="n">AllocUnit</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">mem_loc</span><span class="p">{</span>
     
     <span class="n">MaxBlockCountType</span> <span class="n">alloc_size</span><span class="p">;</span>
     <span class="n">Index</span> <span class="n">alloc_index</span><span class="p">;</span>
@@ -112,16 +112,16 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
     
 <span class="p">};</span>
 
-<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">S</span><span class="p">,</span> <span class="k">class</span> <span class="nc">P</span><span class="o">&gt;</span> <span class="k">class</span> <span class="nc">mem_heap</span><span class="p">{</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">S</span><span class="p">,</span> <span class="k">class</span> <span class="nc">P</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">mem_heap</span><span class="p">{</span>
     
-<span class="k">private</span><span class="o">:</span>
+<span class="nl">private:</span>
     <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">S</span><span class="p">,</span> <span class="n">P</span><span class="o">&gt;*</span> <span class="n">mem</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">mem_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">heap_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     
-<span class="k">public</span><span class="o">:</span>
+<span class="nl">public:</span>
     
-    <span class="k">typedef</span> <span class="k">struct</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">S</span><span class="p">,</span> <span class="n">P</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="k">struct</span> <span class="nc">mem_loc</span><span class="o">&lt;</span><span class="n">S</span><span class="p">,</span> <span class="n">P</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
     
     <span class="n">mem_heap</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span> <span class="n">buffer</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_size</span><span class="p">)</span> <span class="o">:</span>
         <span class="n">mem</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">block</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">)),</span>
@@ -245,8 +245,8 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
         <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">src_subtree</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
         
         <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="n">heap_size</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">S</span><span class="p">,</span> <span class="n">P</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// invalid
-</span>
+            <span class="k">return</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">S</span><span class="p">,</span> <span class="n">P</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// invalid</span>
+
         <span class="k">auto</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
         <span class="kt">int</span> <span class="n">lst</span> <span class="o">=</span> <span class="o">--</span><span class="n">heap_size</span><span class="p">;</span>
         
@@ -275,9 +275,9 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
     
 <span class="p">};</span>
 
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Type</span><span class="o">&gt;</span> <span class="k">class</span> <span class="nc">mem_loc_t</span> <span class="o">:</span> <span class="k">public</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Type</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">mem_loc_t</span> <span class="o">:</span> <span class="k">public</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;</span><span class="p">{</span>
     
-<span class="k">public</span><span class="o">:</span>
+<span class="nl">public:</span>
     
     <span class="n">mem_loc_t</span><span class="p">(</span><span class="k">const</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;&amp;</span>  <span class="n">m</span><span class="p">){</span>
         <span class="k">this</span><span class="o">-&gt;</span><span class="n">alloc_size</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">alloc_size</span><span class="p">;</span>
@@ -290,9 +290,9 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
 <span class="p">};</span>
 
 
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="o">&gt;</span> <span class="k">class</span> <span class="nc">allocator</span><span class="p">{</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">AllocUnit</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Index</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">allocator</span><span class="p">{</span>
     
-<span class="k">private</span><span class="o">:</span>
+<span class="nl">private:</span>
     
     <span class="n">mem_heap</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;</span> <span class="n">heap</span><span class="p">;</span>
     
@@ -300,7 +300,7 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
     <span class="kt">int</span> <span class="n">mem_size</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">mem_idx</span><span class="p">;</span>
     
-<span class="k">public</span><span class="o">:</span>
+<span class="nl">public:</span>
     
     <span class="n">allocator</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span> <span class="n">_mem</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_mem_size</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span> <span class="n">_heap</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_heap_size</span><span class="p">)</span>
             <span class="o">:</span> <span class="n">heap</span><span class="p">(</span><span class="n">_heap</span><span class="p">,</span> <span class="n">_heap_size</span><span class="p">),</span>
@@ -311,18 +311,18 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
         <span class="n">assert</span><span class="p">(</span><span class="n">_mem</span> <span class="o">!=</span> <span class="nb">nullptr</span> <span class="o">&amp;&amp;</span> <span class="n">_mem_size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">_heap</span> <span class="o">!=</span> <span class="nb">nullptr</span> <span class="o">&amp;&amp;</span> <span class="n">_heap_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
     <span class="p">}</span>
     
-    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">O</span><span class="p">,</span> <span class="k">class</span><span class="err">...</span> <span class="nc">CtorP</span><span class="o">&gt;</span> <span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">(</span><span class="k">const</span> <span class="n">CtorP</span><span class="o">&amp;</span><span class="p">...</span> <span class="n">params</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">1</span><span class="p">){</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">O</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">CtorP</span><span class="p">&gt;</span> <span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">(</span><span class="k">const</span> <span class="n">CtorP</span><span class="o">&amp;</span><span class="p">...</span> <span class="n">params</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">1</span><span class="p">){</span>
         
-        <span class="c1">// TODO: if cnt &gt; 1 add a new int to the front of the allocated array so that I can call delete[] on them.
-</span>        
+        <span class="c1">// TODO: if cnt &gt; 1 add a new int to the front of the allocated array so that I can call delete[] on them.</span>
+        
         <span class="kt">int</span> <span class="n">size_in_alloc_units</span> <span class="o">=</span> <span class="n">bytes_to_alloc_units</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">O</span><span class="p">)</span> <span class="o">*</span> <span class="n">cnt</span><span class="p">);</span>
         <span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="n">alloc</span><span class="p">(</span><span class="n">size_in_alloc_units</span><span class="p">);</span>
         
         <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">r</span><span class="p">.</span><span class="n">valid</span><span class="p">()</span> <span class="o">||</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">alloc_size</span> <span class="o">&gt;=</span> <span class="p">((</span><span class="mi">6</span> <span class="o">*</span> <span class="n">size_in_alloc_units</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">mem_idx</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="n">mem_size</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)))</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">alloc_extend_heap</span><span class="p">(</span><span class="n">size_in_alloc_units</span><span class="p">);</span>
         
-        <span class="c1">// invoke constructors
-</span>        <span class="k">auto</span> <span class="n">loc</span> <span class="o">=</span> <span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
+        <span class="c1">// invoke constructors</span>
+        <span class="k">auto</span> <span class="n">loc</span> <span class="o">=</span> <span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
         
         <span class="n">O</span><span class="o">*</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">loc</span><span class="p">.</span><span class="n">ptr</span><span class="p">(</span><span class="n">mem</span><span class="p">);</span>
         
@@ -338,8 +338,8 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
         <span class="kt">int</span> <span class="n">size_in_bytes</span> <span class="o">=</span> <span class="n">alloc_units_to_bytes</span><span class="p">(</span><span class="n">size_in_alloc_units</span><span class="p">);</span>
         
         <span class="k">if</span><span class="p">(</span><span class="n">mem_idx</span> <span class="o">+</span> <span class="n">size_in_bytes</span> <span class="o">&gt;</span> <span class="n">mem_size</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// nullptr
-</span>        
+            <span class="k">return</span> <span class="n">mem_loc</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// nullptr</span>
+        
         <span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span> <span class="n">ptr</span> <span class="o">=</span> <span class="n">mem</span> <span class="o">+</span> <span class="n">mem_idx</span><span class="p">;</span>
         <span class="n">mem_idx</span> <span class="o">+=</span> <span class="n">size_in_bytes</span><span class="p">;</span>
         
@@ -358,11 +358,11 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
         <span class="k">return</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">-</span> <span class="n">mem</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">AllocUnit</span><span class="p">);</span>
     <span class="p">}</span>
     
-    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">O</span><span class="o">&gt;</span><span class="kt">void</span> <span class="n">free</span><span class="p">(</span><span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;&amp;</span> <span class="n">l</span><span class="p">){</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">O</span><span class="p">&gt;</span><span class="kt">void</span> <span class="n">free</span><span class="p">(</span><span class="n">mem_loc_t</span><span class="o">&lt;</span><span class="n">AllocUnit</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">O</span><span class="o">&gt;&amp;</span> <span class="n">l</span><span class="p">){</span>
         
-        <span class="c1">// TODO: call destructors, if array, implement also []
-</span>        <span class="c1">// Warning - now only calls the destructor for the first element
-</span>        <span class="n">l</span><span class="p">.</span><span class="n">ptr</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span><span class="o">-&gt;~</span><span class="n">O</span><span class="p">();</span>
+        <span class="c1">// TODO: call destructors, if array, implement also []</span>
+        <span class="c1">// Warning - now only calls the destructor for the first element</span>
+        <span class="n">l</span><span class="p">.</span><span class="n">ptr</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span><span class="o">-&gt;~</span><span class="n">O</span><span class="p">();</span>
         
         <span class="n">heap</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="n">l</span><span class="p">);</span>
         <span class="n">l</span><span class="p">.</span><span class="n">invalidate</span><span class="p">();</span>
@@ -378,18 +378,18 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
 
 <p>main.cpp</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//
-//  main.cpp
-//  mmalloc
-//
-//  Created by Alexandru Gris on 1/5/19.
-//  Copyright © 2019 Alexandru Gris. All rights reserved.
-//
-</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//</span>
+<span class="c1">//  main.cpp</span>
+<span class="c1">//  mmalloc</span>
+<span class="c1">//</span>
+<span class="c1">//  Created by Alexandru Gris on 1/5/19.</span>
+<span class="c1">//  Copyright © 2019 Alexandru Gris. All rights reserved.</span>
+<span class="c1">//</span>
+
 <span class="cp">#define __DEBUG
 </span>
-<span class="cp">#include &lt;iostream&gt;
-#include "heap.h"
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+#include</span> <span class="cpf">"heap.h"</span><span class="cp">
 </span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
     
@@ -401,9 +401,9 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
         
         <span class="n">mem_heap</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*&gt;</span> <span class="n">h</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="mi">1024</span><span class="p">);</span>
         
-        <span class="c1">// here we test the mem_heap class
-</span>        <span class="c1">// we add some free blocks to see that, indeed, the correct size is found
-</span>        <span class="n">h</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="k">decltype</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">::</span><span class="n">block</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">));</span>
+        <span class="c1">// here we test the mem_heap class</span>
+        <span class="c1">// we add some free blocks to see that, indeed, the correct size is found</span>
+        <span class="n">h</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="k">decltype</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">::</span><span class="n">block</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">));</span>
         <span class="n">h</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="k">decltype</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">::</span><span class="n">block</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">));</span>
         <span class="n">h</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="k">decltype</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">::</span><span class="n">block</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">));</span>
         <span class="n">h</span><span class="p">.</span><span class="n">add_free</span><span class="p">(</span><span class="k">decltype</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">::</span><span class="n">block</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">));</span>
@@ -427,8 +427,8 @@ MaxBlockCountType -&gt; how many AllocUnits are in this block. Can be set to low
     <span class="p">}</span>
     
     <span class="p">{</span>
-        <span class="c1">// here we test the actual allocator
-</span>        <span class="o">::</span><span class="n">allocator</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="mi">768</span><span class="p">,</span> <span class="n">mem</span> <span class="o">+</span> <span class="mi">768</span><span class="p">,</span> <span class="mi">256</span><span class="p">);</span>
+        <span class="c1">// here we test the actual allocator</span>
+        <span class="o">::</span><span class="n">allocator</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="mi">768</span><span class="p">,</span> <span class="n">mem</span> <span class="o">+</span> <span class="mi">768</span><span class="p">,</span> <span class="mi">256</span><span class="p">);</span>
         
         <span class="k">auto</span> <span class="n">m1</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">alloc</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
         <span class="k">auto</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">alloc</span><span class="o">&lt;</span><span class="kt">long</span> <span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>

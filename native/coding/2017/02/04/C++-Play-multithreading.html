@@ -74,7 +74,7 @@ I will use Windows code to exemplify how to build a minimal type-safe threading 
 
 <h3 id="c-standard-library-and-threads">C++ standard library and threads</h3>
 
-<p>The new C++ standard adds <a href="http://en.cppreference.com/w/cpp/thread">extensive support</a> for thread management as well as a new storage specifier, <code class="highlighter-rouge">thread_local</code> (<a href="http://en.cppreference.com/w/cpp/language/storage_duration">storage specifiers</a>).</p>
+<p>The new C++ standard adds <a href="http://en.cppreference.com/w/cpp/thread">extensive support</a> for thread management as well as a new storage specifier, <code class="language-plaintext highlighter-rouge">thread_local</code> (<a href="http://en.cppreference.com/w/cpp/language/storage_duration">storage specifiers</a>).</p>
 
 <p>Let’s start with an interesting piece of code which combines many of these concepts together:</p>
 
@@ -163,20 +163,20 @@ I will use Windows code to exemplify how to build a minimal type-safe threading 
 <p>Running the code we notice the following:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">thread_local TestMTLocalStorage i = compute_i()</code> is called as expected. At this moment, the member variable <code class="highlighter-rouge">i</code> has the <code class="highlighter-rouge">0x013A46A4</code> address.</li>
-  <li>Within the thread, the computations on <code class="highlighter-rouge">i</code> are independent. Internal variable <code class="highlighter-rouge">i</code> has different address in each thread, and different from the initial address on which it was initialized.</li>
+  <li><code class="language-plaintext highlighter-rouge">thread_local TestMTLocalStorage i = compute_i()</code> is called as expected. At this moment, the member variable <code class="language-plaintext highlighter-rouge">i</code> has the <code class="language-plaintext highlighter-rouge">0x013A46A4</code> address.</li>
+  <li>Within the thread, the computations on <code class="language-plaintext highlighter-rouge">i</code> are independent. Internal variable <code class="language-plaintext highlighter-rouge">i</code> has different address in each thread, and different from the initial address on which it was initialized.</li>
   <li>No new constructor / destructor is called when entering or exiting the thread.</li>
-  <li>Variable <code class="highlighter-rouge">i</code> is only destructed at the end of the code, after exiting main, the destructor being called only once (at least in VC++ 2017).</li>
+  <li>Variable <code class="language-plaintext highlighter-rouge">i</code> is only destructed at the end of the code, after exiting main, the destructor being called only once (at least in VC++ 2017).</li>
 </ul>
 
-<p>This lifecycle requires special care when managing dynamically allocated memory within a <code class="highlighter-rouge">thread_local</code> class instance.</p>
+<p>This lifecycle requires special care when managing dynamically allocated memory within a <code class="language-plaintext highlighter-rouge">thread_local</code> class instance.</p>
 
 <h3 id="threading-support-library-std">Threading support library (std)</h3>
 
 <p>In the code above we use the following:</p>
 
 <ul>
-  <li>Creating and running threads, using the <code class="highlighter-rouge">std::thread</code> standard library class. Threads can be instantiated with a lambda and can capture any members. In our case, we capture the synchronization primitives <code class="highlighter-rouge">m</code> and <code class="highlighter-rouge">cv</code> by reference.</li>
+  <li>Creating and running threads, using the <code class="language-plaintext highlighter-rouge">std::thread</code> standard library class. Threads can be instantiated with a lambda and can capture any members. In our case, we capture the synchronization primitives <code class="language-plaintext highlighter-rouge">m</code> and <code class="language-plaintext highlighter-rouge">cv</code> by reference.</li>
   <li>Thread synchronization in three different scenarios:</li>
 </ul>
 
@@ -189,7 +189,7 @@ I will use Windows code to exemplify how to build a minimal type-safe threading 
 	<span class="n">cv</span><span class="p">.</span><span class="nf">wait</span><span class="p">(</span><span class="n">ul</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div></div>
-<p>in the waiting threads and then notifying all threads using the same condition variable <code class="highlighter-rouge">	cv.notify_all();</code>. Important to notice that <code class="highlighter-rouge">cv.wait()</code> requires a <code class="highlighter-rouge">unique_lock</code> on a mutex in order for the thread to block.</p>
+<p>in the waiting threads and then notifying all threads using the same condition variable <code class="language-plaintext highlighter-rouge">	cv.notify_all();</code>. Important to notice that <code class="language-plaintext highlighter-rouge">cv.wait()</code> requires a <code class="language-plaintext highlighter-rouge">unique_lock</code> on a mutex in order for the thread to block.</p>
 
 <p><em>B) Protecting critical sections of code from running in parallel</em></p>
 
@@ -202,7 +202,7 @@ I will use Windows code to exemplify how to build a minimal type-safe threading 
         <span class="c1">// different addresses of i;</span>
 <span class="p">}</span>
 </code></pre></div></div>
-<p>the protection being against several threads running <code class="highlighter-rouge">cout</code> in parallel and generating garbage output on the console. As we have already seen, <code class="highlighter-rouge">i</code> is <code class="highlighter-rouge">thread_local</code> and there is no need for synchronization around it.</p>
+<p>the protection being against several threads running <code class="language-plaintext highlighter-rouge">cout</code> in parallel and generating garbage output on the console. As we have already seen, <code class="language-plaintext highlighter-rouge">i</code> is <code class="language-plaintext highlighter-rouge">thread_local</code> and there is no need for synchronization around it.</p>
 
 <p><em>C) Waiting for several threads to finish before exiting the method</em></p>
 
@@ -213,10 +213,10 @@ I will use Windows code to exemplify how to build a minimal type-safe threading 
 <h3 id="other-interesting-concepts-from-the-standard-threads-library">Other interesting concepts from the standard threads library:</h3>
 
 <ul>
-  <li><code class="highlighter-rouge">recursive_mutex</code> - allows the same thread to lock the mutex several times. Mutex is released when the number of locks matches the number of releases.</li>
-  <li><code class="highlighter-rouge">shared_mutex</code> - mutex that can be used for reader-writer scenarios. Several threads can have shared ownership (read) while only one thread can have exclusive ownership (write).</li>
-  <li><code class="highlighter-rouge">scoped_lock</code> - tries to take ownership of several mutexes.</li>
-  <li><code class="highlighter-rouge">future</code>, <code class="highlighter-rouge">promise</code>, <code class="highlighter-rouge">async</code> - futures package to facilitate asynchronous programming, without manual management of threads - <a href="http://en.cppreference.com/w/cpp/thread/async">async example</a>.</li>
+  <li><code class="language-plaintext highlighter-rouge">recursive_mutex</code> - allows the same thread to lock the mutex several times. Mutex is released when the number of locks matches the number of releases.</li>
+  <li><code class="language-plaintext highlighter-rouge">shared_mutex</code> - mutex that can be used for reader-writer scenarios. Several threads can have shared ownership (read) while only one thread can have exclusive ownership (write).</li>
+  <li><code class="language-plaintext highlighter-rouge">scoped_lock</code> - tries to take ownership of several mutexes.</li>
+  <li><code class="language-plaintext highlighter-rouge">future</code>, <code class="language-plaintext highlighter-rouge">promise</code>, <code class="language-plaintext highlighter-rouge">async</code> - futures package to facilitate asynchronous programming, without manual management of threads - <a href="http://en.cppreference.com/w/cpp/thread/async">async example</a>.</li>
 </ul>
 
 <h2 id="but-how-do-these-work">But How Do These Work?</h2>
@@ -289,13 +289,13 @@ Libraries should have a very clean and intuitive interface. They should be type-
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>There are several issues that impede a direct mapping between C++ and the standard Windows API. The Windows API is a plain C API, which uses extensively opaque <code class="highlighter-rouge">HANDLE</code>s and <code class="highlighter-rouge">void*</code> to pack user data. 
+<p>There are several issues that impede a direct mapping between C++ and the standard Windows API. The Windows API is a plain C API, which uses extensively opaque <code class="language-plaintext highlighter-rouge">HANDLE</code>s and <code class="language-plaintext highlighter-rouge">void*</code> to pack user data. 
 Memory management is done manually, resources being allocated and de-allocated through pairs of “Create” / “Release” C APIs. Error management is done through checking return values.
 In C++, we expect type safety, RAII and exception handling. Clearly this is an impedance mismatch we need to bridge.</p>
 
 <h3 id="creating-of-threads">Creating of threads</h3>
 
-<p>In Windows, threads are created by calling the <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms682453(v=vs.85).aspx"><code class="highlighter-rouge">CreateThread</code> API</a>.</p>
+<p>In Windows, threads are created by calling the <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms682453(v=vs.85).aspx"><code class="language-plaintext highlighter-rouge">CreateThread</code> API</a>.</p>
 
 <p>First challenge is to bridge the function pointer to a lambda and pass the lambda parameters in a typesafe manner through the void* the API provides. As we don’t know how many parameters and what types they have, we will use a variadic template</p>
 
@@ -305,7 +305,7 @@ In C++, we expect type safety, RAII and exception handling. Clearly this is an i
 	<span class="k">return</span> <span class="p">::</span><span class="nf">CreateThread</span><span class="p">(</span><span class="n">nullptr</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">__internal_thread_struct</span><span class="p">&lt;</span><span class="n">Fn</span><span class="p">,</span> <span class="n">Params</span><span class="p">...&gt;::</span><span class="n">ThreadFunc</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div></div>
-<p>The <code class="highlighter-rouge">__internal_thread_struct</code> packs the parameters in a <code class="highlighter-rouge">void*</code> and then invokes the lambda on the  static <code class="highlighter-rouge">__internal_thread_struct::ThreadFunc</code> with the right parameters.</p>
+<p>The <code class="language-plaintext highlighter-rouge">__internal_thread_struct</code> packs the parameters in a <code class="language-plaintext highlighter-rouge">void*</code> and then invokes the lambda on the  static <code class="language-plaintext highlighter-rouge">__internal_thread_struct::ThreadFunc</code> with the right parameters.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="n">DWORD</span> <span class="n">__stdcall</span> <span class="nf">ThreadFunc</span><span class="p">(</span><span class="k">void</span><span class="p">*</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">auto</span> <span class="n">ts</span> <span class="p">=</span> <span class="n">reinterpret_cast</span><span class="p">&lt;</span><span class="n">__internal_thread_struct</span><span class="p">*&gt;(</span><span class="n">ptr</span><span class="p">);</span>
@@ -316,7 +316,7 @@ In C++, we expect type safety, RAII and exception handling. Clearly this is an i
 	<span class="p">}</span>
 </code></pre></div></div>
 
-<p>All magic happens in the <code class="highlighter-rouge">ts-&gt;fn();</code> call, which is our lambda packed together with its parameters. Here is how this is created:</p>
+<p>All magic happens in the <code class="language-plaintext highlighter-rouge">ts-&gt;fn();</code> call, which is our lambda packed together with its parameters. Here is how this is created:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="p">&lt;</span><span class="nf">DWORD</span><span class="p">()&gt;</span> <span class="n">fn</span> <span class="p">=</span> <span class="n">nullptr</span><span class="p">;</span>
 
@@ -346,9 +346,9 @@ In C++, we expect type safety, RAII and exception handling. Clearly this is an i
 <p>There are two tricks in this code:</p>
 
 <ol>
-  <li>We pack the parameters, by value, as captures in the <code class="highlighter-rouge">std::function&lt;DWORD()&gt; fn = nullptr</code>;</li>
-  <li>We cannot send stack-allocated arrays, except if they are strings in which case they are pooled by the compiler. Because of this, we need the <code class="highlighter-rouge">fwd</code> applied to each parameter. 
-For each parameter that can be easily copied, it just returns it. For <code class="highlighter-rouge">char[]</code>, it converts them to <code class="highlighter-rouge">char*</code> and then captures the pointer by value. For any other <code class="highlighter-rouge">T[]</code> stack allocated arrays, error as there is no specialization.</li>
+  <li>We pack the parameters, by value, as captures in the <code class="language-plaintext highlighter-rouge">std::function&lt;DWORD()&gt; fn = nullptr</code>;</li>
+  <li>We cannot send stack-allocated arrays, except if they are strings in which case they are pooled by the compiler. Because of this, we need the <code class="language-plaintext highlighter-rouge">fwd</code> applied to each parameter. 
+For each parameter that can be easily copied, it just returns it. For <code class="language-plaintext highlighter-rouge">char[]</code>, it converts them to <code class="language-plaintext highlighter-rouge">char*</code> and then captures the pointer by value. For any other <code class="language-plaintext highlighter-rouge">T[]</code> stack allocated arrays, error as there is no specialization.</li>
 </ol>
 
 <p>I find this as a very nice example of the power of the new C++: variadic templates, typesafety, perfect forwarding. This call is simply beautiful:</p>
@@ -372,7 +372,7 @@ For each parameter that can be easily copied, it just returns it. For <code clas
 
 <h4 id="waiting-for-all">Waiting for all:</h4>
 
-<p>Again variadic templates, because we need to pack the list of mutexes to a stack-allocated array which is expected as input for the <code class="highlighter-rouge">WaitForAll</code> API call:</p>
+<p>Again variadic templates, because we need to pack the list of mutexes to a stack-allocated array which is expected as input for the <code class="language-plaintext highlighter-rouge">WaitForAll</code> API call:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span><span class="p">...</span> <span class="n">WindowsHandles</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">pack</span><span class="p">(</span><span class="n">HANDLE</span><span class="p">*</span> <span class="n">arr</span><span class="p">){}</span> <span class="c1">// recursion end</span>
@@ -400,7 +400,7 @@ For each parameter that can be easily copied, it just returns it. For <code clas
 
 <h4 id="nice-object-oriented-interface">Nice object oriented interface:</h4>
 
-<p>Arguably nice, as aggregation should be preferred to inheritance (which is, in itself, a form of hidden aggregation) and especially given the need to explicitly <code class="highlighter-rouge">delete</code> a function from the base class. But it is short and it works:</p>
+<p>Arguably nice, as aggregation should be preferred to inheritance (which is, in itself, a form of hidden aggregation) and especially given the need to explicitly <code class="language-plaintext highlighter-rouge">delete</code> a function from the base class. But it is short and it works:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">windows_handle</span> <span class="p">{</span>
 
@@ -456,7 +456,7 @@ For each parameter that can be easily copied, it just returns it. For <code clas
 
 <h4 id="raii-for-locking">RAII for locking</h4>
 
-<p>A basic object which calls a lambda on destruction. No copy semantics, only move. Usage is exemplified in the snippet above, the <code class="highlighter-rouge">auto acquire()</code> method of the <code class="highlighter-rouge">mutex</code> class.</p>
+<p>A basic object which calls a lambda on destruction. No copy semantics, only move. Usage is exemplified in the snippet above, the <code class="language-plaintext highlighter-rouge">auto acquire()</code> method of the <code class="language-plaintext highlighter-rouge">mutex</code> class.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">scoped_obj</span> <span class="p">{</span>
 <span class="k">private</span><span class="p">:</span>

@@ -75,10 +75,10 @@
 <p>To open and send commands to our WebSocket server, in Javascript Console, in any browser, you can do:</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// connect to our websocket endpoint</span>
-<span class="kd">let</span> <span class="nx">ret</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebSocket</span><span class="p">(</span><span class="s2">"ws://localhost:8080/websocket"</span><span class="p">)</span>
+<span class="kd">let</span> <span class="nx">ret</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebSocket</span><span class="p">(</span><span class="dl">"</span><span class="s2">ws://localhost:8080/websocket</span><span class="dl">"</span><span class="p">)</span>
 
 <span class="c1">// subscribe to changes to the first 1024 product IDs</span>
-<span class="nx">req</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="na">command</span><span class="p">:</span> <span class="s2">"subscribe"</span><span class="p">,</span> <span class="na">productIDs</span><span class="p">:</span> <span class="p">[...</span><span class="nb">Array</span><span class="p">(</span><span class="mi">1024</span><span class="p">).</span><span class="nx">keys</span><span class="p">()]}))</span>
+<span class="nx">req</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="na">command</span><span class="p">:</span> <span class="dl">"</span><span class="s2">subscribe</span><span class="dl">"</span><span class="p">,</span> <span class="na">productIDs</span><span class="p">:</span> <span class="p">[...</span><span class="nb">Array</span><span class="p">(</span><span class="mi">1024</span><span class="p">).</span><span class="nx">keys</span><span class="p">()]}))</span>
 <span class="nx">req</span><span class="p">.</span><span class="nx">onmessage</span> <span class="o">=</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span>
 </code></pre></div></div>
 
@@ -87,9 +87,9 @@
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">req</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p>Meanwhile, from a different console, we will be performing <code class="highlighter-rouge">POST</code>, <code class="highlighter-rouge">PUT</code> and <code class="highlighter-rouge">DELETE</code> requests to change the products in the database. These requests are similar to the following:</p>
+<p>Meanwhile, from a different console, we will be performing <code class="language-plaintext highlighter-rouge">POST</code>, <code class="language-plaintext highlighter-rouge">PUT</code> and <code class="language-plaintext highlighter-rouge">DELETE</code> requests to change the products in the database. These requests are similar to the following:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>POST http://localhost:8080/products
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>POST http://localhost:8080/products
 Content-Type: application/json
 
 {
@@ -105,7 +105,7 @@ Content-Type: application/json
 
 <h3 id="database-changes">Database Changes</h3>
 
-<p>In order to be able to listen to changes in the database, we will use the <code class="highlighter-rouge">LISTEN</code> / <code class="highlighter-rouge">NOTIFY</code> system from Postgresql. We are going to create a trigger which sends <code class="highlighter-rouge">JSON</code> messages whenever an update to the Products table occurs and we are going to initialize a listener in our service code to such events.</p>
+<p>In order to be able to listen to changes in the database, we will use the <code class="language-plaintext highlighter-rouge">LISTEN</code> / <code class="language-plaintext highlighter-rouge">NOTIFY</code> system from Postgresql. We are going to create a trigger which sends <code class="language-plaintext highlighter-rouge">JSON</code> messages whenever an update to the Products table occurs and we are going to initialize a listener in our service code to such events.</p>
 
 <p>The trigger procedure below:</p>
 
@@ -124,7 +124,7 @@ Content-Type: application/json
 			<span class="s1">'action'</span><span class="p">,</span> <span class="n">TG_OP</span><span class="p">,</span>
 			<span class="s1">'product'</span><span class="p">,</span> <span class="k">data</span> 
 		<span class="p">);</span>		
-		<span class="n">PERFORM</span> <span class="n">pg_notify</span><span class="p">(</span><span class="s1">'product_change'</span><span class="p">,</span> <span class="n">notif</span><span class="p">::</span><span class="n">text</span><span class="p">);</span>
+		<span class="n">PERFORM</span> <span class="n">pg_notify</span><span class="p">(</span><span class="s1">'product_change'</span><span class="p">,</span> <span class="n">notif</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
 	
 		<span class="k">RETURN</span> <span class="k">NULL</span><span class="p">;</span>
 	<span class="k">END</span>
@@ -136,65 +136,65 @@ Content-Type: application/json
 	<span class="k">FOR</span> <span class="k">EACH</span> <span class="k">ROW</span> <span class="k">EXECUTE</span> <span class="k">PROCEDURE</span> <span class="n">notify_event_on_products_update</span><span class="p">();</span>
 </code></pre></div></div>
 
-<p>Now, that we have this procedure, the code that listens to the emitted events, is listed below. It is invoked as a goroutine and acts as a backgorund service. It uses directly the <code class="highlighter-rouge">pq</code> package instead of the <code class="highlighter-rouge">sql</code> package because it relies on native Postgres functionality - the listen/notify mechanism.</p>
+<p>Now, that we have this procedure, the code that listens to the emitted events, is listed below. It is invoked as a goroutine and acts as a backgorund service. It uses directly the <code class="language-plaintext highlighter-rouge">pq</code> package instead of the <code class="language-plaintext highlighter-rouge">sql</code> package because it relies on native Postgres functionality - the listen/notify mechanism.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// ListenForNotifications should be invoked as a goroutine</span><span class="x">
-</span><span class="k">func</span><span class="x"> </span><span class="n">ListenForNotifications</span><span class="p">(</span><span class="n">event</span><span class="x"> </span><span class="kt">string</span><span class="p">,</span><span class="x"> </span><span class="n">notif</span><span class="x"> </span><span class="k">func</span><span class="p">(</span><span class="n">json</span><span class="x"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">))</span><span class="x"> </span><span class="kt">error</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// ListenForNotifications should be invoked as a goroutine</span>
+<span class="k">func</span> <span class="n">ListenForNotifications</span><span class="p">(</span><span class="n">event</span> <span class="kt">string</span><span class="p">,</span> <span class="n">notif</span> <span class="k">func</span><span class="p">(</span><span class="n">json</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">))</span> <span class="kt">error</span> <span class="p">{</span>
 
-	</span><span class="n">listener</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">pq</span><span class="o">.</span><span class="n">NewListener</span><span class="p">(</span><span class="n">ConnectionString</span><span class="p">,</span><span class="x"> </span><span class="m">1</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">,</span><span class="x"> </span><span class="m">10</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">,</span><span class="x"> 
-	</span><span class="k">func</span><span class="p">(</span><span class="n">ev</span><span class="x"> </span><span class="n">pq</span><span class="o">.</span><span class="n">ListenerEventType</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="kt">error</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span><span class="x">
-		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">})</span><span class="x">
+	<span class="n">listener</span> <span class="o">:=</span> <span class="n">pq</span><span class="o">.</span><span class="n">NewListener</span><span class="p">(</span><span class="n">ConnectionString</span><span class="p">,</span> <span class="m">1</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">,</span> <span class="m">10</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">,</span> 
+	<span class="k">func</span><span class="p">(</span><span class="n">ev</span> <span class="n">pq</span><span class="o">.</span><span class="n">ListenerEventType</span><span class="p">,</span> <span class="n">err</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">})</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">listener</span><span class="o">.</span><span class="n">Listen</span><span class="p">(</span><span class="n">event</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">listener</span><span class="o">.</span><span class="n">Listen</span><span class="p">(</span><span class="n">event</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">select</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">case</span><span class="x"> </span><span class="n">n</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">listener</span><span class="o">.</span><span class="n">Notify</span><span class="o">:</span><span class="x">
-			</span><span class="c">// updates</span><span class="x">
-			</span><span class="n">notif</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">Extra</span><span class="p">))</span><span class="x">
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">select</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="n">n</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">listener</span><span class="o">.</span><span class="n">Notify</span><span class="o">:</span>
+			<span class="c">// updates</span>
+			<span class="n">notif</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">Extra</span><span class="p">))</span>
 
-		</span><span class="k">case</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">time</span><span class="o">.</span><span class="n">After</span><span class="p">(</span><span class="m">90</span><span class="x"> </span><span class="o">*</span><span class="x"> </span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span><span class="o">:</span><span class="x">
+		<span class="k">case</span> <span class="o">&lt;-</span><span class="n">time</span><span class="o">.</span><span class="n">After</span><span class="p">(</span><span class="m">90</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span><span class="o">:</span>
 
-			</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"No events, pinging the connection"</span><span class="p">)</span><span class="x">
-			</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">listener</span><span class="o">.</span><span class="n">Ping</span><span class="p">();</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-				</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-			</span><span class="p">}</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+			<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"No events, pinging the connection"</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">listener</span><span class="o">.</span><span class="n">Ping</span><span class="p">();</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+				<span class="k">return</span> <span class="n">err</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>The snippent which launches listening is in the main function,</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">go</span><span class="x"> </span><span class="k">func</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">ListenForNotifications</span><span class="p">(</span><span class="s">"product_change"</span><span class="p">,</span><span class="x"> 
-		</span><span class="n">product</span><span class="o">.</span><span class="n">HandleChangeProductNotification</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}()</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">database</span><span class="o">.</span><span class="n">ListenForNotifications</span><span class="p">(</span><span class="s">"product_change"</span><span class="p">,</span> 
+		<span class="n">product</span><span class="o">.</span><span class="n">HandleChangeProductNotification</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}()</span>
+</code></pre></div></div>
 
 <h3 id="the-websocket-endpoint">The WebSocket Endpoint</h3>
 
-<p>First, initialize the route. Please notice the <code class="highlighter-rouge">websocket</code> package instead of the <code class="highlighter-rouge">http</code> used above.</p>
+<p>First, initialize the route. Please notice the <code class="language-plaintext highlighter-rouge">websocket</code> package instead of the <code class="language-plaintext highlighter-rouge">http</code> used above.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">GetHTTPHandlers</span><span class="p">()</span><span class="x"> </span><span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">return</span><span class="x"> </span><span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="p">{</span><span class="x">
-		</span><span class="s">"/products"</span><span class="o">:</span><span class="x">  </span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productsHandler</span><span class="p">),</span><span class="x">
-		</span><span class="s">"/products/"</span><span class="o">:</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productHandler</span><span class="p">),</span><span class="x">
-		</span><span class="c">// new handler for websocket</span><span class="x">
-		</span><span class="c">// notice the websocket. package instead of the http.</span><span class="x">
-		</span><span class="s">"/websocket"</span><span class="o">:</span><span class="x"> </span><span class="n">websocket</span><span class="o">.</span><span class="n">Handler</span><span class="p">(</span><span class="n">productChangeWSHandler</span><span class="p">),</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">GetHTTPHandlers</span><span class="p">()</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="p">{</span>
+		<span class="s">"/products"</span><span class="o">:</span>  <span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productsHandler</span><span class="p">),</span>
+		<span class="s">"/products/"</span><span class="o">:</span> <span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productHandler</span><span class="p">),</span>
+		<span class="c">// new handler for websocket</span>
+		<span class="c">// notice the websocket. package instead of the http.</span>
+		<span class="s">"/websocket"</span><span class="o">:</span> <span class="n">websocket</span><span class="o">.</span><span class="n">Handler</span><span class="p">(</span><span class="n">productChangeWSHandler</span><span class="p">),</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>And then the handler itself. Its structure is straight forward:</p>
 <ul>
@@ -204,165 +204,165 @@ Content-Type: application/json
   <li>Loop in the same goroutine to send the relevant data to the client.</li>
 </ul>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">productChangeWSHandler</span><span class="p">(</span><span class="n">ws</span><span class="x"> </span><span class="o">*</span><span class="n">websocket</span><span class="o">.</span><span class="n">Conn</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">productChangeWSHandler</span><span class="p">(</span><span class="n">ws</span> <span class="o">*</span><span class="n">websocket</span><span class="o">.</span><span class="n">Conn</span><span class="p">)</span> <span class="p">{</span>
 
-	</span><span class="c">// make the chan buffered so we can receive more messages until we process them</span><span class="x">
-	</span><span class="n">inMsgChan</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">chan</span><span class="x"> </span><span class="n">inMessage</span><span class="p">,</span><span class="x"> </span><span class="m">1024</span><span class="p">)</span><span class="x">
-	</span><span class="n">inProductsUpdated</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">chan</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="p">,</span><span class="x"> </span><span class="m">1024</span><span class="p">)</span><span class="x">
+	<span class="c">// make the chan buffered so we can receive more messages until we process them</span>
+	<span class="n">inMsgChan</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="n">inMessage</span><span class="p">,</span> <span class="m">1024</span><span class="p">)</span>
+	<span class="n">inProductsUpdated</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="o">*</span><span class="n">Product</span><span class="p">,</span> <span class="m">1024</span><span class="p">)</span>
 
-	</span><span class="k">defer</span><span class="x"> </span><span class="k">func</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">addRemoveSubscription</span><span class="x"> </span><span class="o">&lt;-</span><span class="x"> </span><span class="n">chanSubscriptionCmd</span><span class="p">{</span><span class="x">
-			</span><span class="n">Cmd</span><span class="o">:</span><span class="x">      </span><span class="s">"closeconn"</span><span class="p">,</span><span class="x">
-			</span><span class="n">CommChan</span><span class="o">:</span><span class="x"> </span><span class="n">inProductsUpdated</span><span class="p">,</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+	<span class="k">defer</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">addRemoveSubscription</span> <span class="o">&lt;-</span> <span class="n">chanSubscriptionCmd</span><span class="p">{</span>
+			<span class="n">Cmd</span><span class="o">:</span>      <span class="s">"closeconn"</span><span class="p">,</span>
+			<span class="n">CommChan</span><span class="o">:</span> <span class="n">inProductsUpdated</span><span class="p">,</span>
+		<span class="p">}</span>
 
-		</span><span class="c">// drain the channel</span><span class="x">
-		</span><span class="k">for</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">inProductsUpdated</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="c">// drain the channel</span>
+		<span class="k">for</span> <span class="k">range</span> <span class="n">inProductsUpdated</span> <span class="p">{</span>
+		<span class="p">}</span>
 
-	</span><span class="p">}()</span><span class="x">
+	<span class="p">}()</span>
 
-	</span><span class="k">go</span><span class="x"> </span><span class="k">func</span><span class="p">(</span><span class="n">ws</span><span class="x"> </span><span class="o">*</span><span class="n">websocket</span><span class="o">.</span><span class="n">Conn</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">for</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">ws</span><span class="o">.</span><span class="n">MaxPayloadBytes</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="m">1024</span><span class="x"> </span><span class="o">*</span><span class="x"> </span><span class="m">256</span><span class="x">
-			</span><span class="k">var</span><span class="x"> </span><span class="n">msg</span><span class="x"> </span><span class="n">inMessage</span><span class="x">
+	<span class="k">go</span> <span class="k">func</span><span class="p">(</span><span class="n">ws</span> <span class="o">*</span><span class="n">websocket</span><span class="o">.</span><span class="n">Conn</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">for</span> <span class="p">{</span>
+			<span class="n">ws</span><span class="o">.</span><span class="n">MaxPayloadBytes</span> <span class="o">=</span> <span class="m">1024</span> <span class="o">*</span> <span class="m">256</span>
+			<span class="k">var</span> <span class="n">msg</span> <span class="n">inMessage</span>
 
-			</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">websocket</span><span class="o">.</span><span class="n">JSON</span><span class="o">.</span><span class="n">Receive</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-				</span><span class="k">break</span><span class="x">
-			</span><span class="p">}</span><span class="x">
-			</span><span class="n">inMsgChan</span><span class="x"> </span><span class="o">&lt;-</span><span class="x"> </span><span class="n">msg</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-		</span><span class="nb">close</span><span class="p">(</span><span class="n">inMsgChan</span><span class="p">)</span><span class="x">
-	</span><span class="p">}(</span><span class="n">ws</span><span class="p">)</span><span class="x">
+			<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">websocket</span><span class="o">.</span><span class="n">JSON</span><span class="o">.</span><span class="n">Receive</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+				<span class="k">break</span>
+			<span class="p">}</span>
+			<span class="n">inMsgChan</span> <span class="o">&lt;-</span> <span class="n">msg</span>
+		<span class="p">}</span>
+		<span class="nb">close</span><span class="p">(</span><span class="n">inMsgChan</span><span class="p">)</span>
+	<span class="p">}(</span><span class="n">ws</span><span class="p">)</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">select</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">case</span><span class="x"> </span><span class="n">msg</span><span class="p">,</span><span class="x"> </span><span class="n">ok</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">inMsgChan</span><span class="o">:</span><span class="x">
-			</span><span class="c">// subscribe - unsubscribe</span><span class="x">
-			</span><span class="k">if</span><span class="x"> </span><span class="o">!</span><span class="n">ok</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="k">return</span><span class="x"> </span><span class="c">// connection close</span><span class="x">
-			</span><span class="p">}</span><span class="x"> </span><span class="k">else</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">select</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="n">msg</span><span class="p">,</span> <span class="n">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">inMsgChan</span><span class="o">:</span>
+			<span class="c">// subscribe - unsubscribe</span>
+			<span class="k">if</span> <span class="o">!</span><span class="n">ok</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="c">// connection close</span>
+			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
 
-				</span><span class="n">addRemoveSubscription</span><span class="x"> </span><span class="o">&lt;-</span><span class="x"> </span><span class="n">chanSubscriptionCmd</span><span class="p">{</span><span class="x">
-					</span><span class="n">Cmd</span><span class="o">:</span><span class="x">        </span><span class="n">msg</span><span class="o">.</span><span class="n">Cmd</span><span class="p">,</span><span class="x">
-					</span><span class="n">ProductIDs</span><span class="o">:</span><span class="x"> </span><span class="n">msg</span><span class="o">.</span><span class="n">ProductIDs</span><span class="p">,</span><span class="x">
-					</span><span class="n">CommChan</span><span class="o">:</span><span class="x">   </span><span class="n">inProductsUpdated</span><span class="p">,</span><span class="x">
-				</span><span class="p">}</span><span class="x">
+				<span class="n">addRemoveSubscription</span> <span class="o">&lt;-</span> <span class="n">chanSubscriptionCmd</span><span class="p">{</span>
+					<span class="n">Cmd</span><span class="o">:</span>        <span class="n">msg</span><span class="o">.</span><span class="n">Cmd</span><span class="p">,</span>
+					<span class="n">ProductIDs</span><span class="o">:</span> <span class="n">msg</span><span class="o">.</span><span class="n">ProductIDs</span><span class="p">,</span>
+					<span class="n">CommChan</span><span class="o">:</span>   <span class="n">inProductsUpdated</span><span class="p">,</span>
+				<span class="p">}</span>
 
-			</span><span class="p">}</span><span class="x">
-		</span><span class="k">case</span><span class="x"> </span><span class="n">product</span><span class="p">,</span><span class="x"> </span><span class="n">ok</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">inProductsUpdated</span><span class="o">:</span><span class="x">
-			</span><span class="c">// updated products</span><span class="x">
-			</span><span class="k">if</span><span class="x"> </span><span class="o">!</span><span class="n">ok</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="k">return</span><span class="x">
-			</span><span class="p">}</span><span class="x">
+			<span class="p">}</span>
+		<span class="k">case</span> <span class="n">product</span><span class="p">,</span> <span class="n">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">inProductsUpdated</span><span class="o">:</span>
+			<span class="c">// updated products</span>
+			<span class="k">if</span> <span class="o">!</span><span class="n">ok</span> <span class="p">{</span>
+				<span class="k">return</span>
+			<span class="p">}</span>
 
-			</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">websocket</span><span class="o">.</span><span class="n">JSON</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="x"> </span><span class="n">product</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-				</span><span class="k">return</span><span class="x">
-			</span><span class="p">}</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">websocket</span><span class="o">.</span><span class="n">JSON</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">product</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+				<span class="k">return</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h3 id="the-algorithm">The Algorithm</h3>
 
 <p>The algorithm is straight forward. It keeps a map of productIDs - channels listening for updates. When an update comes for a specific product ID, all the channels are notified. The interesting part is the use of goroutines for synchronization between processes. The map is local to a goroutine, which is launched as a service when the application starts, and all communications with it happen over channels. There is no shared memory involved and no shared-memory-specific synchronization primitives. The commented ode below.</p>
 
-<p>A notable mention is the fact that clearing the subscription on <code class="highlighter-rouge">connclose</code> event is very slow as the function has to iterate through all the registered products. In a production scenario, I’d keep another map, a reversed index, so that I the relationship channel -&gt; productID is faster to navigate. In our case it would have only make the code longer and less readable.</p>
+<p>A notable mention is the fact that clearing the subscription on <code class="language-plaintext highlighter-rouge">connclose</code> event is very slow as the function has to iterate through all the registered products. In a production scenario, I’d keep another map, a reversed index, so that I the relationship channel -&gt; productID is faster to navigate. In our case it would have only make the code longer and less readable.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// shared channel on which the listen-notify db mechanism sends the products</span><span class="x">
-</span><span class="k">var</span><span class="x"> </span><span class="n">prodChan</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">chan</span><span class="x"> </span><span class="n">productNotification</span><span class="p">,</span><span class="x"> </span><span class="m">1024</span><span class="p">)</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// shared channel on which the listen-notify db mechanism sends the products</span>
+<span class="k">var</span> <span class="n">prodChan</span> <span class="o">=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="n">productNotification</span><span class="p">,</span> <span class="m">1024</span><span class="p">)</span>
 
-</span><span class="c">// shared channel on which subscriptions are added / removed</span><span class="x">
-</span><span class="k">var</span><span class="x"> </span><span class="n">addRemoveSubscription</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">chan</span><span class="x"> </span><span class="n">chanSubscriptionCmd</span><span class="p">)</span><span class="x">
+<span class="c">// shared channel on which subscriptions are added / removed</span>
+<span class="k">var</span> <span class="n">addRemoveSubscription</span> <span class="o">=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="n">chanSubscriptionCmd</span><span class="p">)</span>
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">handleDistributionGoroutine</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="k">func</span> <span class="n">handleDistributionGoroutine</span><span class="p">()</span> <span class="p">{</span>
 
-	</span><span class="c">// our map, product id -&gt; channels</span><span class="x">
-	</span><span class="c">// the second map is used because there is no Set in go</span><span class="x">
-	</span><span class="n">notifyUpdates</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="k">map</span><span class="p">[</span><span class="k">chan</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span><span class="x">
+	<span class="c">// our map, product id -&gt; channels</span>
+	<span class="c">// the second map is used because there is no Set in go</span>
+	<span class="n">notifyUpdates</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="k">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="k">map</span><span class="p">[</span><span class="k">chan</span> <span class="o">*</span><span class="n">Product</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="k">for</span> <span class="p">{</span>
 
-		</span><span class="k">select</span><span class="x"> </span><span class="p">{</span><span class="x">
+		<span class="k">select</span> <span class="p">{</span>
 
-		</span><span class="k">case</span><span class="x"> </span><span class="n">incomingProduct</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">prodChan</span><span class="o">:</span><span class="x">
+		<span class="k">case</span> <span class="n">incomingProduct</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">prodChan</span><span class="o">:</span>
 
-			</span><span class="n">notifChans</span><span class="p">,</span><span class="x"> </span><span class="n">exists</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">notifyUpdates</span><span class="p">[</span><span class="n">incomingProduct</span><span class="o">.</span><span class="n">Product</span><span class="o">.</span><span class="n">ProductID</span><span class="p">]</span><span class="x">
-			</span><span class="k">if</span><span class="x"> </span><span class="n">exists</span><span class="x"> </span><span class="o">&amp;&amp;</span><span class="x"> </span><span class="n">notifChans</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="k">for</span><span class="x"> </span><span class="n">k</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">notifChans</span><span class="x"> </span><span class="p">{</span><span class="x">
-					</span><span class="k">if</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="c">// this will block all threads in case of a single slow reader</span><span class="x">
-				</span><span class="c">// the chan will fill and it will not be possible to send other</span><span class="x">
-				</span><span class="c">// notifications to other readers.</span><span class="x">
-				</span><span class="c">// option is to do launch each as a separate goroutine</span><span class="x">
-				</span><span class="c">// but it will not guarantee order at the receiving side</span><span class="x">
-						</span><span class="k">go</span><span class="x"> </span><span class="k">func</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x"> </span><span class="n">k</span><span class="x"> </span><span class="o">&lt;-</span><span class="x"> </span><span class="o">&amp;</span><span class="n">incomingProduct</span><span class="o">.</span><span class="n">Product</span><span class="x"> </span><span class="p">}()</span><span class="x">
-					</span><span class="p">}</span><span class="x">
-				</span><span class="p">}</span><span class="x">
-			</span><span class="p">}</span><span class="x">
+			<span class="n">notifChans</span><span class="p">,</span> <span class="n">exists</span> <span class="o">:=</span> <span class="n">notifyUpdates</span><span class="p">[</span><span class="n">incomingProduct</span><span class="o">.</span><span class="n">Product</span><span class="o">.</span><span class="n">ProductID</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">exists</span> <span class="o">&amp;&amp;</span> <span class="n">notifChans</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">notifChans</span> <span class="p">{</span>
+					<span class="k">if</span> <span class="n">v</span> <span class="p">{</span>
+				<span class="c">// this will block all threads in case of a single slow reader</span>
+				<span class="c">// the chan will fill and it will not be possible to send other</span>
+				<span class="c">// notifications to other readers.</span>
+				<span class="c">// option is to do launch each as a separate goroutine</span>
+				<span class="c">// but it will not guarantee order at the receiving side</span>
+						<span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span> <span class="n">k</span> <span class="o">&lt;-</span> <span class="o">&amp;</span><span class="n">incomingProduct</span><span class="o">.</span><span class="n">Product</span> <span class="p">}()</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
 
-		</span><span class="k">case</span><span class="x"> </span><span class="n">subscription</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="o">&lt;-</span><span class="n">addRemoveSubscription</span><span class="o">:</span><span class="x">
+		<span class="k">case</span> <span class="n">subscription</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">addRemoveSubscription</span><span class="o">:</span>
 
-			</span><span class="k">switch</span><span class="x"> </span><span class="n">subscription</span><span class="o">.</span><span class="n">Cmd</span><span class="x"> </span><span class="p">{</span><span class="x">
+			<span class="k">switch</span> <span class="n">subscription</span><span class="o">.</span><span class="n">Cmd</span> <span class="p">{</span>
 
-			</span><span class="k">case</span><span class="x"> </span><span class="s">"subscribe"</span><span class="o">:</span><span class="x">
-				</span><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">prd</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">subscription</span><span class="o">.</span><span class="n">ProductIDs</span><span class="x"> </span><span class="p">{</span><span class="x">
-					</span><span class="n">ret</span><span class="p">,</span><span class="x"> </span><span class="n">ok</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">notifyUpdates</span><span class="p">[</span><span class="n">prd</span><span class="p">]</span><span class="x">
-					</span><span class="k">if</span><span class="x"> </span><span class="o">!</span><span class="n">ok</span><span class="x"> </span><span class="p">{</span><span class="x">
-						</span><span class="n">ret</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">make</span><span class="p">(</span><span class="k">map</span><span class="p">[</span><span class="k">chan</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span><span class="x">
-						</span><span class="n">notifyUpdates</span><span class="p">[</span><span class="n">prd</span><span class="p">]</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">ret</span><span class="x">
-					</span><span class="p">}</span><span class="x">
-					</span><span class="n">ret</span><span class="p">[</span><span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">]</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="no">true</span><span class="x">
-				</span><span class="p">}</span><span class="x">
-			</span><span class="k">case</span><span class="x"> </span><span class="s">"unsubscribe"</span><span class="o">:</span><span class="x">
-				</span><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">prd</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">subscription</span><span class="o">.</span><span class="n">ProductIDs</span><span class="x"> </span><span class="p">{</span><span class="x">
-					</span><span class="nb">delete</span><span class="p">(</span><span class="n">notifyUpdates</span><span class="p">,</span><span class="x"> </span><span class="n">prd</span><span class="p">)</span><span class="x">
-				</span><span class="p">}</span><span class="x">
+			<span class="k">case</span> <span class="s">"subscribe"</span><span class="o">:</span>
+				<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">prd</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">subscription</span><span class="o">.</span><span class="n">ProductIDs</span> <span class="p">{</span>
+					<span class="n">ret</span><span class="p">,</span> <span class="n">ok</span> <span class="o">:=</span> <span class="n">notifyUpdates</span><span class="p">[</span><span class="n">prd</span><span class="p">]</span>
+					<span class="k">if</span> <span class="o">!</span><span class="n">ok</span> <span class="p">{</span>
+						<span class="n">ret</span> <span class="o">=</span> <span class="nb">make</span><span class="p">(</span><span class="k">map</span><span class="p">[</span><span class="k">chan</span> <span class="o">*</span><span class="n">Product</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span>
+						<span class="n">notifyUpdates</span><span class="p">[</span><span class="n">prd</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+					<span class="p">}</span>
+					<span class="n">ret</span><span class="p">[</span><span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">]</span> <span class="o">=</span> <span class="no">true</span>
+				<span class="p">}</span>
+			<span class="k">case</span> <span class="s">"unsubscribe"</span><span class="o">:</span>
+				<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">prd</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">subscription</span><span class="o">.</span><span class="n">ProductIDs</span> <span class="p">{</span>
+					<span class="nb">delete</span><span class="p">(</span><span class="n">notifyUpdates</span><span class="p">,</span> <span class="n">prd</span><span class="p">)</span>
+				<span class="p">}</span>
 
-			</span><span class="k">case</span><span class="x"> </span><span class="s">"closeconn"</span><span class="o">:</span><span class="x">
+			<span class="k">case</span> <span class="s">"closeconn"</span><span class="o">:</span>
 
-				</span><span class="c">// empty the rest</span><span class="x">
-				</span><span class="c">// we might wrap the following in a goroutine </span><span class="x">
-				</span><span class="c">// so we don't block futher incoming messages </span><span class="x">
-				</span><span class="n">emptyKeys</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span><span class="x"> </span><span class="m">0</span><span class="p">,</span><span class="x"> </span><span class="m">100</span><span class="p">)</span><span class="x">
+				<span class="c">// empty the rest</span>
+				<span class="c">// we might wrap the following in a goroutine </span>
+				<span class="c">// so we don't block futher incoming messages </span>
+				<span class="n">emptyKeys</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">100</span><span class="p">)</span>
 
-				</span><span class="k">for</span><span class="x"> </span><span class="n">k</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">notifyUpdates</span><span class="x"> </span><span class="p">{</span><span class="x">
-					</span><span class="nb">delete</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="x"> </span><span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">)</span><span class="x">
-					</span><span class="k">if</span><span class="x"> </span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="m">0</span><span class="x"> </span><span class="p">{</span><span class="x">
-						</span><span class="n">emptyKeys</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">append</span><span class="p">(</span><span class="n">emptyKeys</span><span class="p">,</span><span class="x"> </span><span class="n">k</span><span class="p">)</span><span class="x">
-					</span><span class="p">}</span><span class="x">
-				</span><span class="p">}</span><span class="x">
-				</span><span class="c">// clear the map of empty keys</span><span class="x">
-				</span><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">k</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">emptyKeys</span><span class="x"> </span><span class="p">{</span><span class="x">
-					</span><span class="nb">delete</span><span class="p">(</span><span class="n">notifyUpdates</span><span class="p">,</span><span class="x"> </span><span class="n">k</span><span class="p">)</span><span class="x">
-				</span><span class="p">}</span><span class="x">
-				</span><span class="nb">close</span><span class="p">(</span><span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">)</span><span class="x">
+				<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">notifyUpdates</span> <span class="p">{</span>
+					<span class="nb">delete</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">)</span>
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="m">0</span> <span class="p">{</span>
+						<span class="n">emptyKeys</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">emptyKeys</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+				<span class="c">// clear the map of empty keys</span>
+				<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">k</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">emptyKeys</span> <span class="p">{</span>
+					<span class="nb">delete</span><span class="p">(</span><span class="n">notifyUpdates</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+				<span class="p">}</span>
+				<span class="nb">close</span><span class="p">(</span><span class="n">subscription</span><span class="o">.</span><span class="n">CommChan</span><span class="p">)</span>
 
-			</span><span class="k">default</span><span class="o">:</span><span class="x">
-				</span><span class="n">log</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Unhandled command %v"</span><span class="p">,</span><span class="x"> </span><span class="n">subscription</span><span class="o">.</span><span class="n">Cmd</span><span class="p">)</span><span class="x">
-			</span><span class="p">}</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
+			<span class="k">default</span><span class="o">:</span>
+				<span class="n">log</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Unhandled command %v"</span><span class="p">,</span> <span class="n">subscription</span><span class="o">.</span><span class="n">Cmd</span><span class="p">)</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
 
-</span><span class="c">// module init function to start the map service</span><span class="x">
-</span><span class="k">func</span><span class="x"> </span><span class="n">init</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">go</span><span class="x"> </span><span class="n">handleDistributionGoroutine</span><span class="p">()</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<span class="c">// module init function to start the map service</span>
+<span class="k">func</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">go</span> <span class="n">handleDistributionGoroutine</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/gowsws2.png" alt="Running in IntelliJ" /></p>
 
 <h3 id="https-and-http2">HTTPS and HTTP/2</h3>
 
-<p>Before we launch to production our service, we need to make sure we secure it. In order to accept connections over HTTPS, we need to change our <code class="highlighter-rouge">http.ListenAndServe</code> invocation to <code class="highlighter-rouge">http.ListenAndServeTLS</code> and provide the call a certificate. We are going to generate ourselves such a certificate using <code class="highlighter-rouge">generate_cert.go</code> utility from the <code class="highlighter-rouge">crypto/tls</code> package.</p>
+<p>Before we launch to production our service, we need to make sure we secure it. In order to accept connections over HTTPS, we need to change our <code class="language-plaintext highlighter-rouge">http.ListenAndServe</code> invocation to <code class="language-plaintext highlighter-rouge">http.ListenAndServeTLS</code> and provide the call a certificate. We are going to generate ourselves such a certificate using <code class="language-plaintext highlighter-rouge">generate_cert.go</code> utility from the <code class="language-plaintext highlighter-rouge">crypto/tls</code> package.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/gowsws3.png" alt="Generating Certificates" /></p>
 
-<p>The <code class="highlighter-rouge">cert.pem</code> file is the certificate with my public key inside while <code class="highlighter-rouge">key.pem</code> is my private key. When the session is established, a shared session key is generated by the client, signed with my public key. It is only I who can decode the shared key using my private key. The shared key is used to symmetrically encrypt messages</p>
+<p>The <code class="language-plaintext highlighter-rouge">cert.pem</code> file is the certificate with my public key inside while <code class="language-plaintext highlighter-rouge">key.pem</code> is my private key. When the session is established, a shared session key is generated by the client, signed with my public key. It is only I who can decode the shared key using my private key. The shared key is used to symmetrically encrypt messages</p>
 
 <p>If I try to open now my service in Fireforx I get a security warning, but after I accept the warning I can access my service over https.</p>
 
@@ -376,39 +376,39 @@ Content-Type: application/json
   <li>Server push</li>
 </ul>
 
-<p>From these, we will discuss a bit server push. What server push does is to send to the client assets which were not previously requested before they are requested. An example is when the browser requires <code class="highlighter-rouge">index.html</code> and we know that it is styled with <code class="highlighter-rouge">main.css</code>, append to the request this file also. This saves loading times and browser roundripts. A problem arises when the asset is cached with <code class="highlighter-rouge">Cache-Control</code> in which condition it will get pushed anyway, increasing the size of the request. A simple solution to this issue is to set a cookie when the page is visited and, if the cookie is present, do not send the asset with server push. If the cookie is present we can safely assume the browser has the asset already cached and, if not, it will be requested anyway when it encounters it.</p>
+<p>From these, we will discuss a bit server push. What server push does is to send to the client assets which were not previously requested before they are requested. An example is when the browser requires <code class="language-plaintext highlighter-rouge">index.html</code> and we know that it is styled with <code class="language-plaintext highlighter-rouge">main.css</code>, append to the request this file also. This saves loading times and browser roundripts. A problem arises when the asset is cached with <code class="language-plaintext highlighter-rouge">Cache-Control</code> in which condition it will get pushed anyway, increasing the size of the request. A simple solution to this issue is to set a cookie when the page is visited and, if the cookie is present, do not send the asset with server push. If the cookie is present we can safely assume the browser has the asset already cached and, if not, it will be requested anyway when it encounters it.</p>
 
 <p>Since not all connections have the ability to do server push, we need to check for this capability. In our handler we do:</p>
 
-<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">mySeverPushRequest</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">mySeverPushRequest</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
 
-	</span><span class="c">// get the pusher interface out of our writer</span><span class="x">
-	</span><span class="k">if</span><span class="x"> </span><span class="n">pusher</span><span class="p">,</span><span class="x"> </span><span class="n">ok</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">w</span><span class="o">.</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">Pusher</span><span class="p">);</span><span class="x"> </span><span class="n">ok</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="c">// get the pusher interface out of our writer</span>
+	<span class="k">if</span> <span class="n">pusher</span><span class="p">,</span> <span class="n">ok</span> <span class="o">:=</span> <span class="n">w</span><span class="o">.</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">Pusher</span><span class="p">);</span> <span class="n">ok</span> <span class="p">{</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">cookieAssetsPushed</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Cookie</span><span class="p">(</span><span class="s">"assetspushed"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="c">// set cookie and cache control for one hour</span><span class="x">
-			</span><span class="n">pusher</span><span class="o">.</span><span class="n">Push</span><span class="p">(</span><span class="s">"main.css"</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">http</span><span class="o">.</span><span class="n">PushOptions</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="n">Header</span><span class="o">:</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">{</span><span class="x"> 
-					</span><span class="s">"Content-Type"</span><span class="o">:</span><span class="x"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"text/css"</span><span class="p">}</span><span class="x"> </span><span class="p">,</span><span class="x">
-					</span><span class="s">"Cache-Control"</span><span class="o">:</span><span class="x"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"max-age=3600"</span><span class="p">},</span><span class="x">
-					</span><span class="p">}</span><span class="x">
-			</span><span class="p">})</span><span class="x">
+		<span class="k">if</span> <span class="n">cookieAssetsPushed</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">r</span><span class="o">.</span><span class="n">Cookie</span><span class="p">(</span><span class="s">"assetspushed"</span><span class="p">);</span> <span class="n">err</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="c">// set cookie and cache control for one hour</span>
+			<span class="n">pusher</span><span class="o">.</span><span class="n">Push</span><span class="p">(</span><span class="s">"main.css"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">http</span><span class="o">.</span><span class="n">PushOptions</span> <span class="p">{</span>
+				<span class="n">Header</span><span class="o">:</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">{</span> 
+					<span class="s">"Content-Type"</span><span class="o">:</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"text/css"</span><span class="p">}</span> <span class="p">,</span>
+					<span class="s">"Cache-Control"</span><span class="o">:</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"max-age=3600"</span><span class="p">},</span>
+					<span class="p">}</span>
+			<span class="p">})</span>
 
-			</span><span class="c">// 1h expiration time</span><span class="x">
- 			</span><span class="n">expiration</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">time</span><span class="o">.</span><span class="n">Now</span><span class="p">()</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">Hour</span><span class="p">)</span><span class="x">
-        	</span><span class="n">cookie</span><span class="x"> </span><span class="o">:=</span><span class="x">    </span><span class="n">http</span><span class="o">.</span><span class="n">Cookie</span><span class="p">{</span><span class="x">
-				</span><span class="n">Name</span><span class="o">:</span><span class="x"> 		</span><span class="s">"assetspushed"</span><span class="p">,</span><span class="x">
-				</span><span class="n">Value</span><span class="o">:</span><span class="x">		</span><span class="s">"true"</span><span class="p">,</span><span class="x">
-				</span><span class="n">Expires</span><span class="o">:</span><span class="x">	</span><span class="n">expiration</span><span class="p">,</span><span class="x">
-			</span><span class="p">}</span><span class="x">
-        	</span><span class="n">http</span><span class="o">.</span><span class="n">SetCookie</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">cookie</span><span class="p">)</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+			<span class="c">// 1h expiration time</span>
+ 			<span class="n">expiration</span> <span class="o">:=</span> <span class="n">time</span><span class="o">.</span><span class="n">Now</span><span class="p">()</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">Hour</span><span class="p">)</span>
+        	<span class="n">cookie</span> <span class="o">:=</span>    <span class="n">http</span><span class="o">.</span><span class="n">Cookie</span><span class="p">{</span>
+				<span class="n">Name</span><span class="o">:</span> 		<span class="s">"assetspushed"</span><span class="p">,</span>
+				<span class="n">Value</span><span class="o">:</span>		<span class="s">"true"</span><span class="p">,</span>
+				<span class="n">Expires</span><span class="o">:</span>	<span class="n">expiration</span><span class="p">,</span>
+			<span class="p">}</span>
+        	<span class="n">http</span><span class="o">.</span><span class="n">SetCookie</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">cookie</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
 
-	</span><span class="c">// continue serving files or executing templates</span><span class="x">
-	</span><span class="p">[</span><span class="o">.......................</span><span class="p">]</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="c">// continue serving files or executing templates</span>
+	<span class="p">[</span><span class="o">.......................</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 
   </div>

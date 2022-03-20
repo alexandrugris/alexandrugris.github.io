@@ -82,7 +82,7 @@
 <p>We want both confusion and diffusion to be as high as possible.</p>
 
 <p>To increase confusion, we want for a small change in the key to lead to a large change in the text. 
-If we were to apply a simple <code class="highlighter-rouge">text XOR key</code> on each block independently, one bit of change in the key leads to one bit of change in the ciphertext, thus a very low confusion. Therefore, a good CBC algorithm work in several encryption rounds on each block.</p>
+If we were to apply a simple <code class="language-plaintext highlighter-rouge">text XOR key</code> on each block independently, one bit of change in the key leads to one bit of change in the ciphertext, thus a very low confusion. Therefore, a good CBC algorithm work in several encryption rounds on each block.</p>
 
 <p>Similarly, we want a small change in the text to lead to a large change in the ciphertext. Therefore, we cannot simply apply the same key over and over the encrypted message, independently, block from block. That would encrypt the block itself, but patterns in the text would still be apparent when the same group of characters reappears. Therefore, we use the ciphertext from the previous block as a part of encryption of the current block. This ensures that every block in the message depends on all the previous blocks. Thus, a small change in the message early in the stream would lead to a large change of the ciphertext, spread all the way to the end, hence increasing diffusion.</p>
 
@@ -90,7 +90,7 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">initVector</span><span class="o">(</span><span class="kt">int</span> <span class="n">blockSize</span><span class="o">){</span>
     <span class="kt">byte</span><span class="o">[]</span> <span class="n">initVector</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">blockSize</span><span class="o">];</span>
-    <span class="o">(</span><span class="k">new</span> <span class="n">Random</span> <span class="o">(</span><span class="mi">42</span><span class="o">)).</span><span class="na">nextBytes</span> <span class="o">(</span><span class="n">initVector</span><span class="o">);</span> <span class="c1">// given key</span>
+    <span class="o">(</span><span class="k">new</span> <span class="nc">Random</span> <span class="o">(</span><span class="mi">42</span><span class="o">)).</span><span class="na">nextBytes</span> <span class="o">(</span><span class="n">initVector</span><span class="o">);</span> <span class="c1">// given key</span>
     <span class="k">return</span> <span class="n">initVector</span><span class="o">;</span>
 <span class="o">}</span>
 
@@ -114,30 +114,30 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
     <span class="k">return</span> <span class="n">msg</span><span class="o">;</span>
 <span class="o">}</span>
 
-<span class="kd">private</span> <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">encryptCBC</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">){</span>
-    <span class="kt">byte</span><span class="o">[]</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
-    <span class="kt">byte</span><span class="o">[]</span> <span class="n">key</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">encryptCBC</span><span class="o">(</span><span class="nc">String</span> <span class="n">s</span><span class="o">,</span> <span class="nc">String</span> <span class="n">password</span><span class="o">){</span>
+    <span class="kt">byte</span><span class="o">[]</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
+    <span class="kt">byte</span><span class="o">[]</span> <span class="n">key</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
     <span class="k">return</span> <span class="nf">encryptDecryptCBC</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
 <span class="o">}</span>
 
-<span class="kd">private</span> <span class="kd">static</span> <span class="n">String</span> <span class="nf">decryptCBC</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">msg</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">){</span>
-    <span class="kt">byte</span><span class="o">[]</span> <span class="n">key</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="nc">String</span> <span class="nf">decryptCBC</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">msg</span><span class="o">,</span> <span class="nc">String</span> <span class="n">password</span><span class="o">){</span>
+    <span class="kt">byte</span><span class="o">[]</span> <span class="n">key</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
     <span class="k">return</span> <span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="n">encryptDecryptCBC</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="kc">false</span><span class="o">));</span>
 <span class="o">}</span>
 
 <span class="cm">/***
  * Here it starts
  */</span>
-<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_CypherBlockChaining</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-    <span class="n">String</span> <span class="n">myMsg</span> <span class="o">=</span> <span class="s">"This is a message which is long"</span><span class="o">;</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_CypherBlockChaining</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
+    <span class="nc">String</span> <span class="n">myMsg</span> <span class="o">=</span> <span class="s">"This is a message which is long"</span><span class="o">;</span>
     <span class="kt">byte</span><span class="o">[]</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">encryptCBC</span> <span class="o">(</span><span class="n">myMsg</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">);</span>
-    <span class="n">String</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">decryptCBC</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">);</span>
+    <span class="nc">String</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">decryptCBC</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">);</span>
     <span class="k">if</span><span class="o">(!</span><span class="n">ret</span><span class="o">.</span><span class="na">equals</span> <span class="o">(</span><span class="n">myMsg</span><span class="o">))</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span> <span class="o">(</span><span class="s">"Wrong Algorithm"</span><span class="o">);</span>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>One of the early implementations was <code class="highlighter-rouge">DES</code>, currently considered obsolete due to the short key length. A newer one is <code class="highlighter-rouge">AES</code>, which is run with keys 128, 192 or 256 bits. <code class="highlighter-rouge">AES</code> runs on blocks of 16 bytes and applies a series of rounds to to confuse the key, including operations like shifting rows, mixing rows, XOR-ing, side lookups. <code class="highlighter-rouge">AES-256</code> is considered strong enough to encrypt government secrets.</p>
+<p>One of the early implementations was <code class="language-plaintext highlighter-rouge">DES</code>, currently considered obsolete due to the short key length. A newer one is <code class="language-plaintext highlighter-rouge">AES</code>, which is run with keys 128, 192 or 256 bits. <code class="language-plaintext highlighter-rouge">AES</code> runs on blocks of 16 bytes and applies a series of rounds to to confuse the key, including operations like shifting rows, mixing rows, XOR-ing, side lookups. <code class="language-plaintext highlighter-rouge">AES-256</code> is considered strong enough to encrypt government secrets.</p>
 
 <p>When sending a message, the following order of operations must be kept:</p>
 
@@ -147,11 +147,11 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
   <li>Error correction</li>
 </ol>
 
-<p>Compression reduces redundancy in the message. If encryption is applied before compression, due to diffusion which is aimed at masking redundant patterns, compression becomes ineffective. Error correction adds redundancy to the message. Thus, if applied it the same step as the encryption, as the <code class="highlighter-rouge">DES</code> algorithm did, it decreases the encryption strength. If applied before, it loses its meaning as accidental information loss can occur during transmission, not at encryption time.</p>
+<p>Compression reduces redundancy in the message. If encryption is applied before compression, due to diffusion which is aimed at masking redundant patterns, compression becomes ineffective. Error correction adds redundancy to the message. Thus, if applied it the same step as the encryption, as the <code class="language-plaintext highlighter-rouge">DES</code> algorithm did, it decreases the encryption strength. If applied before, it loses its meaning as accidental information loss can occur during transmission, not at encryption time.</p>
 
 <h3 id="asymmetric-algorithms">Asymmetric Algorithms</h3>
 
-<p>The principle of asymmetric algorithms is simple. The emitter keeps a function <code class="highlighter-rouge">ciphertext = f(text)</code> to himself while giving the recipient its inverse <code class="highlighter-rouge">text = f-1(ciphertext)</code>. In more practical terms, I want to give you a an encrypting exponent <code class="highlighter-rouge">e</code> and a modulus <code class="highlighter-rouge">m</code> so that you can <code class="highlighter-rouge">message^e % m = ciphertext</code> while I can <code class="highlighter-rouge">ciphertext^d % m = message</code>, where <code class="highlighter-rouge">d</code> is the decrypting exponent.</p>
+<p>The principle of asymmetric algorithms is simple. The emitter keeps a function <code class="language-plaintext highlighter-rouge">ciphertext = f(text)</code> to himself while giving the recipient its inverse <code class="language-plaintext highlighter-rouge">text = f-1(ciphertext)</code>. In more practical terms, I want to give you a an encrypting exponent <code class="language-plaintext highlighter-rouge">e</code> and a modulus <code class="language-plaintext highlighter-rouge">m</code> so that you can <code class="language-plaintext highlighter-rouge">message^e % m = ciphertext</code> while I can <code class="language-plaintext highlighter-rouge">ciphertext^d % m = message</code>, where <code class="language-plaintext highlighter-rouge">d</code> is the decrypting exponent.</p>
 
 <p>The principle of exponentiation in the modulo has been discussed in the previous post. In short, exponentiation in the modulo has the following interesting properties:</p>
 <ul>
@@ -160,36 +160,36 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
   <li>its inverse, the logarithm problem, is very time consuming</li>
 </ul>
 
-<p>The code below exemplifies the algorithm. The modulo exponentiation function is described in the previous post. Important to note that each chunk of message we can encrypt with this process must be lower than <code class="highlighter-rouge">modulo</code>.</p>
+<p>The code below exemplifies the algorithm. The modulo exponentiation function is described in the previous post. Important to note that each chunk of message we can encrypt with this process must be lower than <code class="language-plaintext highlighter-rouge">modulo</code>.</p>
 
 <p>But how do we get the encrypting/decrypting exponent pairs and the modulo? The maths goes like this:</p>
 
 <ol>
-  <li>We select the modulo <code class="highlighter-rouge">m = p * q</code> where <code class="highlighter-rouge">p</code> and <code class="highlighter-rouge">q</code> are two (large) prime numbers.</li>
-  <li>The formula for inverse assumes that <code class="highlighter-rouge">(message^e)^d % m = message</code> which is equivalent to <code class="highlighter-rouge">message ^ (e * d) % m = message</code></li>
-  <li>Because we selected <code class="highlighter-rouge">m = p * q</code>, we obtain <code class="highlighter-rouge">message^(e * d) % p = message^(e * d) % q = message</code>, which is true when <code class="highlighter-rouge">message &lt; p</code> and <code class="highlighter-rouge">message &lt; q</code>.</li>
-  <li>This is equivalent to saying <code class="highlighter-rouge">message^(e * d - 1) * message % p = message</code> which looks very much like the <a href="https://en.wikipedia.org/wiki/Fermat%27s_little_theorem"><em>Fermat’s Little Theorem</em></a> which tells us that <code class="highlighter-rouge">m^(p-1) % p = 1</code> when <code class="highlighter-rouge">p</code> is prime and <code class="highlighter-rouge">m</code> is not a multiple of <code class="highlighter-rouge">p</code></li>
-  <li>If we select <code class="highlighter-rouge">e * d = k * (p-1)</code> where <code class="highlighter-rouge">k</code> is a constant and plug it in point 4, we obtain <code class="highlighter-rouge">(message^(p-1))^k * message % p = message</code> which is equivalent to <code class="highlighter-rouge">1^k * message % p = message</code> which is equivalent to <code class="highlighter-rouge">message % p = message</code>.</li>
-  <li>If we proceed in an identical manner on the <code class="highlighter-rouge">q</code> side, we get <code class="highlighter-rouge">e * d - 1 = k * (p-1) * (q-1)</code>. So we need to find <code class="highlighter-rouge">k</code> and <code class="highlighter-rouge">d</code>, both integers, which satisfy the above equation.</li>
+  <li>We select the modulo <code class="language-plaintext highlighter-rouge">m = p * q</code> where <code class="language-plaintext highlighter-rouge">p</code> and <code class="language-plaintext highlighter-rouge">q</code> are two (large) prime numbers.</li>
+  <li>The formula for inverse assumes that <code class="language-plaintext highlighter-rouge">(message^e)^d % m = message</code> which is equivalent to <code class="language-plaintext highlighter-rouge">message ^ (e * d) % m = message</code></li>
+  <li>Because we selected <code class="language-plaintext highlighter-rouge">m = p * q</code>, we obtain <code class="language-plaintext highlighter-rouge">message^(e * d) % p = message^(e * d) % q = message</code>, which is true when <code class="language-plaintext highlighter-rouge">message &lt; p</code> and <code class="language-plaintext highlighter-rouge">message &lt; q</code>.</li>
+  <li>This is equivalent to saying <code class="language-plaintext highlighter-rouge">message^(e * d - 1) * message % p = message</code> which looks very much like the <a href="https://en.wikipedia.org/wiki/Fermat%27s_little_theorem"><em>Fermat’s Little Theorem</em></a> which tells us that <code class="language-plaintext highlighter-rouge">m^(p-1) % p = 1</code> when <code class="language-plaintext highlighter-rouge">p</code> is prime and <code class="language-plaintext highlighter-rouge">m</code> is not a multiple of <code class="language-plaintext highlighter-rouge">p</code></li>
+  <li>If we select <code class="language-plaintext highlighter-rouge">e * d = k * (p-1)</code> where <code class="language-plaintext highlighter-rouge">k</code> is a constant and plug it in point 4, we obtain <code class="language-plaintext highlighter-rouge">(message^(p-1))^k * message % p = message</code> which is equivalent to <code class="language-plaintext highlighter-rouge">1^k * message % p = message</code> which is equivalent to <code class="language-plaintext highlighter-rouge">message % p = message</code>.</li>
+  <li>If we proceed in an identical manner on the <code class="language-plaintext highlighter-rouge">q</code> side, we get <code class="language-plaintext highlighter-rouge">e * d - 1 = k * (p-1) * (q-1)</code>. So we need to find <code class="language-plaintext highlighter-rouge">k</code> and <code class="language-plaintext highlighter-rouge">d</code>, both integers, which satisfy the above equation.</li>
 </ol>
 
 <p><img src="https://alexandrugris.github.io/assets/crypto2_1.png" alt="Finding the decryption exponent" /></p>
 
 <p>Let’s do just that:</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">encryptMessage</span><span class="o">(</span><span class="kt">int</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">int</span> <span class="n">encryptingExponent</span><span class="o">,</span> <span class="kt">int</span> <span class="n">modulo</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">encryptMessage</span><span class="o">(</span><span class="kt">int</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">int</span> <span class="n">encryptingExponent</span><span class="o">,</span> <span class="kt">int</span> <span class="n">modulo</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
     <span class="c1">// if msg == modulo, exponentiation returns 0 =&gt; message is compromised</span>
     <span class="c1">// from there on, it loops again through the same values =&gt; impossible to construct the msg</span>
     <span class="k">if</span><span class="o">(</span><span class="n">msg</span> <span class="o">&gt;=</span> <span class="n">modulo</span><span class="o">)</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span> <span class="o">(</span><span class="s">"Cannot encrypt messages larger than modulo"</span><span class="o">);</span>
-    <span class="k">return</span> <span class="n">Actor</span><span class="o">.</span><span class="na">powModulo</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">encryptingExponent</span><span class="o">,</span> <span class="n">modulo</span><span class="o">);</span>
+    <span class="k">return</span> <span class="nc">Actor</span><span class="o">.</span><span class="na">powModulo</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">encryptingExponent</span><span class="o">,</span> <span class="n">modulo</span><span class="o">);</span>
 <span class="o">}</span>
 
 <span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">decryptMessage</span><span class="o">(</span><span class="kt">int</span> <span class="n">encryptedMessage</span><span class="o">,</span> <span class="kt">int</span> <span class="n">decryptingExponent</span><span class="o">,</span> <span class="kt">int</span> <span class="n">modulo</span><span class="o">){</span>
-    <span class="k">return</span> <span class="n">Actor</span><span class="o">.</span><span class="na">powModulo</span> <span class="o">(</span><span class="n">encryptedMessage</span><span class="o">,</span> <span class="n">decryptingExponent</span><span class="o">,</span> <span class="n">modulo</span><span class="o">);</span>
+    <span class="k">return</span> <span class="nc">Actor</span><span class="o">.</span><span class="na">powModulo</span> <span class="o">(</span><span class="n">encryptedMessage</span><span class="o">,</span> <span class="n">decryptingExponent</span><span class="o">,</span> <span class="n">modulo</span><span class="o">);</span>
 <span class="o">}</span>
 
-<span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getDecryptingExponent</span><span class="o">(</span><span class="kt">int</span> <span class="n">e</span><span class="o">,</span> <span class="kt">int</span> <span class="n">p</span><span class="o">,</span> <span class="kt">int</span> <span class="n">q</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getDecryptingExponent</span><span class="o">(</span><span class="kt">int</span> <span class="n">e</span><span class="o">,</span> <span class="kt">int</span> <span class="n">p</span><span class="o">,</span> <span class="kt">int</span> <span class="n">q</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
     
     <span class="c1">// here we search blindly for this k, </span>
     <span class="c1">// a better algorithm can be found in wikipedia </span>
@@ -204,7 +204,7 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
     <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span> <span class="o">(</span><span class="s">"Cannot find inverse exponent"</span><span class="o">);</span>
 <span class="o">}</span>
 
-<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_asymmetricEncryption</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span><span class="o">{</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_asymmetricEncryption</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span><span class="o">{</span>
     <span class="kt">int</span> <span class="n">msg</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>   <span class="c1">// [SECRET] my secret message</span>
     <span class="kt">int</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">17</span><span class="o">;</span>     <span class="c1">// factor of modulo, large prime - [SECRET]</span>
     <span class="kt">int</span> <span class="n">q</span> <span class="o">=</span> <span class="mi">19</span><span class="o">;</span>     <span class="c1">// factor of modulo, large prime - [SECRET]</span>
@@ -225,19 +225,19 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
 
 <p>The algorithm above is a very rudimentary implementation of the <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)"><em>RSA</em> algorithm</a>.</p>
 
-<p>We’ve see in the previous post that, in order to solve the discrete logarithm problem and crack the Diffie-Hellman encryption, we need to perform a scan over the whole set of possible values, from <code class="highlighter-rouge">0</code> to <code class="highlighter-rouge">modulo</code> (variable <code class="highlighter-rouge">COUNT</code> is the <code class="highlighter-rouge">modulo</code> in our case):</p>
+<p>We’ve see in the previous post that, in order to solve the discrete logarithm problem and crack the Diffie-Hellman encryption, we need to perform a scan over the whole set of possible values, from <code class="language-plaintext highlighter-rouge">0</code> to <code class="language-plaintext highlighter-rouge">modulo</code> (variable <code class="language-plaintext highlighter-rouge">COUNT</code> is the <code class="language-plaintext highlighter-rouge">modulo</code> in our case):</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">COUNT</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">Actor</span><span class="o">.</span><span class="na">initialPowModulo</span> <span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">==</span> <span class="n">actor1PublicMessage</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="no">COUNT</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="nc">Actor</span><span class="o">.</span><span class="na">initialPowModulo</span> <span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">==</span> <span class="n">actor1PublicMessage</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
         <span class="n">crackedInternalRandoms</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
         <span class="k">break</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>Each extra bit added to the <code class="highlighter-rouge">COUNT</code> variable doubles the amount of work the algorithm is required to perform. Therefore, the complexity of cracking the code is <code class="highlighter-rouge">O(2^no_of_bits_in_modulo)</code>.</p>
+<p>Each extra bit added to the <code class="language-plaintext highlighter-rouge">COUNT</code> variable doubles the amount of work the algorithm is required to perform. Therefore, the complexity of cracking the code is <code class="language-plaintext highlighter-rouge">O(2^no_of_bits_in_modulo)</code>.</p>
 
-<p>In 2014 a paper has been published with an algorithm that would bring the discrete logarithm problem to significantly sub-exponential complexity. However, since in <code class="highlighter-rouge">Diffie-Hellman</code> the modulo is prime and in <code class="highlighter-rouge">RSA</code> it is a product of two prime numbers, the suggested heuristics from the paper does not (yet) apply.</p>
+<p>In 2014 a paper has been published with an algorithm that would bring the discrete logarithm problem to significantly sub-exponential complexity. However, since in <code class="language-plaintext highlighter-rouge">Diffie-Hellman</code> the modulo is prime and in <code class="language-plaintext highlighter-rouge">RSA</code> it is a product of two prime numbers, the suggested heuristics from the paper does not (yet) apply.</p>
 
 <h3 id="authenticity">Authenticity</h3>
 
@@ -261,7 +261,7 @@ If we were to apply a simple <code class="highlighter-rouge">text XOR key</code>
 
 <p>The weakness is the hash function. If the hash function is easily reversible, a potential attacker could craft a message that has the same hash as the original message and pass it along with the originally encrypted hash. The message, at the recipient, would pass the validation.</p>
 
-<p>Because of this, we need cryptographically strong hash functions. These functions work on the same principles as the CBC described earlier in this chapter. <code class="highlighter-rouge">MD5</code>, the first designed hash function, is no longer recommended for use, same for <code class="highlighter-rouge">SHA-1</code> which came later. <code class="highlighter-rouge">SHA-2</code> (<code class="highlighter-rouge">SHA-256</code> and <code class="highlighter-rouge">SHA-512</code>) and <code class="highlighter-rouge">SHA-3</code> are currently the gold standard in cryptography.</p>
+<p>Because of this, we need cryptographically strong hash functions. These functions work on the same principles as the CBC described earlier in this chapter. <code class="language-plaintext highlighter-rouge">MD5</code>, the first designed hash function, is no longer recommended for use, same for <code class="language-plaintext highlighter-rouge">SHA-1</code> which came later. <code class="language-plaintext highlighter-rouge">SHA-2</code> (<code class="language-plaintext highlighter-rouge">SHA-256</code> and <code class="language-plaintext highlighter-rouge">SHA-512</code>) and <code class="language-plaintext highlighter-rouge">SHA-3</code> are currently the gold standard in cryptography.</p>
 
 <p>There is still an attack vector open - an attacker can generate a large number of messages that I am likely to sign and a similarly large number of messages that I would not likely sign. This increases the probability that he/she will find a pair of (likely-to-sign, unlikely-to-sign) and thus use my signature to validate his malicious message. Because of this, the protocol for using signatures requires that we never sign a message received from a 3rd party without altering it a little bit before, to generate another hash.</p>
 

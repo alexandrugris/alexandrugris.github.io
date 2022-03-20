@@ -79,7 +79,7 @@
   <li><em>true negatives:</em> my test says not spam and the email is not spam (tn)</li>
 </ul>
 
-<p>For the rest of the article, let’s consider a classifier that has the following confusion matrix: <code class="highlighter-rouge">tp = 10</code>, <code class="highlighter-rouge">fp = 100</code>, <code class="highlighter-rouge">fn = 1000</code>, <code class="highlighter-rouge">tn = 10000</code>. This is an example of an imbalanced dataset (<code class="highlighter-rouge">tp + fn  = 10 + 1000 &lt;&lt; fp + tn = 100 + 10000</code>).</p>
+<p>For the rest of the article, let’s consider a classifier that has the following confusion matrix: <code class="language-plaintext highlighter-rouge">tp = 10</code>, <code class="language-plaintext highlighter-rouge">fp = 100</code>, <code class="language-plaintext highlighter-rouge">fn = 1000</code>, <code class="language-plaintext highlighter-rouge">tn = 10000</code>. This is an example of an imbalanced dataset (<code class="language-plaintext highlighter-rouge">tp + fn  = 10 + 1000 &lt;&lt; fp + tn = 100 + 10000</code>).</p>
 
 <h3 id="accuracy">Accuracy</h3>
 
@@ -144,51 +144,51 @@
 
 <h3 id="roc-and-auroc-auc">ROC and AUROC (AUC)</h3>
 
-<p>The ROC curve captures the tradeoff between specificity and recall (sensitivity). Its axes are <code class="highlighter-rouge">X:(1-specificity)</code> and <code class="highlighter-rouge">Y: sensitivity</code>. It is drawn by varying the lambda classification threshold for a specific model. It is used to select such a threshold that gives the best ratio of sensitivity and specificity, which is given by choosing a lambda as close as possible to the top - left corner of the chart.</p>
+<p>The ROC curve captures the tradeoff between specificity and recall (sensitivity). Its axes are <code class="language-plaintext highlighter-rouge">X:(1-specificity)</code> and <code class="language-plaintext highlighter-rouge">Y: sensitivity</code>. It is drawn by varying the lambda classification threshold for a specific model. It is used to select such a threshold that gives the best ratio of sensitivity and specificity, which is given by choosing a lambda as close as possible to the top - left corner of the chart.</p>
 
 <p>Below an example of plotting the ROC curve and setting the lambda parameter for a logistic regression.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
 
 <span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
-<span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">lr</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
-<span class="c"># our lambda parameter</span>
-<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.5</span> 
+<span class="c1"># our lambda parameter
+</span><span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.5</span> 
 
-<span class="c"># ...[0] is probability of not `0` </span>
-<span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+<span class="c1"># ...[0] is probability of not `0` 
+</span><span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="p">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">).</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold</span>
 
 <span class="n">sensitivity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">specificity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Sensitivity: {sensitivity}"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Specificity: {specificity}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Sensitivity: </span><span class="si">{</span><span class="n">sensitivity</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Specificity: </span><span class="si">{</span><span class="n">specificity</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted no, actual no: {sum((y==0) &amp; (y_pred==0))}"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted no, actual yes: {sum((y==1) &amp; (y_pred==0))}"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted yes, actual no: {sum((y==0) &amp; (y_pred==1))}"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Predicted yes, actual yes: {sum((y==1) &amp; (y_pred==1))}"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Predicted no, actual no: </span><span class="si">{</span><span class="nb">sum</span><span class="p">((</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span><span class="o">==</span><span class="mi">0</span><span class="p">))</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Predicted no, actual yes: </span><span class="si">{</span><span class="nb">sum</span><span class="p">((</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span><span class="o">==</span><span class="mi">0</span><span class="p">))</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Predicted yes, actual no: </span><span class="si">{</span><span class="nb">sum</span><span class="p">((</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span><span class="o">==</span><span class="mi">1</span><span class="p">))</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Predicted yes, actual yes: </span><span class="si">{</span><span class="nb">sum</span><span class="p">((</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span><span class="o">==</span><span class="mi">1</span><span class="p">))</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Now, let’s vary the threshold and plot the ROC curve.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">roc</span><span class="p">(</span><span class="n">threshold</span><span class="p">):</span>
     
-    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">lr</span><span class="p">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">).</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
     <span class="n">sensitivity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">specificity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="p">[</span><span class="n">sensitivity</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">threshold</span><span class="p">]</span>
 
-<span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">roc</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="k">for</span>  <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">roc</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="k">for</span>  <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)]).</span><span class="n">T</span>
 
-<span class="c"># draw the ROC curve</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="c1"># draw the ROC curve
+</span><span class="n">plt</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-<span class="c"># the point most distant from the curve</span>
-<span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-<span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"recommended threshold = {v[2][n]} with sensitivity = {v[0][n]} and specificity={1-v[1][n]}"</span><span class="p">)</span>
+<span class="c1"># the point most distant from the curve
+</span><span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"recommended threshold = </span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">n</span><span class="p">]</span><span class="si">}</span><span class="s"> with sensitivity = </span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">n</span><span class="p">]</span><span class="si">}</span><span class="s"> and specificity=</span><span class="si">{</span><span class="mi">1</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">n</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/classification_1.png" alt="ROC" /></p>
@@ -231,8 +231,8 @@
 <p>Reading and inspecting the dataset. After getting the dataset, we will just plot a digit.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_openml</span><span class="p">(</span><span class="s">'mnist_784'</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_X_y</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="n">digit</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">32000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
+<span class="n">digit</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">32000</span><span class="p">].</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="p">.</span><span class="n">cm</span><span class="p">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
 </code></pre></div></div>
 
 <p>Splitting the dataset in train and test. As good ML engineers, we are going to look further only at the train dataset, and leave the test dataset untouched until the last stages of the project.</p>
@@ -242,9 +242,9 @@
 <span class="n">train_index_5</span> <span class="o">=</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span>
 <span class="n">test_index_5</span> <span class="o">=</span> <span class="n">y_test</span> <span class="o">==</span> <span class="s">'5'</span>
 
-<span class="c"># observe a digit in the train dataset</span>
-<span class="n">digit</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="mi">1000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
+<span class="c1"># observe a digit in the train dataset
+</span><span class="n">digit</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="mi">1000</span><span class="p">].</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="p">.</span><span class="n">cm</span><span class="p">.</span><span class="n">binary</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">"nearest"</span><span class="p">)</span> 
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/classification_5.png" alt="A random image from the dataset" /></p>
@@ -253,68 +253,68 @@
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
 
-<span class="c"># a classifier that has the capacity to handle large datasets efficiently</span>
-<span class="n">sgd_c</span> <span class="o">=</span> <span class="n">SGDClassifier</span><span class="p">()</span>
-<span class="n">sgd_c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">train_index_5</span><span class="p">)</span>
+<span class="c1"># a classifier that has the capacity to handle large datasets efficiently
+</span><span class="n">sgd_c</span> <span class="o">=</span> <span class="n">SGDClassifier</span><span class="p">()</span>
+<span class="n">sgd_c</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">train_index_5</span><span class="p">)</span>
 
-<span class="c"># predict one true:</span>
-<span class="n">sgd_c</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X_train</span><span class="p">[</span><span class="n">train_index_5</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+<span class="c1"># predict one true:
+</span><span class="n">sgd_c</span><span class="p">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X_train</span><span class="p">[</span><span class="n">train_index_5</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
 
-<span class="c"># predict one false</span>
-<span class="n">sgd_c</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="mi">10</span><span class="p">]])</span>
+<span class="c1"># predict one false
+</span><span class="n">sgd_c</span><span class="p">.</span><span class="n">predict</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="mi">10</span><span class="p">]])</span>
 </code></pre></div></div>
 
-<p>Compute the cross validation score. The results for accuracy seem pretty good. However, this is an imbalanced class, only approx <code class="highlighter-rouge">10%</code> of the digits are <code class="highlighter-rouge">5</code>, which would give a pure <code class="highlighter-rouge">False</code> classifier an accuracy of approx <code class="highlighter-rouge">90%</code>. Therefore, the <code class="highlighter-rouge">96%</code> score obtained below is not great.</p>
+<p>Compute the cross validation score. The results for accuracy seem pretty good. However, this is an imbalanced class, only approx <code class="language-plaintext highlighter-rouge">10%</code> of the digits are <code class="language-plaintext highlighter-rouge">5</code>, which would give a pure <code class="language-plaintext highlighter-rouge">False</code> classifier an accuracy of approx <code class="language-plaintext highlighter-rouge">90%</code>. Therefore, the <code class="language-plaintext highlighter-rouge">96%</code> score obtained below is not great.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cv_score</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">StratifiedKFold</span><span class="p">())</span>
-<span class="c">#array([0.96414286, 0.94464286, 0.96785714, 0.96135714, 0.96757143])</span>
-</code></pre></div></div>
+<span class="c1">#array([0.96414286, 0.94464286, 0.96785714, 0.96135714, 0.96757143])
+</span></code></pre></div></div>
 
 <p>Now we are going to look at the ROC curve and the Precision Recall curve and compare the two. We will look also at the classification metrics.</p>
 
 <p>The ROC curve first:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># to get the false positive and true positive rates together with the thresholds for each</span>
-<span class="c"># and analyze them programmatically, use the following method. </span>
-<span class="c"># This will allow the programmer to pick the desired threshold for the classifier</span>
-<span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># to get the false positive and true positive rates together with the thresholds for each
+# and analyze them programmatically, use the following method. 
+# This will allow the programmer to pick the desired threshold for the classifier
+</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="p">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
 
-<span class="c"># Plot the curve and compute the AUC</span>
-<span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c1"># Plot the curve and compute the AUC
+</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 
-<span class="c"># We can also plot our decision function</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">)))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c1"># We can also plot our decision function
+</span><span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">)))</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p>The curve looks quite steep, which gives the impression of a good classifier. 
 <img src="https://alexandrugris.github.io/assets/classification_3.png" alt="ROC-curve" /></p>
 
-<p>But when we do the same with the precision-recall curve, we see the results are less outstanding. That is because we have a minority class we want to classify and the PR-curve is better suited for it. But before that, let’s look at the <code class="highlighter-rouge">cross_val_predict</code> function and then compute the classification metrics described at the beginning of this article.</p>
+<p>But when we do the same with the precision-recall curve, we see the results are less outstanding. That is because we have a minority class we want to classify and the PR-curve is better suited for it. But before that, let’s look at the <code class="language-plaintext highlighter-rouge">cross_val_predict</code> function and then compute the classification metrics described at the beginning of this article.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># splits internally the train set in k folds and outputs the result for</span>
-<span class="c"># each number in the set based on the test fold. That is, when a result is predicted</span>
-<span class="c"># the train method has not seen that data</span>
-<span class="n">cv_p</span> <span class="o">=</span> <span class="n">cross_val_predict</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">StratifiedKFold</span><span class="p">())</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># splits internally the train set in k folds and outputs the result for
+# each number in the set based on the test fold. That is, when a result is predicted
+# the train method has not seen that data
+</span><span class="n">cv_p</span> <span class="o">=</span> <span class="n">cross_val_predict</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">StratifiedKFold</span><span class="p">())</span>
 
-<span class="c"># the confusion matrix</span>
-<span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+<span class="c1"># the confusion matrix
+</span><span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
 
-<span class="c"># when it claims an image is a 5, how many times it is a 5 </span>
-<span class="n">precision_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+<span class="c1"># when it claims an image is a 5, how many times it is a 5 
+</span><span class="n">precision_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
 
-<span class="c"># how many 5s it detects</span>
-<span class="n">recall_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+<span class="c1"># how many 5s it detects
+</span><span class="n">recall_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
 
-<span class="c"># the f1 score</span>
-<span class="n">f1_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
+<span class="c1"># the f1 score
+</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_train</span><span class="o">==</span><span class="s">'5'</span><span class="p">,</span> <span class="n">cv_p</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>And finally the precision recall curve and, similarly to the ROC curve, the function to programmatically access the precisions and recalls for each threshold allowing for a manual selection of the classifier decision boundary.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># plot precision / recall curve</span>
-<span class="n">precisions</span><span class="p">,</span> <span class="n">recalls</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">precision_recall_curve</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># plot precision / recall curve
+</span><span class="n">precisions</span><span class="p">,</span> <span class="n">recalls</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">precision_recall_curve</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">,</span> <span class="n">sgd_c</span><span class="p">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
 <span class="n">plot_precision_recall_curve</span><span class="p">(</span><span class="n">sgd_c</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">==</span> <span class="s">'5'</span><span class="p">)</span>
 </code></pre></div></div>
 

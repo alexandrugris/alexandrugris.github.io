@@ -72,11 +72,11 @@
 
 <p>By far the easiest and most portable way to run RabbitMQ is to use the official docker container with the management console started:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -d --rm --hostname my-rabbit -p 4369:4369 -p 15671-15672:15671-15672 -p 5672:5672 \
     --name my_rabbit_mq rabbitmq:3-management
 </code></pre></div></div>
 
-<p>The corresponding connetion string is <code class="highlighter-rouge">"amqp://guest:guest@localhost:5672"</code> and the management URL: <code class="highlighter-rouge">http://localhost:15672/#/ </code></p>
+<p>The corresponding connetion string is <code class="language-plaintext highlighter-rouge">"amqp://guest:guest@localhost:5672"</code> and the management URL: <code class="language-plaintext highlighter-rouge">http://localhost:15672/#/ </code></p>
 
 <h3 id="basic-concepts">Basic concepts</h3>
 
@@ -94,7 +94,7 @@
 
 <p><em>Topic Exchange</em></p>
 
-<p>Routing behaves very much like for the direct exchange. However, routing keys can have several terms separated by dots. E.g. <code class="highlighter-rouge">package.fast.international</code>. Queues listen to various keys by using wildcards. E.g. <code class="highlighter-rouge">package.*.international</code>. <code class="highlighter-rouge">*</code> is the wildcard for one word. <code class="highlighter-rouge">#</code> is the hashtag for multiple words.</p>
+<p>Routing behaves very much like for the direct exchange. However, routing keys can have several terms separated by dots. E.g. <code class="language-plaintext highlighter-rouge">package.fast.international</code>. Queues listen to various keys by using wildcards. E.g. <code class="language-plaintext highlighter-rouge">package.*.international</code>. <code class="language-plaintext highlighter-rouge">*</code> is the wildcard for one word. <code class="language-plaintext highlighter-rouge">#</code> is the hashtag for multiple words.</p>
 
 <p><em>Fanout Exchange</em></p>
 
@@ -102,7 +102,7 @@
 
 <p><em>Headers Exchange</em></p>
 
-<p>Routing is based on the message headers which are set through <code class="highlighter-rouge">IBasicProperties::Headers</code> property. Matching is done for all headers or for any.</p>
+<p>Routing is based on the message headers which are set through <code class="language-plaintext highlighter-rouge">IBasicProperties::Headers</code> property. Matching is done for all headers or for any.</p>
 
 <p><a href="https://www.rabbitmq.com/tutorials/amqp-concepts.html">More details here</a></p>
 
@@ -115,7 +115,7 @@
 <span class="p">};</span>
 
 <span class="n">conn</span> <span class="p">=</span> <span class="n">cf</span><span class="p">.</span><span class="nf">CreateConnection</span><span class="p">();</span> <span class="c1">// one per application</span>
-<span class="na">[...]</span>
+<span class="p">[...]</span>
 <span class="n">IModel</span> <span class="n">chan</span> <span class="p">=</span> <span class="n">conn</span><span class="p">.</span><span class="nf">CreateModel</span><span class="p">();</span> <span class="c1">// one per thread</span>
 </code></pre></div></div>
 
@@ -124,9 +124,9 @@
 <p>Use:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">IModel::ExchangeDeclare()</code> to declare an exchange</li>
-  <li><code class="highlighter-rouge">IModel::QueueDeclare()</code> to declare a queue</li>
-  <li><code class="highlighter-rouge">IModel::QueueBind()</code> to bind a queue to an exchange</li>
+  <li><code class="language-plaintext highlighter-rouge">IModel::ExchangeDeclare()</code> to declare an exchange</li>
+  <li><code class="language-plaintext highlighter-rouge">IModel::QueueDeclare()</code> to declare a queue</li>
+  <li><code class="language-plaintext highlighter-rouge">IModel::QueueBind()</code> to bind a queue to an exchange</li>
 </ul>
 
 <p>Beside the normal exchange types, two special exchanges stand out:</p>
@@ -227,7 +227,7 @@
 
 <h3 id="receiving-messages">Receiving messages</h3>
 
-<p>Inside the client, for receiving messages, one can set <code class="highlighter-rouge">prefetchCount</code> to load multiple messages. However, if the server crashes, these will all remain unacknowledged even if processed.</p>
+<p>Inside the client, for receiving messages, one can set <code class="language-plaintext highlighter-rouge">prefetchCount</code> to load multiple messages. However, if the server crashes, these will all remain unacknowledged even if processed.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">cthread</span> <span class="p">!=</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Thread</span><span class="p">.</span><span class="n">CurrentThread</span><span class="p">.</span><span class="n">ManagedThreadId</span><span class="p">)</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="p">(</span><span class="s">"Channel reused from a different thread"</span><span class="p">);</span>
@@ -240,7 +240,7 @@
 <span class="n">chan</span><span class="p">.</span><span class="nf">BasicConsume</span><span class="p">(</span><span class="n">Commons</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">RabbitMQQueueName</span><span class="p">,</span> <span class="n">noAck</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span> <span class="n">consumer</span><span class="p">:</span> <span class="k">this</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">consumer: this</code> in the listing above refers to the <code class="highlighter-rouge">Consumer</code> class below which extends the <code class="highlighter-rouge">DefaultBasicConsumer</code> class:</p>
+<p>The <code class="language-plaintext highlighter-rouge">consumer: this</code> in the listing above refers to the <code class="language-plaintext highlighter-rouge">Consumer</code> class below which extends the <code class="language-plaintext highlighter-rouge">DefaultBasicConsumer</code> class:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Consumer</span> <span class="p">:</span> <span class="n">DefaultBasicConsumer</span><span class="p">,</span> <span class="n">IDisposable</span>
 <span class="p">{</span>
@@ -262,11 +262,11 @@
     <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Another way to go is to use the <code class="highlighter-rouge">QueuingBasicConsumer(model)</code> and then <code class="highlighter-rouge">(BasicDeliveryEventArgs)consumer.Queue.Dequeue();</code> for extracting the message in a loop.</p>
+<p>Another way to go is to use the <code class="language-plaintext highlighter-rouge">QueuingBasicConsumer(model)</code> and then <code class="language-plaintext highlighter-rouge">(BasicDeliveryEventArgs)consumer.Queue.Dequeue();</code> for extracting the message in a loop.</p>
 
 <h3 id="reliability-options">Reliability options</h3>
 
-<p><em>Acks</em> - Rabbitmq only deletes a message from the queue when the message is acknowledged by the consumer. Can be set to off in the consumer, which means the message is deleted as soon as it is delivered. The consumer is notified if a message is redelivered by a <code class="highlighter-rouge">redelivered == true</code> flag.</p>
+<p><em>Acks</em> - Rabbitmq only deletes a message from the queue when the message is acknowledged by the consumer. Can be set to off in the consumer, which means the message is deleted as soon as it is delivered. The consumer is notified if a message is redelivered by a <code class="language-plaintext highlighter-rouge">redelivered == true</code> flag.</p>
 
 <p><em>Publisher confirms</em> - for the publisher to know that a message has been queued or not. In case of important messages, implement a re-send strategy for the cases when the queue is not accessible.</p>
 
@@ -275,9 +275,9 @@
 <span class="n">chan</span><span class="p">.</span><span class="n">BasicNacks</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Error sending message to queue </span><span class="p">{</span><span class="n">args</span><span class="p">.</span><span class="n">DeliveryTag</span><span class="p">}</span><span class="s">"</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p><em>Mandatory</em> - set as a flag in <code class="highlighter-rouge">BasicPublish</code>. If the message cannot be routed to the queue it will be sent back to the producer. By default, if the flag is not set, the message is lost. The event <code class="highlighter-rouge">BasicReturn</code> is fired on the channel. Routing failures can be treated using the alternative exchange feature.</p>
+<p><em>Mandatory</em> - set as a flag in <code class="language-plaintext highlighter-rouge">BasicPublish</code>. If the message cannot be routed to the queue it will be sent back to the producer. By default, if the flag is not set, the message is lost. The event <code class="language-plaintext highlighter-rouge">BasicReturn</code> is fired on the channel. Routing failures can be treated using the alternative exchange feature.</p>
 
-<p><em>Reply to sender</em> - producer is notified when the consumer has received the message. Use the <code class="highlighter-rouge">ReplyTo</code> field in message properties or use <code class="highlighter-rouge">SimpleRpcServer</code> and <code class="highlighter-rouge">SimpleRpcClient</code>. <a href="https://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html">Example here</a></p>
+<p><em>Reply to sender</em> - producer is notified when the consumer has received the message. Use the <code class="language-plaintext highlighter-rouge">ReplyTo</code> field in message properties or use <code class="language-plaintext highlighter-rouge">SimpleRpcServer</code> and <code class="language-plaintext highlighter-rouge">SimpleRpcClient</code>. <a href="https://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html">Example here</a></p>
 
 <p><em>Connection and topology recovery</em> - retry in case of failure to send messages, only if the queues and exchanges are set to durable. Even if the topology is set to durable, the messages are lost if their individual flag for durability is not set.</p>
 
@@ -317,9 +317,9 @@
 
 <h3 id="dealing-with-errors">Dealing with errors</h3>
 
-<p><em>Scenario 1: exception is caught in the consumer and <code class="highlighter-rouge">chan.BasicNack(resend: true)</code> is sent to the queue.</em></p>
+<p><em>Scenario 1: exception is caught in the consumer and <code class="language-plaintext highlighter-rouge">chan.BasicNack(resend: true)</code> is sent to the queue.</em></p>
 
-<p>The message is then immediately redispatched to a consumer with the flag <code class="highlighter-rouge">redelivered == true</code>. However there is no mechanism to know how many retries have occured. Thus, a better alternative is to requeue the message again.</p>
+<p>The message is then immediately redispatched to a consumer with the flag <code class="language-plaintext highlighter-rouge">redelivered == true</code>. However there is no mechanism to know how many retries have occured. Thus, a better alternative is to requeue the message again.</p>
 
 <p><em>Scenario 2: exception is caught and the message is redelivered to the queue for a number of times.</em></p>
 
@@ -409,15 +409,15 @@
 
 <p>In my demo the producer creates the routing topology with:</p>
 <ul>
-  <li>One exchange of type direct (<code class="highlighter-rouge">alexandrugris.1st_exchange</code>)</li>
-  <li>One one alternate exchange which is also the dead letter exchange (<code class="highlighter-rouge">alexandrugris.1st_exchange_dead_letter_exchnage</code>)</li>
+  <li>One exchange of type direct (<code class="language-plaintext highlighter-rouge">alexandrugris.1st_exchange</code>)</li>
+  <li>One one alternate exchange which is also the dead letter exchange (<code class="language-plaintext highlighter-rouge">alexandrugris.1st_exchange_dead_letter_exchnage</code>)</li>
 </ul>
 
 <p><img src="https://alexandrugris.github.io/assets/rabbitmq_3.png" alt="Exchanges" /></p>
 
 <p>And two queues:</p>
 <ul>
-  <li>One queue connected to the the <code class="highlighter-rouge">1st_exchange</code></li>
+  <li>One queue connected to the the <code class="language-plaintext highlighter-rouge">1st_exchange</code></li>
   <li>One connected to the dead letter exchange</li>
 </ul>
 
@@ -447,7 +447,7 @@
 <span class="n">props</span><span class="p">.</span><span class="nf">SetPersistent</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p>To set properties for the message, <code class="highlighter-rouge">model.CreateBasicProperties()</code> returns the following interface instance:</p>
+<p>To set properties for the message, <code class="language-plaintext highlighter-rouge">model.CreateBasicProperties()</code> returns the following interface instance:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">interface</span> <span class="nc">IBasicProperties</span><span class="p">{</span>
 <span class="err">  </span> 
@@ -502,8 +502,8 @@
 
 <ol>
   <li>Convert object to byte[] array</li>
-  <li>Indicate the message <code class="highlighter-rouge">IBasicProperties::Type</code> (what kind of object is serialized, for instance <code class="highlighter-rouge">ro.alexandrugris.Person</code>)</li>
-  <li>Indicate the format of serialization and encoding, using <code class="highlighter-rouge">IBasicProperties::ContentType</code> and <code class="highlighter-rouge">IBasicProperties::ContentEncoding</code></li>
+  <li>Indicate the message <code class="language-plaintext highlighter-rouge">IBasicProperties::Type</code> (what kind of object is serialized, for instance <code class="language-plaintext highlighter-rouge">ro.alexandrugris.Person</code>)</li>
+  <li>Indicate the format of serialization and encoding, using <code class="language-plaintext highlighter-rouge">IBasicProperties::ContentType</code> and <code class="language-plaintext highlighter-rouge">IBasicProperties::ContentEncoding</code></li>
   <li>Send the message</li>
 </ol>
 
@@ -518,7 +518,7 @@
 
 <p>Ideally the serialization should be application agnostic (for instance a fully qualified class name might not be a good solution if the message is to be consumed across tehnology boundaries) and, of course, versioning should be taken into account.</p>
 
-<p>For binary messages, a potential encoding could be <code class="highlighter-rouge">Protocol Buffers</code> or <code class="highlighter-rouge">Apache Thrift</code> which support versioning as well as multiple language bindings.</p>
+<p>For binary messages, a potential encoding could be <code class="language-plaintext highlighter-rouge">Protocol Buffers</code> or <code class="language-plaintext highlighter-rouge">Apache Thrift</code> which support versioning as well as multiple language bindings.</p>
 
 <p>AMQP supports very large messages. However, if the application requires sending such messages it is better to use a separate, dedicated instance of the server in order not to impact the throughput of smaller, more frequent exchanges.</p>
 
@@ -526,7 +526,7 @@
 
 <ul>
   <li>Buffered (small to medium files) - attention to memory performance.</li>
-  <li>Chunked (larger files) - use headers to keep track on how to assemble back the file on the receiving end. Attention to <code class="highlighter-rouge">Worker Queue</code> pattern where the <a href="https://stackoverflow.com/questions/21363302/rabbitmq-message-order-of-delivery">chunks will not all end up on the same machine</a>.</li>
+  <li>Chunked (larger files) - use headers to keep track on how to assemble back the file on the receiving end. Attention to <code class="language-plaintext highlighter-rouge">Worker Queue</code> pattern where the <a href="https://stackoverflow.com/questions/21363302/rabbitmq-message-order-of-delivery">chunks will not all end up on the same machine</a>.</li>
 </ul>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">props</span> <span class="p">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">CreateBasicProperties</span><span class="p">();</span>

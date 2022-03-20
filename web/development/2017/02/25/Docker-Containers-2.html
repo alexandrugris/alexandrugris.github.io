@@ -93,11 +93,11 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_3.png" alt="Network rules" /></p>
 
-<p>Another option is to run <code class="highlighter-rouge">gpedit.msc</code> and change network profile for <em>Unidentifiable Networks</em>. :)</p>
+<p>Another option is to run <code class="language-plaintext highlighter-rouge">gpedit.msc</code> and change network profile for <em>Unidentifiable Networks</em>. :)</p>
 
 <p>Now that we have enabled access to host folders, let’s run the following command:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run --rm -v d:\OneDrive\Pictures:/my_pictures alpine sh -c "cd /my_pictures &amp;&amp; ls -l"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run --rm -v d:\OneDrive\Pictures:/my_pictures alpine sh -c "cd /my_pictures &amp;&amp; ls -l"
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_4.png" alt="Running a command on a volume in docker" /></p>
@@ -105,19 +105,19 @@ For my desktop PC at home, I have simply enabled firewall rules for the public n
 <p>Let’s disect it:</p>
 
 <ol>
-  <li><code class="highlighter-rouge">docker run --rm</code> tells docker to remove the image after the command is run. The image is not persisted.</li>
-  <li><code class="highlighter-rouge">-v d:\OneDrive\Pictures:/my_pictures</code> tells docker to mount the <code class="highlighter-rouge">d:\OneDrive\Pictures</code> from the host to the <code class="highlighter-rouge">/my_pictures</code> folder in the container.</li>
-  <li><code class="highlighter-rouge">alpine sh -c "cd /my_pictures &amp;&amp; ls -l"</code> from the <code class="highlighter-rouge">alpine</code> image run the <code class="highlighter-rouge">sh</code> command with the <code class="highlighter-rouge">-c "cd /my_pictures &amp;&amp; ls -l"</code> parameters. It means change directory to <code class="highlighter-rouge">/my_pictures</code> and then, if successful, run the <code class="highlighter-rouge">ls -l</code> command.</li>
+  <li><code class="language-plaintext highlighter-rouge">docker run --rm</code> tells docker to remove the image after the command is run. The image is not persisted.</li>
+  <li><code class="language-plaintext highlighter-rouge">-v d:\OneDrive\Pictures:/my_pictures</code> tells docker to mount the <code class="language-plaintext highlighter-rouge">d:\OneDrive\Pictures</code> from the host to the <code class="language-plaintext highlighter-rouge">/my_pictures</code> folder in the container.</li>
+  <li><code class="language-plaintext highlighter-rouge">alpine sh -c "cd /my_pictures &amp;&amp; ls -l"</code> from the <code class="language-plaintext highlighter-rouge">alpine</code> image run the <code class="language-plaintext highlighter-rouge">sh</code> command with the <code class="language-plaintext highlighter-rouge">-c "cd /my_pictures &amp;&amp; ls -l"</code> parameters. It means change directory to <code class="language-plaintext highlighter-rouge">/my_pictures</code> and then, if successful, run the <code class="language-plaintext highlighter-rouge">ls -l</code> command.</li>
 </ol>
 
-<p>For a list of parameters of the <code class="highlighter-rouge">docker run</code> command, here they are: <a href="https://docs.docker.com/engine/reference/commandline/run/">Docker Run</a>. Another parameter very useful is the <code class="highlighter-rouge">--env</code> to sent environment variables in the container.</p>
+<p>For a list of parameters of the <code class="language-plaintext highlighter-rouge">docker run</code> command, here they are: <a href="https://docs.docker.com/engine/reference/commandline/run/">Docker Run</a>. Another parameter very useful is the <code class="language-plaintext highlighter-rouge">--env</code> to sent environment variables in the container.</p>
 
 <h3 id="example-no-1-delete-all-mongo-named-containers">Example no. 1: delete all “mongo”-named containers:</h3>
 
 <p>The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container. 
-It is clearly not efficient at all as it is much simpler to simply use batch <code class="highlighter-rouge">for</code> and <code class="highlighter-rouge">if</code> in Windows, but it is just an example to show that it actually works.</p>
+It is clearly not efficient at all as it is much simpler to simply use batch <code class="language-plaintext highlighter-rouge">for</code> and <code class="language-plaintext highlighter-rouge">if</code> in Windows, but it is just an example to show that it actually works.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker ps -a 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker ps -a 
     &gt; d:\to_delete.txt 
     &amp;&amp; docker run --rm -v d:\to_delete.txt:/my_data/to_delete.txt 
     alpine sh -c "grep mongo /my_data/to_delete.txt | awk '{print $1}'" 
@@ -125,7 +125,7 @@ It is clearly not efficient at all as it is much simpler to simply use batch <co
     &amp;&amp; for /F %I in (d:\to_delete_2.txt) DO docker rm %I
 </code></pre></div></div>
 
-<p>Explanation: the command uses two files <code class="highlighter-rouge">d:\to_delete.txt</code> and <code class="highlighter-rouge">d:\to_delete_2.txt</code> as IPC between Windows and the command ran in the Linux container.</p>
+<p>Explanation: the command uses two files <code class="language-plaintext highlighter-rouge">d:\to_delete.txt</code> and <code class="language-plaintext highlighter-rouge">d:\to_delete_2.txt</code> as IPC between Windows and the command ran in the Linux container.</p>
 
 <h3 id="-example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker"><a name="vclinuxdocker"></a> Example no. 2: developing Linux applications with Visual C++ for Linux and Docker</h3>
 
@@ -136,10 +136,10 @@ It is clearly not efficient at all as it is much simpler to simply use batch <co
 <p>However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher alternative - use a Docker container for running and debugging the app.</p>
 
 <ul>
-  <li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</li>
+  <li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag <code class="language-plaintext highlighter-rouge">--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --env "USERNAME=agris" --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --env "USERNAME=agris" --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
     debian bash -c "echo sshd: ALL &gt;&gt; /etc/hosts.allow 
         &amp;&amp; apt-get update 
         &amp;&amp; apt-get install -y openssh-server g++ gdb gdbserver 
@@ -179,7 +179,7 @@ It is clearly not efficient at all as it is much simpler to simply use batch <co
 
 <p><img src="https://alexandrugris.github.io/assets/docker_2_7.png" alt="Visual Studio Project Config" /></p>
 
-<p>The container is run with the <code class="highlighter-rouge">--rm</code> flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.</p>
+<p>The container is run with the <code class="language-plaintext highlighter-rouge">--rm</code> flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run.</p>
 
 <h3 id="creating-an-image-to-host-all-the-tools-needed-for-building-and-debugging-with-vc-for-linux">Creating an image to host all the tools needed for building and debugging with VC++ for Linux</h3>
 
@@ -187,7 +187,7 @@ It is clearly not efficient at all as it is much simpler to simply use batch <co
   <li>Create the docker file (Dockerfile):</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM debian:latest
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM debian:latest
 
 ARG USERNAME=agris
 ARG PASSWD=1234
@@ -212,35 +212,35 @@ CMD /etc/init.d/ssh start &amp;&amp; bash
 </code></pre></div></div>
 
 <ul>
-  <li>Build the image with the <code class="highlighter-rouge">gcc_debug_debian:latest</code> tag:</li>
+  <li>Build the image with the <code class="language-plaintext highlighter-rouge">gcc_debug_debian:latest</code> tag:</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker build -t gcc_debug_debian:latest .
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker build -t gcc_debug_debian:latest .
 </code></pre></div></div>
 
 <ul>
   <li>Clean up a little bit</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;for /f "tokens=1, 3" %I in ('docker images') do if "%I"=="&lt;none&gt;" (docker rmi -f %J)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;for /f "tokens=1, 3" %I in ('docker images') do if "%I"=="&lt;none&gt;" (docker rmi -f %J)
 </code></pre></div></div>
 
 <ul>
   <li>Run the container and map the port 22 to 2222 on the host:</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined gcc_debug_debian
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined gcc_debug_debian
 </code></pre></div></div>
 
 <ul>
   <li>Try SSH by running ssh command in another container to test the SSH connection (192.168.1.6 is the local IP of my computer):</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --rm gcc_debug_debian /usr/bin/ssh -l agris -p 2222 192.168.1.6
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>c:&gt;docker run -it --rm gcc_debug_debian /usr/bin/ssh -l agris -p 2222 192.168.1.6
 </code></pre></div></div>
 
 <ul>
-  <li>Clean / Rebuild and then Start Remote Debugging in Visual C++. If the build step works but debugging fails, please make sure you have not forgotten the <code class="highlighter-rouge">--security-opt seccomp=unconfined</code> flag.</li>
+  <li>Clean / Rebuild and then Start Remote Debugging in Visual C++. If the build step works but debugging fails, please make sure you have not forgotten the <code class="language-plaintext highlighter-rouge">--security-opt seccomp=unconfined</code> flag.</li>
 </ul>
 
 <p>This is it for running and debugging C++ applications in a Linux docker container. Happy Hacking! :)</p>

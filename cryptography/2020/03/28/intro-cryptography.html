@@ -70,22 +70,22 @@
 
 <h3 id="one-time-pads">One-Time Pads</h3>
 
-<p><a href="https://en.wikipedia.org/wiki/One-time_pad">One-time pad</a> is a very basic algorithm but virtually unbreakable if properly implemented. The idea is simple: given a message and a shared secret, we create an encrypted message based on the formula <code class="highlighter-rouge">encrypted[i] = original[i] + shared_secret[i]</code>. If the <code class="highlighter-rouge">shared_secret</code> is purely random and the key is not intercepted, the algorithm is virtually impossible to crack.</p>
+<p><a href="https://en.wikipedia.org/wiki/One-time_pad">One-time pad</a> is a very basic algorithm but virtually unbreakable if properly implemented. The idea is simple: given a message and a shared secret, we create an encrypted message based on the formula <code class="language-plaintext highlighter-rouge">encrypted[i] = original[i] + shared_secret[i]</code>. If the <code class="language-plaintext highlighter-rouge">shared_secret</code> is purely random and the key is not intercepted, the algorithm is virtually impossible to crack.</p>
 
 <p>However, in practice, we are limited by the following:</p>
 
 <ul>
   <li>the alphabet of the message is limited</li>
   <li>the alphabet of the shared secret is limited</li>
-  <li>due to practical transmission purposes and due to the limitations of random number generators, the length of the <code class="highlighter-rouge">shared_secret</code> is usually less than the length of the original message</li>
+  <li>due to practical transmission purposes and due to the limitations of random number generators, the length of the <code class="language-plaintext highlighter-rouge">shared_secret</code> is usually less than the length of the original message</li>
   <li>if humans are used to generating keys, (e.g. entering passwords), then true randomness is even harder to achieve</li>
 </ul>
 
 <p>The above points generate patterns in the encoded message that can be exploited by an attacker.</p>
 
-<p>Let’s consider a 26 letter alphabet, made from letters <code class="highlighter-rouge">A</code> to <code class="highlighter-rouge">Z</code>. Below you can observe how the secret is looped through in case its length is less than the length of the original message.</p>
+<p>Let’s consider a 26 letter alphabet, made from letters <code class="language-plaintext highlighter-rouge">A</code> to <code class="language-plaintext highlighter-rouge">Z</code>. Below you can observe how the secret is looped through in case its length is less than the length of the original message.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="n">String</span> <span class="nf">parse</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">,</span> <span class="n">String</span> <span class="n">key</span><span class="o">,</span> <span class="n">BiFunction</span><span class="o">&lt;</span><span class="n">Byte</span><span class="o">,</span> <span class="n">Byte</span><span class="o">,</span> <span class="n">Byte</span><span class="o">&gt;</span> <span class="n">f</span><span class="o">){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="nc">String</span> <span class="nf">parse</span><span class="o">(</span><span class="nc">String</span> <span class="n">msg</span><span class="o">,</span> <span class="nc">String</span> <span class="n">key</span><span class="o">,</span> <span class="nc">BiFunction</span><span class="o">&lt;</span><span class="nc">Byte</span><span class="o">,</span> <span class="nc">Byte</span><span class="o">,</span> <span class="nc">Byte</span><span class="o">&gt;</span> <span class="n">f</span><span class="o">){</span>
 
         <span class="c1">// ensure we use only our alphabet</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="na">toUpperCase</span> <span class="o">();</span>
@@ -93,8 +93,8 @@
 
         <span class="c1">// remove the white spaces because these decrease the randomness of the message</span>
         <span class="c1">// and they are not part of our alphabet</span>
-        <span class="kt">byte</span><span class="o">[]</span> <span class="n">msgb</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="na">replaceAll</span> <span class="o">(</span><span class="s">"\\s+"</span><span class="o">,</span><span class="s">""</span><span class="o">)</span> <span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
-        <span class="kt">byte</span><span class="o">[]</span> <span class="n">keyb</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="na">replaceAll</span> <span class="o">(</span><span class="s">"\\s+"</span><span class="o">,</span><span class="s">""</span><span class="o">).</span> <span class="n">getBytes</span> <span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">msgb</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="na">replaceAll</span> <span class="o">(</span><span class="s">"\\s+"</span><span class="o">,</span><span class="s">""</span><span class="o">)</span> <span class="o">.</span><span class="na">getBytes</span> <span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">keyb</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="na">replaceAll</span> <span class="o">(</span><span class="s">"\\s+"</span><span class="o">,</span><span class="s">""</span><span class="o">).</span> <span class="n">getBytes</span> <span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">US_ASCII</span><span class="o">);</span>
 
         <span class="kt">byte</span><span class="o">[]</span> <span class="n">ret</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">msgb</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
 
@@ -105,12 +105,12 @@
 
     <span class="o">}</span>
 
-    <span class="kd">static</span> <span class="n">String</span> <span class="nf">encode</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">,</span> <span class="n">String</span> <span class="n">key</span><span class="o">){</span>
-        <span class="k">return</span> <span class="nf">parse</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="o">(</span><span class="n">m</span><span class="o">,</span> <span class="n">k</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="kt">byte</span><span class="o">)((</span><span class="n">m</span><span class="o">-</span><span class="sc">'A'</span><span class="o">+</span><span class="n">k</span><span class="o">-</span><span class="sc">'A'</span><span class="o">)</span> <span class="o">%</span> <span class="n">COUNT</span> <span class="o">+</span> <span class="sc">'A'</span><span class="o">));</span>
+    <span class="kd">static</span> <span class="nc">String</span> <span class="nf">encode</span><span class="o">(</span><span class="nc">String</span> <span class="n">msg</span><span class="o">,</span> <span class="nc">String</span> <span class="n">key</span><span class="o">){</span>
+        <span class="k">return</span> <span class="nf">parse</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="o">(</span><span class="n">m</span><span class="o">,</span> <span class="n">k</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="kt">byte</span><span class="o">)((</span><span class="n">m</span><span class="o">-</span><span class="sc">'A'</span><span class="o">+</span><span class="n">k</span><span class="o">-</span><span class="sc">'A'</span><span class="o">)</span> <span class="o">%</span> <span class="no">COUNT</span> <span class="o">+</span> <span class="sc">'A'</span><span class="o">));</span>
     <span class="o">}</span>
 
-    <span class="kd">static</span> <span class="n">String</span> <span class="nf">decode</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">,</span> <span class="n">String</span> <span class="n">key</span><span class="o">){</span>
-        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">COUNT</span><span class="o">;</span>
+    <span class="kd">static</span> <span class="nc">String</span> <span class="nf">decode</span><span class="o">(</span><span class="nc">String</span> <span class="n">msg</span><span class="o">,</span> <span class="nc">String</span> <span class="n">key</span><span class="o">){</span>
+        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="no">COUNT</span><span class="o">;</span>
         <span class="k">return</span> <span class="nf">parse</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="o">(</span><span class="n">m</span><span class="o">,</span> <span class="n">k</span><span class="o">)</span> <span class="o">-&gt;(</span><span class="kt">byte</span><span class="o">)((</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">&gt;=</span><span class="mi">0</span><span class="o">)?</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)</span> <span class="o">:</span> <span class="o">(</span><span class="n">m</span><span class="o">-</span><span class="n">k</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="sc">'A'</span><span class="o">)));</span>
     <span class="o">}</span>
 </code></pre></div></div>
@@ -119,11 +119,11 @@
 
 <p>In the previous section we spoke about message randomness. To measure randomness, we introduce the notion of entropy. Entropy is the number of bits needed to optimally encode a given string.</p>
 
-<p>For a purely random string, composed of equally probable symbols, its entropy is given by the number of bits we need to encode each symbol multiplied by the number of symbols in the string. Variable <code class="highlighter-rouge">COUNT</code> in the code below is the number of distinct symbols in the alphabet. In our case, for the <code class="highlighter-rouge">A-Z</code> alphabet, it is <code class="highlighter-rouge">26</code>.</p>
+<p>For a purely random string, composed of equally probable symbols, its entropy is given by the number of bits we need to encode each symbol multiplied by the number of symbols in the string. Variable <code class="language-plaintext highlighter-rouge">COUNT</code> in the code below is the number of distinct symbols in the alphabet. In our case, for the <code class="language-plaintext highlighter-rouge">A-Z</code> alphabet, it is <code class="language-plaintext highlighter-rouge">26</code>.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="kt">double</span> <span class="nf">symbol_entropy</span><span class="o">(){</span>
         <span class="c1">// log2(x) = log(x) / log(2)</span>
-        <span class="k">return</span> <span class="o">(</span><span class="n">Math</span><span class="o">.</span><span class="na">log</span> <span class="o">(</span><span class="n">COUNT</span><span class="o">)</span> <span class="o">/</span> <span class="n">Math</span><span class="o">.</span><span class="na">log</span> <span class="o">(</span><span class="mi">2</span><span class="o">));</span>
+        <span class="k">return</span> <span class="o">(</span><span class="nc">Math</span><span class="o">.</span><span class="na">log</span> <span class="o">(</span><span class="no">COUNT</span><span class="o">)</span> <span class="o">/</span> <span class="nc">Math</span><span class="o">.</span><span class="na">log</span> <span class="o">(</span><span class="mi">2</span><span class="o">));</span>
     <span class="o">}</span>
 
     <span class="kd">static</span> <span class="kt">double</span> <span class="nf">theoretical_entropy</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">sequence</span><span class="o">){</span>
@@ -131,29 +131,29 @@
     <span class="o">}</span>
 </code></pre></div></div>
 
-<p>But what about the pseudo random number generators? Let’s consider the simplest and most commonly used random number generator is the <a href="https://en.wikipedia.org/wiki/Linear_congruential_generator">Linear Congruential Generator</a>. It has a very simple, recursive, form: <code class="highlighter-rouge">n_i+1 = (A * n_i + B)%m</code>, with <code class="highlighter-rouge">n_-1</code> being called “seed”.</p>
+<p>But what about the pseudo random number generators? Let’s consider the simplest and most commonly used random number generator is the <a href="https://en.wikipedia.org/wiki/Linear_congruential_generator">Linear Congruential Generator</a>. It has a very simple, recursive, form: <code class="language-plaintext highlighter-rouge">n_i+1 = (A * n_i + B)%m</code>, with <code class="language-plaintext highlighter-rouge">n_-1</code> being called “seed”.</p>
 
-<p>It is very important to observe that the seed is the only source of randomness (entropy) in the system, thus the maximum theoretical entropy of this RNG is given by <code class="highlighter-rouge">log2(symbols_in_the_alphabet)</code>, in our case, for our alphabet, <code class="highlighter-rouge">log2(26) ==  4.7004</code>. That is because the random function depends only on the first seed and the longest possible sequence it can generate is 26 characters before it loops over. In practice, if wrong <code class="highlighter-rouge">A</code>s and <code class="highlighter-rouge">B</code>s are chosen, the entropy can be much lower, as seen in the following pseudo-random sequence generated with this RNG: <code class="highlighter-rouge">QKGUVFLPBA QKGUVFLPBA QKGUVFLPBA QKGUVFLPBA QKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBA</code></p>
+<p>It is very important to observe that the seed is the only source of randomness (entropy) in the system, thus the maximum theoretical entropy of this RNG is given by <code class="language-plaintext highlighter-rouge">log2(symbols_in_the_alphabet)</code>, in our case, for our alphabet, <code class="language-plaintext highlighter-rouge">log2(26) ==  4.7004</code>. That is because the random function depends only on the first seed and the longest possible sequence it can generate is 26 characters before it loops over. In practice, if wrong <code class="language-plaintext highlighter-rouge">A</code>s and <code class="language-plaintext highlighter-rouge">B</code>s are chosen, the entropy can be much lower, as seen in the following pseudo-random sequence generated with this RNG: <code class="language-plaintext highlighter-rouge">QKGUVFLPBA QKGUVFLPBA QKGUVFLPBA QKGUVFLPBA QKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBAQKGUVFLPBA</code></p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="kt">byte</span> <span class="nf">randomLetter</span><span class="o">(</span><span class="kt">int</span> <span class="n">A</span><span class="o">,</span> <span class="kt">int</span> <span class="n">B</span><span class="o">,</span> <span class="kt">int</span> <span class="n">seed</span><span class="o">){</span>
-        <span class="kt">int</span> <span class="n">length</span> <span class="o">=</span> <span class="n">COUNT</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="kt">byte</span> <span class="nf">randomLetter</span><span class="o">(</span><span class="kt">int</span> <span class="no">A</span><span class="o">,</span> <span class="kt">int</span> <span class="no">B</span><span class="o">,</span> <span class="kt">int</span> <span class="n">seed</span><span class="o">){</span>
+        <span class="kt">int</span> <span class="n">length</span> <span class="o">=</span> <span class="no">COUNT</span><span class="o">;</span>
 
-        <span class="kt">long</span> <span class="n">lA</span> <span class="o">=</span> <span class="n">A</span><span class="o">;</span>
-        <span class="kt">long</span> <span class="n">lB</span> <span class="o">=</span> <span class="n">B</span><span class="o">;</span>
+        <span class="kt">long</span> <span class="n">lA</span> <span class="o">=</span> <span class="no">A</span><span class="o">;</span>
+        <span class="kt">long</span> <span class="n">lB</span> <span class="o">=</span> <span class="no">B</span><span class="o">;</span>
         <span class="kt">long</span> <span class="n">lSeed</span> <span class="o">=</span> <span class="n">seed</span><span class="o">;</span>
 
-        <span class="kt">long</span> <span class="n">n</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">abs</span> <span class="o">(</span><span class="n">lA</span> <span class="o">*</span> <span class="n">lSeed</span> <span class="o">+</span> <span class="n">lB</span><span class="o">)</span> <span class="o">%</span> <span class="n">length</span><span class="o">;</span>
+        <span class="kt">long</span> <span class="n">n</span> <span class="o">=</span> <span class="nc">Math</span><span class="o">.</span><span class="na">abs</span> <span class="o">(</span><span class="n">lA</span> <span class="o">*</span> <span class="n">lSeed</span> <span class="o">+</span> <span class="n">lB</span><span class="o">)</span> <span class="o">%</span> <span class="n">length</span><span class="o">;</span>
 
         <span class="c1">// there is no additional source of randomness except for the seed</span>
         <span class="k">return</span> <span class="o">(</span><span class="kt">byte</span><span class="o">)(</span><span class="n">n</span> <span class="o">+</span> <span class="sc">'A'</span><span class="o">);</span>
     <span class="o">}</span>
 
-    <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">random_sequence</span><span class="o">(</span><span class="kt">int</span> <span class="n">A</span><span class="o">,</span> <span class="kt">int</span> <span class="n">B</span><span class="o">,</span> <span class="kt">int</span> <span class="n">seed</span><span class="o">,</span> <span class="kt">int</span> <span class="n">cnt</span><span class="o">){</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">cnt</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">IllegalArgumentException</span> <span class="o">(</span><span class="s">"Count must be larger than 0"</span><span class="o">);</span>
+    <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">random_sequence</span><span class="o">(</span><span class="kt">int</span> <span class="no">A</span><span class="o">,</span> <span class="kt">int</span> <span class="no">B</span><span class="o">,</span> <span class="kt">int</span> <span class="n">seed</span><span class="o">,</span> <span class="kt">int</span> <span class="n">cnt</span><span class="o">){</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">cnt</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalArgumentException</span> <span class="o">(</span><span class="s">"Count must be larger than 0"</span><span class="o">);</span>
 
         <span class="kt">byte</span><span class="o">[]</span> <span class="n">ret</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">cnt</span><span class="o">];</span>
         <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">cnt</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
-            <span class="n">seed</span> <span class="o">=</span> <span class="n">ret</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">randomLetter</span> <span class="o">(</span><span class="n">A</span><span class="o">,</span> <span class="n">B</span><span class="o">,</span> <span class="n">seed</span><span class="o">);</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">ret</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">randomLetter</span> <span class="o">(</span><span class="no">A</span><span class="o">,</span> <span class="no">B</span><span class="o">,</span> <span class="n">seed</span><span class="o">);</span>
         <span class="o">}</span>
         <span class="k">return</span> <span class="n">ret</span><span class="o">;</span>
     <span class="o">}</span>
@@ -165,28 +165,28 @@
 
 <p>We observe the following:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(p^q)^r = p^(q*r) = p^(r*q) = (p^q)^r
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(p^q)^r = p^(q*r) = p^(r*q) = (p^q)^r
 
 and this property is preserved for modulo n as follows:
 
 (p^q % n)^r % n = (p^r % n)^q % n
 </code></pre></div></div>
 
-<p>This means that, having two actors that communicate over a channel, each actor can reach a consensus on a shared secret, <code class="highlighter-rouge">(p^q % n)^r % n = (p^r % n)^q % n</code>, without sharing it explicitly. Let’s see it in code:</p>
+<p>This means that, having two actors that communicate over a channel, each actor can reach a consensus on a shared secret, <code class="language-plaintext highlighter-rouge">(p^q % n)^r % n = (p^r % n)^q % n</code>, without sharing it explicitly. Let’s see it in code:</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Actor</span> <span class="o">{</span>
 
         <span class="kd">private</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">sharedPass</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
         <span class="kd">private</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">internalRandoms</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
 
-        <span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="n">PASS_LEN</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
-        <span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="n">INITIAL_BASE</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="no">PASS_LEN</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="no">INITIAL_BASE</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
 
         <span class="kd">private</span> <span class="nf">Actor</span> <span class="o">(){</span>
-            <span class="n">Random</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Random</span> <span class="o">();</span>
+            <span class="nc">Random</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Random</span> <span class="o">();</span>
 
             <span class="c1">// STEP: generate a set of internal numbers</span>
-            <span class="n">internalRandoms</span> <span class="o">=</span>  <span class="n">IntStream</span><span class="o">.</span><span class="na">range</span> <span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">PASS_LEN</span><span class="o">).</span><span class="na">map</span> <span class="o">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="n">r</span><span class="o">.</span><span class="na">nextInt</span> <span class="o">()).</span><span class="na">toArray</span> <span class="o">();</span>
+            <span class="n">internalRandoms</span> <span class="o">=</span>  <span class="nc">IntStream</span><span class="o">.</span><span class="na">range</span> <span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="no">PASS_LEN</span><span class="o">).</span><span class="na">map</span> <span class="o">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="n">r</span><span class="o">.</span><span class="na">nextInt</span> <span class="o">()).</span><span class="na">toArray</span> <span class="o">();</span>
         <span class="o">}</span>
 
         <span class="kd">private</span> <span class="nf">Actor</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">randoms</span><span class="o">){</span>
@@ -212,37 +212,37 @@ and this property is preserved for modulo n as follows:
         <span class="o">}</span>
 
         <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">powModulo</span><span class="o">(</span><span class="kt">int</span> <span class="n">base</span><span class="o">,</span> <span class="kt">int</span> <span class="n">x</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="nf">powModulo</span><span class="o">(</span><span class="n">base</span><span class="o">,</span> <span class="n">x</span><span class="o">,</span> <span class="n">COUNT</span><span class="o">);</span>
+            <span class="k">return</span> <span class="nf">powModulo</span><span class="o">(</span><span class="n">base</span><span class="o">,</span> <span class="n">x</span><span class="o">,</span> <span class="no">COUNT</span><span class="o">);</span>
         <span class="o">}</span>
 
         <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">initialBaseModulo</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">){</span>
-            <span class="k">return</span> <span class="nf">powModulo</span> <span class="o">(</span><span class="n">INITIAL_BASE</span><span class="o">,</span> <span class="n">x</span><span class="o">);</span>
+            <span class="k">return</span> <span class="nf">powModulo</span> <span class="o">(</span><span class="no">INITIAL_BASE</span><span class="o">,</span> <span class="n">x</span><span class="o">);</span>
         <span class="o">}</span>
 
         <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="nf">getPublicMessage</span><span class="o">()</span> <span class="o">{</span>
             <span class="c1">// STEP2: share the result of exponentiation on the public channel</span>
-            <span class="k">return</span> <span class="n">IntStream</span><span class="o">.</span><span class="na">of</span> <span class="o">(</span><span class="n">internalRandoms</span><span class="o">).</span> <span class="n">map</span> <span class="o">(</span><span class="nl">Actor:</span><span class="o">:</span><span class="n">initialBaseModulo</span><span class="o">).</span><span class="na">toArray</span> <span class="o">();</span>
+            <span class="k">return</span> <span class="nc">IntStream</span><span class="o">.</span><span class="na">of</span> <span class="o">(</span><span class="n">internalRandoms</span><span class="o">).</span> <span class="n">map</span> <span class="o">(</span><span class="nl">Actor:</span><span class="o">:</span><span class="n">initialBaseModulo</span><span class="o">).</span><span class="na">toArray</span> <span class="o">();</span>
         <span class="o">}</span>
 
         <span class="kd">public</span> <span class="kt">void</span> <span class="nf">createSharedPass</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">othersRand</span><span class="o">){</span>
             <span class="c1">// STEP3: raise to the other's public message to the power of internal randoms</span>
             <span class="c1">// to get to the commonly shared password</span>
-            <span class="n">sharedPass</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">PASS_LEN</span><span class="o">];</span>
-            <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">PASS_LEN</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span>
+            <span class="n">sharedPass</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="no">PASS_LEN</span><span class="o">];</span>
+            <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="no">PASS_LEN</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span>
                 <span class="n">sharedPass</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">(</span><span class="kt">byte</span><span class="o">)(</span><span class="n">powModulo</span> <span class="o">(</span><span class="n">othersRand</span><span class="o">[</span><span class="n">i</span><span class="o">],</span> <span class="n">internalRandoms</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">+</span> <span class="sc">'A'</span><span class="o">);</span>
         <span class="o">}</span>
 
-        <span class="kd">public</span> <span class="n">String</span> <span class="nf">encodeMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">){</span>
+        <span class="kd">public</span> <span class="nc">String</span> <span class="nf">encodeMessage</span><span class="o">(</span><span class="nc">String</span> <span class="n">s</span><span class="o">){</span>
             <span class="c1">// STEP4: communicate</span>
-            <span class="k">return</span> <span class="nf">encode</span> <span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span> <span class="o">(</span><span class="n">sharedPass</span><span class="o">));</span>
+            <span class="k">return</span> <span class="nf">encode</span> <span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="k">new</span> <span class="nc">String</span> <span class="o">(</span><span class="n">sharedPass</span><span class="o">));</span>
         <span class="o">}</span>
 
-        <span class="kd">public</span> <span class="n">String</span> <span class="nf">decodeMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">){</span>
+        <span class="kd">public</span> <span class="nc">String</span> <span class="nf">decodeMessage</span><span class="o">(</span><span class="nc">String</span> <span class="n">msg</span><span class="o">){</span>
             <span class="c1">// STEP4: communicate</span>
-            <span class="k">return</span> <span class="nf">decode</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span> <span class="o">(</span><span class="n">sharedPass</span><span class="o">));</span>
+            <span class="k">return</span> <span class="nf">decode</span> <span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="k">new</span> <span class="nc">String</span> <span class="o">(</span><span class="n">sharedPass</span><span class="o">));</span>
         <span class="o">}</span>
 
-        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getPrivatePassword</span><span class="o">(){</span>
+        <span class="kd">public</span> <span class="nc">String</span> <span class="nf">getPrivatePassword</span><span class="o">(){</span>
             <span class="k">return</span> <span class="k">new</span> <span class="nf">String</span> <span class="o">(</span><span class="n">sharedPass</span><span class="o">);</span>
         <span class="o">}</span>
 
@@ -250,71 +250,71 @@ and this property is preserved for modulo n as follows:
     <span class="cm">/**
     * Implementation of the actual exchange
     */</span> 
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_diffieHellman</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_diffieHellman</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
 
-        <span class="n">var</span> <span class="n">actor1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Actor</span> <span class="o">();</span>
-        <span class="n">var</span> <span class="n">actor2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Actor</span> <span class="o">();</span>
+        <span class="kt">var</span> <span class="n">actor1</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Actor</span> <span class="o">();</span>
+        <span class="kt">var</span> <span class="n">actor2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Actor</span> <span class="o">();</span>
 
         <span class="n">actor2</span><span class="o">.</span><span class="na">createSharedPass</span> <span class="o">(</span><span class="n">actor1</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">());</span>
         <span class="n">actor1</span><span class="o">.</span><span class="na">createSharedPass</span> <span class="o">(</span><span class="n">actor2</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">());</span>
 
-        <span class="n">var</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">actor1</span><span class="o">.</span><span class="na">encodeMessage</span> <span class="o">(</span><span class="s">"HELLOWORLD"</span><span class="o">);</span>
-        <span class="n">var</span> <span class="n">decodedMsg</span> <span class="o">=</span> <span class="n">actor2</span><span class="o">.</span><span class="na">decodeMessage</span> <span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+        <span class="kt">var</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">actor1</span><span class="o">.</span><span class="na">encodeMessage</span> <span class="o">(</span><span class="s">"HELLOWORLD"</span><span class="o">);</span>
+        <span class="kt">var</span> <span class="n">decodedMsg</span> <span class="o">=</span> <span class="n">actor2</span><span class="o">.</span><span class="na">decodeMessage</span> <span class="o">(</span><span class="n">msg</span><span class="o">);</span>
 
-        <span class="n">var</span> <span class="n">pass1</span> <span class="o">=</span> <span class="n">actor1</span><span class="o">.</span><span class="na">getPrivatePassword</span> <span class="o">();</span>
-        <span class="n">var</span> <span class="n">pass2</span> <span class="o">=</span> <span class="n">actor2</span><span class="o">.</span><span class="na">getPrivatePassword</span> <span class="o">();</span>
+        <span class="kt">var</span> <span class="n">pass1</span> <span class="o">=</span> <span class="n">actor1</span><span class="o">.</span><span class="na">getPrivatePassword</span> <span class="o">();</span>
+        <span class="kt">var</span> <span class="n">pass2</span> <span class="o">=</span> <span class="n">actor2</span><span class="o">.</span><span class="na">getPrivatePassword</span> <span class="o">();</span>
 
         <span class="k">if</span><span class="o">(!</span><span class="n">pass1</span><span class="o">.</span><span class="na">equals</span> <span class="o">(</span><span class="n">pass2</span><span class="o">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">decodedMsg</span><span class="o">.</span><span class="na">equals</span> <span class="o">(</span><span class="s">"HELLOWORLD"</span><span class="o">))</span>
             <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span> <span class="o">(</span><span class="s">"Wrong Algorithm"</span><span class="o">);</span>
     <span class="o">}</span>
 </code></pre></div></div>
 
-<p>The most important function here is <code class="highlighter-rouge">powModulo</code>. We notice that it <code class="highlighter-rouge">base^x % modulo == 0</code>, the result of the power function will be <code class="highlighter-rouge">0</code> from that point on. So we need to avoid that.</p>
+<p>The most important function here is <code class="language-plaintext highlighter-rouge">powModulo</code>. We notice that it <code class="language-plaintext highlighter-rouge">base^x % modulo == 0</code>, the result of the power function will be <code class="language-plaintext highlighter-rouge">0</code> from that point on. So we need to avoid that.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/crypto_2.png" alt="Example" /></p>
 
-<p>Let’s look at little bit at the results of <code class="highlighter-rouge">powModulo</code>:</p>
+<p>Let’s look at little bit at the results of <code class="language-plaintext highlighter-rouge">powModulo</code>:</p>
 
 <ul>
-  <li>The function starts returning <code class="highlighter-rouge">1</code>.</li>
-  <li>At each step, it returns a value between <code class="highlighter-rouge">0</code> and <code class="highlighter-rouge">n-1</code>. We want to avoid <code class="highlighter-rouge">0</code>s because, otherwise,from that point on, the function will always return <code class="highlighter-rouge">0</code>.</li>
-  <li>The function loops through the same values once it returns <code class="highlighter-rouge">1</code> again.</li>
+  <li>The function starts returning <code class="language-plaintext highlighter-rouge">1</code>.</li>
+  <li>At each step, it returns a value between <code class="language-plaintext highlighter-rouge">0</code> and <code class="language-plaintext highlighter-rouge">n-1</code>. We want to avoid <code class="language-plaintext highlighter-rouge">0</code>s because, otherwise,from that point on, the function will always return <code class="language-plaintext highlighter-rouge">0</code>.</li>
+  <li>The function loops through the same values once it returns <code class="language-plaintext highlighter-rouge">1</code> again.</li>
 </ul>
 
 <p><img src="https://alexandrugris.github.io/assets/crypto_3.png" alt="Example" /></p>
 
-<p>What does it mean for someone who is listening to this conversation to guess our initial, hidden number? It means that he/she guesses a number <code class="highlighter-rouge">g</code> such that <code class="highlighter-rouge">INITIAL_BASE^g % n</code> is the observed number transmitted over the network. He/she can do this by substituting numbers from <code class="highlighter-rouge">1 ... n</code> in the formula and compare the result with the observed number. It is worth to notice that this <code class="highlighter-rouge">g</code> does not necessary need to be the number we initially thought of, but rather any value that satisfies the above condition will also satisfy <code class="highlighter-rouge">powModulo (othersRand[i], internalRandoms[i] == powModulo (othersRand[i], g[i]))</code>, which employed when generating the shared password.</p>
+<p>What does it mean for someone who is listening to this conversation to guess our initial, hidden number? It means that he/she guesses a number <code class="language-plaintext highlighter-rouge">g</code> such that <code class="language-plaintext highlighter-rouge">INITIAL_BASE^g % n</code> is the observed number transmitted over the network. He/she can do this by substituting numbers from <code class="language-plaintext highlighter-rouge">1 ... n</code> in the formula and compare the result with the observed number. It is worth to notice that this <code class="language-plaintext highlighter-rouge">g</code> does not necessary need to be the number we initially thought of, but rather any value that satisfies the above condition will also satisfy <code class="language-plaintext highlighter-rouge">powModulo (othersRand[i], internalRandoms[i] == powModulo (othersRand[i], g[i]))</code>, which employed when generating the shared password.</p>
 
 <p>So let’s crack our code:</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_diffieHellman</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>  
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">test_diffieHellman</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>  
 
         <span class="cm">/*
         [....code from above, new lines added below... ]
         */</span>
 
-        <span class="n">var</span> <span class="n">crackedMessage</span> <span class="o">=</span> <span class="n">crackEncodedMessage</span> <span class="o">(</span><span class="n">actor1</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">(),</span> <span class="n">actor2</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">(),</span> <span class="n">msg</span><span class="o">);</span>
+        <span class="kt">var</span> <span class="n">crackedMessage</span> <span class="o">=</span> <span class="n">crackEncodedMessage</span> <span class="o">(</span><span class="n">actor1</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">(),</span> <span class="n">actor2</span><span class="o">.</span><span class="na">getPublicMessage</span> <span class="o">(),</span> <span class="n">msg</span><span class="o">);</span>
 
         <span class="k">if</span> <span class="o">(!</span><span class="n">decodedMsg</span><span class="o">.</span><span class="na">equals</span> <span class="o">(</span><span class="n">crackedMessage</span><span class="o">))</span>
             <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span> <span class="o">(</span><span class="s">"Wrong Algorithm"</span><span class="o">);</span>
 
     <span class="o">}</span>
 
-    <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="nf">crackEncodedMessage</span><span class="o">(</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="nc">String</span> <span class="nf">crackEncodedMessage</span><span class="o">(</span>
         <span class="kt">int</span><span class="o">[]</span> <span class="n">actor1PublicMessage</span><span class="o">,</span> 
         <span class="kt">int</span><span class="o">[]</span> <span class="n">actor2PublicMessage</span><span class="o">,</span> 
-        <span class="n">String</span> <span class="n">encodedMessage</span><span class="o">){</span>
+        <span class="nc">String</span> <span class="n">encodedMessage</span><span class="o">){</span>
 
-        <span class="n">var</span> <span class="n">crackedInternalRandoms</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">actor1PublicMessage</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+        <span class="kt">var</span> <span class="n">crackedInternalRandoms</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">actor1PublicMessage</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
 
         <span class="c1">// STEP 1: </span>
         <span class="c1">// for each element in the public message from the first actor,</span>
         <span class="c1">// find a number for which the initialPowModulo is equal to the observed value</span>
         <span class="c1">// O(pass length * modulo = pass length * 2^no_of_bits_in_modulo_prime_number) algorithm:</span>
         <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">crackedInternalRandoms</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">COUNT</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
-                <span class="k">if</span> <span class="o">(</span><span class="n">Actor</span><span class="o">.</span><span class="na">initialPowModulo</span> <span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">==</span> <span class="n">actor1PublicMessage</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="no">COUNT</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="nc">Actor</span><span class="o">.</span><span class="na">initialPowModulo</span> <span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">==</span> <span class="n">actor1PublicMessage</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
                     <span class="n">crackedInternalRandoms</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
                     <span class="k">break</span><span class="o">;</span>
                 <span class="o">}</span>
@@ -322,7 +322,7 @@ and this property is preserved for modulo n as follows:
         <span class="o">}</span>
 
         <span class="c1">// STEP 2: create an actor with these randoms as the internal password</span>
-        <span class="n">var</span> <span class="n">actor3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Actor</span> <span class="o">(</span><span class="n">crackedInternalRandoms</span><span class="o">);</span>
+        <span class="kt">var</span> <span class="n">actor3</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Actor</span> <span class="o">(</span><span class="n">crackedInternalRandoms</span><span class="o">);</span>
 
         <span class="c1">// STEP 3: use this fake internal password and the observed responses from </span>
         <span class="c1">// the second actor to re-create the shared password</span>
@@ -333,19 +333,19 @@ and this property is preserved for modulo n as follows:
     <span class="o">}</span>
 </code></pre></div></div>
 
-<p>Since we want for someone in the middle to be as hard as possible to guess which was the initial hidden random number we started with, we want to force them to run through the longest number of trials and errors, thus we want the longest possible sequence of non-1s results, that is we want <code class="highlighter-rouge">1</code> to be reached again when <code class="highlighter-rouge">x==n-1</code>, while avoiding premature cycles.</p>
+<p>Since we want for someone in the middle to be as hard as possible to guess which was the initial hidden random number we started with, we want to force them to run through the longest number of trials and errors, thus we want the longest possible sequence of non-1s results, that is we want <code class="language-plaintext highlighter-rouge">1</code> to be reached again when <code class="language-plaintext highlighter-rouge">x==n-1</code>, while avoiding premature cycles.</p>
 
-<p><a href="https://en.wikipedia.org/wiki/Fermat%27s_little_theorem"><em>Fermat’s Little Theorem</em></a> tells us that <code class="highlighter-rouge">INITIAL_BASE^(n-1) % n==1</code> when <code class="highlighter-rouge">n</code> is prime and <code class="highlighter-rouge">INITIAL_BASE</code> is not a multiple of <code class="highlighter-rouge">n</code>.</p>
+<p><a href="https://en.wikipedia.org/wiki/Fermat%27s_little_theorem"><em>Fermat’s Little Theorem</em></a> tells us that <code class="language-plaintext highlighter-rouge">INITIAL_BASE^(n-1) % n==1</code> when <code class="language-plaintext highlighter-rouge">n</code> is prime and <code class="language-plaintext highlighter-rouge">INITIAL_BASE</code> is not a multiple of <code class="language-plaintext highlighter-rouge">n</code>.</p>
 
-<p>Now, even if <code class="highlighter-rouge">(INITIAL_BASE^(n-1) mod n) == 1</code>, it might be that <code class="highlighter-rouge">1</code> is also reached for factors of <code class="highlighter-rouge">n-1</code>. For example, if we set <code class="highlighter-rouge">INITIAL_BASE = 3,  n = 23</code>, we have ones also for <code class="highlighter-rouge">11</code>. In practice, <code class="highlighter-rouge">INITIAL_BASE</code> can be a small number, good choices being <code class="highlighter-rouge">2, 3, 5, 7</code>.</p>
+<p>Now, even if <code class="language-plaintext highlighter-rouge">(INITIAL_BASE^(n-1) mod n) == 1</code>, it might be that <code class="language-plaintext highlighter-rouge">1</code> is also reached for factors of <code class="language-plaintext highlighter-rouge">n-1</code>. For example, if we set <code class="language-plaintext highlighter-rouge">INITIAL_BASE = 3,  n = 23</code>, we have ones also for <code class="language-plaintext highlighter-rouge">11</code>. In practice, <code class="language-plaintext highlighter-rouge">INITIAL_BASE</code> can be a small number, good choices being <code class="language-plaintext highlighter-rouge">2, 3, 5, 7</code>.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/crypto_1.png" alt="Example" /></p>
 
 <p>This example demonstrate three points:</p>
 
 <ul>
-  <li>Why we need to choose a large prime number for <code class="highlighter-rouge">n</code>, in our case the <code class="highlighter-rouge">COUNT</code> variable, usually selected as a prime <code class="highlighter-rouge">n=2*q+1</code>, where <a href="https://en.wikipedia.org/wiki/Sophie_Germain_prime">q is another large prime</a></li>
-  <li>Why factoring <code class="highlighter-rouge">n-1</code> is important (the factors are the points where loops might start, hence the <code class="highlighter-rouge">n=2*q+1</code> selection)</li>
+  <li>Why we need to choose a large prime number for <code class="language-plaintext highlighter-rouge">n</code>, in our case the <code class="language-plaintext highlighter-rouge">COUNT</code> variable, usually selected as a prime <code class="language-plaintext highlighter-rouge">n=2*q+1</code>, where <a href="https://en.wikipedia.org/wiki/Sophie_Germain_prime">q is another large prime</a></li>
+  <li>Why factoring <code class="language-plaintext highlighter-rouge">n-1</code> is important (the factors are the points where loops might start, hence the <code class="language-plaintext highlighter-rouge">n=2*q+1</code> selection)</li>
   <li>Why Diffie-Hellman does not protect against man-in-the-middle. There’s nothing stopping an attacker to set himself/herself as a middleman between the two communicators. There’s no means for each of the parties communicating to validate their identity to each other.</li>
 </ul>
 

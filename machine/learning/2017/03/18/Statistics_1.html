@@ -74,10 +74,10 @@
 
 <ul>
   <li>
-    <p><strong>Power law</strong> - sometimes referred as Pareto. Common in social systems or systems with strong network effects - wealth distribution, group size, productivity, website views. It models preferential attachment. Power law <a href="https://en.wikipedia.org/wiki/Probability_density_function">density function</a> is <code class="highlighter-rouge">p(a) ~= a / x^lambda</code> where <code class="highlighter-rouge">lambda</code> reflects the steepness of the fall. I am using <code class="highlighter-rouge">~=</code> because the integral on the (-infinity, +infinity) interval should be 1, thus the power law as expressed above is not really a density function. <a href="https://en.wikipedia.org/wiki/Power_law">Power Law, Wikipedia</a></p>
+    <p><strong>Power law</strong> - sometimes referred as Pareto. Common in social systems or systems with strong network effects - wealth distribution, group size, productivity, website views. It models preferential attachment. Power law <a href="https://en.wikipedia.org/wiki/Probability_density_function">density function</a> is <code class="language-plaintext highlighter-rouge">p(a) ~= a / x^lambda</code> where <code class="language-plaintext highlighter-rouge">lambda</code> reflects the steepness of the fall. I am using <code class="language-plaintext highlighter-rouge">~=</code> because the integral on the (-infinity, +infinity) interval should be 1, thus the power law as expressed above is not really a density function. <a href="https://en.wikipedia.org/wiki/Power_law">Power Law, Wikipedia</a></p>
   </li>
   <li>
-    <p><strong>Gaussian</strong> - common in physical systems, common in measurements or small random effect. <code class="highlighter-rouge">N(a, sigma) = C * e^[-(x-a)^2 / 2 * sigma^2]</code>, where <code class="highlighter-rouge">C</code> is a constant, <code class="highlighter-rouge">a</code> is the average and <code class="highlighter-rouge">sigma^2</code> the variance. 88% of the values fall between a+-sigma, 99.7% between a+-3*sigma. Z-scoring (<code class="highlighter-rouge">y=(x-a)/sigma</code>) brings the values to the N(0,1) standard form. The standard score (z-score) is the signed number of standard deviations by which the value of an observation or data point is above the mean value of what is being observed or measured. Observed values above the mean have positive standard scores, while values below the mean have negative standard scores. The standard score is a dimensionless quantity obtained by subtracting the population mean from an individual raw score and then dividing the difference by the population standard deviation [Wikipedia]</p>
+    <p><strong>Gaussian</strong> - common in physical systems, common in measurements or small random effect. <code class="language-plaintext highlighter-rouge">N(a, sigma) = C * e^[-(x-a)^2 / 2 * sigma^2]</code>, where <code class="language-plaintext highlighter-rouge">C</code> is a constant, <code class="language-plaintext highlighter-rouge">a</code> is the average and <code class="language-plaintext highlighter-rouge">sigma^2</code> the variance. 88% of the values fall between a+-sigma, 99.7% between a+-3*sigma. Z-scoring (<code class="language-plaintext highlighter-rouge">y=(x-a)/sigma</code>) brings the values to the N(0,1) standard form. The standard score (z-score) is the signed number of standard deviations by which the value of an observation or data point is above the mean value of what is being observed or measured. Observed values above the mean have positive standard scores, while values below the mean have negative standard scores. The standard score is a dimensionless quantity obtained by subtracting the population mean from an individual raw score and then dividing the difference by the population standard deviation [Wikipedia]</p>
   </li>
 </ul>
 
@@ -86,54 +86,54 @@
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
-<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="n">x_step</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">y</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">x_step</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">x_step</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="n">cdf_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">cdf_arr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
     <span class="n">cdf_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">.</span><span class="n">size</span><span class="p">):</span>
         <span class="n">cdf_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         
-    <span class="k">return</span> <span class="n">cdf_arr</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">cdf_arr</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">cdf_arr</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">cdf_arr</span><span class="p">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
     
 <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
 </code></pre></div></div>
 
 <p><strong>Result:</strong></p>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_1.png" alt="PDF, CDF" /></p>
 
-<p>In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the <code class="highlighter-rouge">pdf</code> function above. I kept the <code class="highlighter-rouge">pdf</code>, <code class="highlighter-rouge">cdf</code>, mean and <code class="highlighter-rouge">sigma</code> functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).</p>
+<p>In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the <code class="language-plaintext highlighter-rouge">pdf</code> function above. I kept the <code class="language-plaintext highlighter-rouge">pdf</code>, <code class="language-plaintext highlighter-rouge">cdf</code>, mean and <code class="language-plaintext highlighter-rouge">sigma</code> functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).</p>
 
 <p>Now, let’s compute a random variable distributed according to a specific probability density function.</p>
 
-<p>Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. <code class="highlighter-rouge">func</code> - the function, <code class="highlighter-rouge">pdf_func</code> - probability density of func and <code class="highlighter-rouge">cdf_func</code> the cumulative distribution - please note that <code class="highlighter-rouge">cdf(func)</code> and <code class="highlighter-rouge">cdf(pdf(func))</code> produce similar results because <code class="highlighter-rouge">cdf</code> has normalization embedded.</p>
+<p>Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. <code class="language-plaintext highlighter-rouge">func</code> - the function, <code class="language-plaintext highlighter-rouge">pdf_func</code> - probability density of func and <code class="language-plaintext highlighter-rouge">cdf_func</code> the cumulative distribution - please note that <code class="language-plaintext highlighter-rouge">cdf(func)</code> and <code class="language-plaintext highlighter-rouge">cdf(pdf(func))</code> produce similar results because <code class="language-plaintext highlighter-rouge">cdf</code> has normalization embedded.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy.random</span> <span class="k">as</span> <span class="n">rnd</span>
 
-<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
 <span class="n">func</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_axis</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.8</span>
 
 <span class="n">pdf_func</span> <span class="o">=</span> <span class="n">pdf</span><span class="p">(</span><span class="n">x_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">func</span><span class="p">)</span>
 <span class="n">cdf_func</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf_func</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">pdf_func</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_2.png" alt="PDF, CDF" /></p>
@@ -142,7 +142,7 @@
 <span class="k">def</span> <span class="nf">rand_cdf</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">cdf_arr</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
         <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="mi">1</span>
     
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
@@ -151,26 +151,26 @@
             <span class="k">while</span> <span class="n">cdf_arr</span><span class="p">[</span><span class="n">prev_cdf_idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">next_val</span><span class="p">:</span>
                 <span class="n">prev_cdf_idx</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">+</span> <span class="mi">1</span>
                 
-            <span class="c"># a more accurate version would consider a linear interpolation</span>
-            <span class="c"># between prev_cdf_idx - 1 and prev_cdf_idx</span>
-            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># a more accurate version would consider a linear interpolation
+</span>            <span class="c1"># between prev_cdf_idx - 1 and prev_cdf_idx
+</span>            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev_cdf_idx</span> <span class="o">-</span> <span class="mi">1</span>
         
-        <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">cdf_arr</span><span class="p">.</span><span class="n">size</span>
     
     <span class="n">scale</span> <span class="o">=</span> <span class="mi">10000</span>
     
     <span class="n">cdf_inv</span> <span class="o">=</span> <span class="n">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cdf_inv</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">scale</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)]</span> 
+    <span class="k">return</span> <span class="n">cdf_inv</span><span class="p">[</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">scale</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">integer</span><span class="p">)]</span> 
 
-<span class="n">rand_0_1</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">rand_0_1</span> <span class="o">=</span> <span class="n">rnd</span><span class="p">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
 <span class="n">rand_distributed_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf_func</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_distributed_arr</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_distributed_arr</span><span class="p">)</span>
 
 </code></pre></div></div>
 <p><img src="https://alexandrugris.github.io/assets/ml_2_3.png" alt="PDF, CDF" /></p>
 
-<p>The <code class="highlighter-rouge">rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between 0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
+<p>The <code class="language-plaintext highlighter-rouge">rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between 0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_4.png" alt="Inverse CDF" /></p>
 
@@ -180,11 +180,11 @@
 
 <p><a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Entropy</a></p>
 
-<p>Entropy measures the amount of information in signals being transferred over a communication channel. A rare signal bares more information than a more frequent one and since the signals are considered to be independent of each other, they can be summed up to estimate the total amount of information. Because of these, we can choose <code class="highlighter-rouge">log(1/p) = log(p^-1) = -log(p)</code> for scoring the level of information in a signal which appears with probability <code class="highlighter-rouge">p</code>. We define entropy to be the averaged level of information in categories of a categorical feature.</p>
+<p>Entropy measures the amount of information in signals being transferred over a communication channel. A rare signal bares more information than a more frequent one and since the signals are considered to be independent of each other, they can be summed up to estimate the total amount of information. Because of these, we can choose <code class="language-plaintext highlighter-rouge">log(1/p) = log(p^-1) = -log(p)</code> for scoring the level of information in a signal which appears with probability <code class="language-plaintext highlighter-rouge">p</code>. We define entropy to be the averaged level of information in categories of a categorical feature.</p>
 
 <p>Thus, considering a categorical feature with p1..pn probabilities of occurence:</p>
 
-<p><code class="highlighter-rouge">Entropy = H = Sum(-pi log(pi))</code> and it is smaller than <code class="highlighter-rouge">log(n)</code> where n is the number of categories. H for a uniform distribution is <code class="highlighter-rouge">log(n)</code> and it is the maximum entropy.</p>
+<p><code class="language-plaintext highlighter-rouge">Entropy = H = Sum(-pi log(pi))</code> and it is smaller than <code class="language-plaintext highlighter-rouge">log(n)</code> where n is the number of categories. H for a uniform distribution is <code class="language-plaintext highlighter-rouge">log(n)</code> and it is the maximum entropy.</p>
 
 <p>According to <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Wikipedia</a>:</p>
 
@@ -192,60 +192,60 @@
   <p>Entropy is a measure of unpredictability of the state, or equivalently, of its average information content. To get an intuitive understanding of these terms, consider the example of a political poll. Usually, such polls happen because the outcome of the &gt;poll is not already known. In other words, the outcome of the poll is relatively unpredictable, and actually performing the poll and learning the results gives some new information; these are just different ways of saying that the a priori entropy of the &gt;poll results is large. Now, consider the case that the same poll is performed a second time shortly after the first poll. Since the result of the first poll is already known, the outcome of the second poll can be predicted well and the results should not &gt;contain much new information; in this case the a priori entropy of the second poll result is small relative to that of the first.</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>H of uniform distribution - m elements =&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>H of uniform distribution - m elements =&gt;
 probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log(m)
 </code></pre></div></div>
 
 <p>The formulas above translate to the following python code:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_values</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">ma</span><span class="p">.</span><span class="n">masked_values</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">histogram</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="c"># so we don't have 1/0</span>
-    
-    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">prb</span> <span class="p">))</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="p">.</span><span class="n">mask</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="p">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">histogram</span><span class="p">[</span><span class="n">mask</span><span class="p">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="c1"># so we don't have 1/0
+</span>    
+    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="n">log2</span><span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">prb</span> <span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">log2</span><span class="p">(</span><span class="n">histogram</span><span class="p">.</span><span class="n">size</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Example 1:</p>
 
 <p>Compute entropy for a completely skewed distribution of 5 items, [1, 0, 0, 0, 0]</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="nb">float</span><span class="p">)</span>
-<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
 </code></pre></div></div>
 
 <p>With output:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Entropy: 0.0058899223994331295 ; Max Entropy: 2.321928094887362
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Entropy: 0.0058899223994331295 ; Max Entropy: 2.321928094887362
 </code></pre></div></div>
 
 <p>Example 2:</p>
 
 <p>Compute entropy for a gaussian distrbuted random variable split into 5 categories.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">rand_gaussian_arr</span><span class="p">,</span> <span class="mi">5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">rand_gaussian_arr</span><span class="p">,</span> <span class="mi">5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">"Entropy: {} ; Max Entropy: {}"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">),</span> <span class="n">max_entropy</span><span class="p">(</span><span class="n">histogram</span><span class="p">)))</span>
 </code></pre></div></div>
 
 <p>With output:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Entropy: 1.8286832347936723 ; Max Entropy: 2.321928094887362
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Entropy: 1.8286832347936723 ; Max Entropy: 2.321928094887362
 </code></pre></div></div>
 
 <p>Example 3:</p>
 
 <p>Plot the chart for the evolution of the entropy index for a set of probabilities [p, 1-p]</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-<span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span>
 <span class="n">e_idx</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_axis</span><span class="p">:</span>    
     <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> 
@@ -256,7 +256,7 @@ probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log
     
     <span class="n">e_idx</span> <span class="o">=</span> <span class="n">e_idx</span> <span class="o">+</span> <span class="mi">1</span>
     
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>With the output:</p>
@@ -267,21 +267,21 @@ probability p = 1/m  = -Sum(1/p * log(p)) = -p * (1/p) * log(p) = log(1/p) = log
 
 <p>Gini index is referred also as categorical variance. It was initially introduced to “represent the income or wealth distribution of a nation’s residents, and is the most commonly used measure of inequality.” [Wikipedia]. We define it as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency).</p>
 
-<p>E.g., consider a category with frequency <code class="highlighter-rouge">p = 20%</code>, the average error is <code class="highlighter-rouge">p*(1-p) = 20% * 80% = 16%</code>. <code class="highlighter-rouge">Gmax = (m-1) / m</code> and is obtained for a uniform distribution. <code class="highlighter-rouge">G = sum( p_i * (1 - p_i)</code> ).</p>
+<p>E.g., consider a category with frequency <code class="language-plaintext highlighter-rouge">p = 20%</code>, the average error is <code class="language-plaintext highlighter-rouge">p*(1-p) = 20% * 80% = 16%</code>. <code class="language-plaintext highlighter-rouge">Gmax = (m-1) / m</code> and is obtained for a uniform distribution. <code class="language-plaintext highlighter-rouge">G = sum( p_i * (1 - p_i)</code> ).</p>
 
 <p>Same as before:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">gini_idx</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
-    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">prb</span><span class="p">)</span>
+    <span class="n">prb</span> <span class="o">=</span> <span class="n">histogram</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">prb</span> <span class="o">*</span> <span class="n">prb</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">gini_idx_max</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">histogram</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">histogram</span><span class="p">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">histogram</span><span class="p">.</span><span class="n">size</span>
 </code></pre></div></div>
 
 <p>For Gaussian (5 elements):</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>histogram = np.histogram(rand_gaussian_arr, 5)[0]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>histogram = np.histogram(rand_gaussian_arr, 5)[0]
 print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
 
 Gini: 0.674266 ; Max Gini: 0.8
@@ -289,7 +289,7 @@ Gini: 0.674266 ; Max Gini: 0.8
 
 <p>For skewed distribution:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>histogram = np.array([1, 0, 0, 0, 0], dtype=np.float)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>histogram = np.array([1, 0, 0, 0, 0], dtype=np.float)
 print ("Gini: {} ; Max Gini: {}".format(gini_idx(histogram), gini_idx_max(histogram)))
 Gini: 0.0 ; Max Gini: 0.8
 </code></pre></div></div>
@@ -306,7 +306,7 @@ Gini: 0.0 ; Max Gini: 0.8
 
 <ol>
   <li>Consider M random trials and an entity set with N entities</li>
-  <li>Randomly extract and put back N entities from the entity set =&gt; on average only <code class="highlighter-rouge">(e-1) / e = 63.2%</code> will be selected in a trial. (p of an entity not to be drawn = 1 - 1/N, we have N trials =&gt; p of not drawn for N trials is (1 - 1/N)^N -&gt; 1/e = 36% of all entities)</li>
+  <li>Randomly extract and put back N entities from the entity set =&gt; on average only <code class="language-plaintext highlighter-rouge">(e-1) / e = 63.2%</code> will be selected in a trial. (p of an entity not to be drawn = 1 - 1/N, we have N trials =&gt; p of not drawn for N trials is (1 - 1/N)^N -&gt; 1/e = 36% of all entities)</li>
   <li>Compute the desired index for the trial</li>
   <li>Summarize for all trials the indices into the mean / stddev form; plot a histogram.</li>
 </ol>
@@ -315,37 +315,37 @@ Gini: 0.0 ; Max Gini: 0.8
 
 <p>Initialization:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x_axis</span>          <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x_axis</span>          <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
 <span class="n">powerlaw</span>        <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_axis</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.2</span>
-<span class="n">rand_0_1</span>        <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="c"># 20 extractions</span>
-<span class="n">rand_powerlaw_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">powerlaw</span><span class="p">))</span>
+<span class="n">rand_0_1</span>        <span class="o">=</span> <span class="n">rnd</span><span class="p">.</span><span class="n">random</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="c1"># 20 extractions
+</span><span class="n">rand_powerlaw_arr</span> <span class="o">=</span> <span class="n">rand_cdf</span><span class="p">(</span><span class="n">rand_0_1</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">powerlaw</span><span class="p">))</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span> <span class="c"># just check the distribution is power-law-ish</span>
-</code></pre></div></div>
+<span class="n">plt</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span> <span class="c1"># just check the distribution is power-law-ish
+</span></code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_7.png" alt="First distribution" /></p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># prepare space for mean for 500 trials</span>
-<span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># prepare space for mean for 500 trials
+</span><span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">means</span><span class="o">.</span><span class="n">size</span><span class="p">):</span> <span class="c">#500 trials</span>
-    <span class="n">bootstrapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
-        <span class="n">bootstrapped</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rand_powerlaw_arr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">rand_powerlaw_arr</span><span class="o">.</span><span class="n">size</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">means</span><span class="p">.</span><span class="n">size</span><span class="p">):</span> <span class="c1">#500 trials
+</span>    <span class="n">bootstrapped</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rand_powerlaw_arr</span><span class="p">.</span><span class="n">size</span><span class="p">):</span>
+        <span class="n">bootstrapped</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rand_powerlaw_arr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd</span><span class="p">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">rand_powerlaw_arr</span><span class="p">.</span><span class="n">size</span><span class="p">)]</span>
         
-    <span class="n">means</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bootstrapped</span><span class="p">)</span>
+    <span class="n">means</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bootstrapped</span><span class="p">)</span>
     
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="s">"Mean of distribution: {:.4f}, Mean boostrapped: {:.4f}, Stddev mean bootstrapped {:.4f} "</span>
-      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">means</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">means</span><span class="p">)))</span>
+      <span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">means</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">means</span><span class="p">)))</span>
 </code></pre></div></div>
 
 <p>And the output - shows the distribution of the mean is Gaussian:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/ml_2_8.png" alt="First distribution" /></p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Mean of distribution: 0.1402, Mean boostrapped: 0.1408, Stddev mean bootstrapped 0.0346 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Mean of distribution: 0.1402, Mean boostrapped: 0.1408, Stddev mean bootstrapped 0.0346 
 </code></pre></div></div>
 
 <p>Intrestingly enough, as the initial sample is quite narrow (20 extractions), the mean and std-dev of mean vary significantly between successive runs of the algorithm.</p>

@@ -91,13 +91,13 @@
 
 <p>Most of the timeseries have a trend, that is the mean is not constant - <a href="https://en.wikipedia.org/wiki/Trend-stationary_process">trend-stationarity</a> and <a href="https://en.wikipedia.org/wiki/Unit_root">difference-stationarity</a>. Removing a trend is most commonly done by differencing. Sometimes a series must be differenced more than once. However, if you find yourself differencing too much (more than two or three times) it is unlikely that you can fix your stationarity problem with differencing.</p>
 
-<p>If <code class="highlighter-rouge">v(t_i+1) - v(t_i)</code> is random and stationary, then the process generating the series is a random walk, else a more refined model is required.</p>
+<p>If <code class="language-plaintext highlighter-rouge">v(t_i+1) - v(t_i)</code> is random and stationary, then the process generating the series is a random walk, else a more refined model is required.</p>
 
 <p>The test that is mainly used for testing stationarity is called the <a href="https://en.wikipedia.org/wiki/Augmented_Dickey%E2%80%93Fuller_test">Augmented Dickey Fuller Test</a>. It removes the autocorrelation and tests for equal mean and equal variance throughout the series. The null hypothesis is the non-stationarity.</p>
 
-<p>The Dickey Fuller test assumes that the time series is an AR1 process (auto-regressive one), that is, it can be written as <code class="highlighter-rouge">y(t) = phi * y(t-1) + constant + error</code>. The DF test’s null hypothesis is <code class="highlighter-rouge">phi &gt;= 1</code>. The alternate hypothesis is that <code class="highlighter-rouge">phi &lt; 1</code>.  This <code class="highlighter-rouge">phi == 1</code> is called a unit root. A good explanation of unit roots can be found <a href="https://www.youtube.com/watch?v=ugOvehrTRRw">here</a>.</p>
+<p>The Dickey Fuller test assumes that the time series is an AR1 process (auto-regressive one), that is, it can be written as <code class="language-plaintext highlighter-rouge">y(t) = phi * y(t-1) + constant + error</code>. The DF test’s null hypothesis is <code class="language-plaintext highlighter-rouge">phi &gt;= 1</code>. The alternate hypothesis is that <code class="language-plaintext highlighter-rouge">phi &lt; 1</code>.  This <code class="language-plaintext highlighter-rouge">phi == 1</code> is called a unit root. A good explanation of unit roots can be found <a href="https://www.youtube.com/watch?v=ugOvehrTRRw">here</a>.</p>
 
-<p>ADF extends the test to ARn series and this null hypothesis is that <code class="highlighter-rouge">sum(phi_i)&gt;=1</code>. The difference between the basic DF test and the ADF test is that the latter makes is to account for more lags. The test of whether a series is stationary is a test of whether a series is integrated. An integrated series of order <code class="highlighter-rouge">n</code> is a series that must be differenced <code class="highlighter-rouge">n</code> times to become stationary.</p>
+<p>ADF extends the test to ARn series and this null hypothesis is that <code class="language-plaintext highlighter-rouge">sum(phi_i)&gt;=1</code>. The difference between the basic DF test and the ADF test is that the latter makes is to account for more lags. The test of whether a series is stationary is a test of whether a series is integrated. An integrated series of order <code class="language-plaintext highlighter-rouge">n</code> is a series that must be differenced <code class="language-plaintext highlighter-rouge">n</code> times to become stationary.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">statsmodels.tsa.stattools</span> <span class="kn">import</span> <span class="n">adfuller</span>
@@ -109,34 +109,34 @@
   <span class="n">lst</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
 
   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="n">count</span><span class="p">):</span>
-    <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">error</span>
+    <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">error</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
       <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coefs</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">]</span>
 
   <span class="k">return</span> <span class="n">lst</span>
 
-<span class="n">v</span> <span class="o">=</span> <span class="n">gen_ts</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="c"># sum of coefficients &lt; 1</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">gen_ts</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="c1"># sum of coefficients &lt; 1
+</span><span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 
-<span class="c"># automatically test for the best lag to use</span>
-<span class="c"># AIC comes from https://en.wikipedia.org/wiki/Akaike_information_criterion</span>
-<span class="n">p_value</span> <span class="o">=</span> <span class="n">adfuller</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">autolag</span><span class="o">=</span><span class="s">'AIC'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="c1"># automatically test for the best lag to use
+# AIC comes from https://en.wikipedia.org/wiki/Akaike_information_criterion
+</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">adfuller</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">autolag</span><span class="o">=</span><span class="s">'AIC'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
 <span class="k">print</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>For detecting auto correlation, we introduce two measures:</p>
 <ul>
-  <li>The <em>ACF</em> - the autocorrelation between the value at <code class="highlighter-rouge">t</code> and <code class="highlighter-rouge">t-n</code>, <em>including</em> the intermediary values, <code class="highlighter-rouge">(t-1 .. t-n-1)</code>. E.g. the effect of prices 2 months ago vs the prices today, including the effect of the prices 2 months ago on the prices 1 month ago and the prices from 1 month ago on today’s prices.</li>
-  <li>The <em>PACF</em> - the autocorrelation between the value at <code class="highlighter-rouge">t</code> and <code class="highlighter-rouge">t-n</code> <em>excluding</em> the intermediary values.</li>
+  <li>The <em>ACF</em> - the autocorrelation between the value at <code class="language-plaintext highlighter-rouge">t</code> and <code class="language-plaintext highlighter-rouge">t-n</code>, <em>including</em> the intermediary values, <code class="language-plaintext highlighter-rouge">(t-1 .. t-n-1)</code>. E.g. the effect of prices 2 months ago vs the prices today, including the effect of the prices 2 months ago on the prices 1 month ago and the prices from 1 month ago on today’s prices.</li>
+  <li>The <em>PACF</em> - the autocorrelation between the value at <code class="language-plaintext highlighter-rouge">t</code> and <code class="language-plaintext highlighter-rouge">t-n</code> <em>excluding</em> the intermediary values.</li>
 </ul>
 
-<p>The ACF is the Pearson correlation between the values <code class="highlighter-rouge">ti</code> and the lagged <code class="highlighter-rouge">ti-k</code> values. For the PACF we do a regression on the values of the timeseries at time <code class="highlighter-rouge">ti</code> on the <code class="highlighter-rouge">ti-k</code> of the form <code class="highlighter-rouge">ti=phi_1*ti_-1 + phi_2*ti_-2 + ... + phi_k*ti_-k + error_term</code> - autoregressive lag <code class="highlighter-rouge">k</code>. <code class="highlighter-rouge">phi_k</code> is our PACF(k).</p>
+<p>The ACF is the Pearson correlation between the values <code class="language-plaintext highlighter-rouge">ti</code> and the lagged <code class="language-plaintext highlighter-rouge">ti-k</code> values. For the PACF we do a regression on the values of the timeseries at time <code class="language-plaintext highlighter-rouge">ti</code> on the <code class="language-plaintext highlighter-rouge">ti-k</code> of the form <code class="language-plaintext highlighter-rouge">ti=phi_1*ti_-1 + phi_2*ti_-2 + ... + phi_k*ti_-k + error_term</code> - autoregressive lag <code class="language-plaintext highlighter-rouge">k</code>. <code class="language-plaintext highlighter-rouge">phi_k</code> is our PACF(k).</p>
 
 <p>To plot these a real dataset:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
 
-<span class="n">lynx_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"/content/drive/MyDrive/Datasets/LYNXdata.csv"</span><span class="p">,</span> 
+<span class="n">lynx_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"/content/drive/MyDrive/Datasets/LYNXdata.csv"</span><span class="p">,</span> 
     <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
     <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
     <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s">'year'</span><span class="p">,</span> <span class="s">'trappings'</span><span class="p">])</span>
@@ -144,13 +144,13 @@
 
 <p>And then transform it to time-annotated series:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">lynx_ts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-    <span class="n">lynx_df</span><span class="p">[</span><span class="s">"trappings"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> 
-    <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s">'31/12/1821'</span><span class="p">,</span> 
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">lynx_ts</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">Series</span><span class="p">(</span>
+    <span class="n">lynx_df</span><span class="p">[</span><span class="s">"trappings"</span><span class="p">].</span><span class="n">values</span><span class="p">,</span> 
+    <span class="n">pd</span><span class="p">.</span><span class="n">date_range</span><span class="p">(</span><span class="s">'31/12/1821'</span><span class="p">,</span> 
     <span class="n">periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">lynx_df</span><span class="p">),</span> 
     <span class="n">freq</span><span class="o">=</span><span class="s">'A-DEC'</span><span class="p">))</span>
 
-<span class="n">lynx_ts</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">lynx_ts</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/tsa_lynx.png" alt="Lynx TS" /></p>
@@ -170,11 +170,11 @@
 
 <p>Let’s plot some generated time series to explore the PCF and PACF charts for various cases.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">white_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">white_noise</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">plot_acf</span><span class="p">(</span><span class="n">white_noise</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">white_noise</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_acf_white_noise.png" alt="ACF White Noise" /></p>
@@ -183,31 +183,31 @@
 
 <p>Let’s plot a perfect AR(1) model, with no noise.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ar(1) process</span>
-<span class="n">ts2</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># ar(1) process
+</span><span class="n">ts2</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
 <span class="n">phi_0</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">phi_1</span> <span class="o">=</span> <span class="mf">0.8</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">0</span> <span class="c"># 0 = perfectly noiseless, 1 = very noisy</span>
-
-<span class="c"># Expected value of the timeseries (perfect timeseries converges to this value)</span>
-<span class="n">miu</span> <span class="o">=</span> <span class="n">phi_0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi_1</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># 0 = perfectly noiseless, 1 = very noisy
+</span>
+<span class="c1"># Expected value of the timeseries (perfect timeseries converges to this value)
+</span><span class="n">miu</span> <span class="o">=</span> <span class="n">phi_0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi_1</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">"Expected value: "</span><span class="p">,</span> <span class="n">miu</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-    <span class="c"># note that without the error term this goes fast to the mean</span>
-    <span class="c"># AR(1)</span>
-    <span class="n">ts2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phi_0</span> <span class="o">+</span> <span class="n">ts2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="c1"># note that without the error term this goes fast to the mean
+</span>    <span class="c1"># AR(1)
+</span>    <span class="n">ts2</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">phi_0</span> <span class="o">+</span> <span class="n">ts2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-<span class="n">ts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
+<span class="n">ts2</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
 
 <span class="n">plot_acf</span><span class="p">(</span><span class="n">ts2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">ts2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p>The time series converges to <code class="highlighter-rouge">miu=phi_0 / (1-phi_1) = 50</code>.</p>
+<p>The time series converges to <code class="language-plaintext highlighter-rouge">miu=phi_0 / (1-phi_1) = 50</code>.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_perfect_ar_1.png" alt="Perfect AR converges to expected value" /></p>
 
@@ -225,16 +225,16 @@
 <span class="n">mean</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">phi_1</span> <span class="o">=</span> <span class="mf">0.8</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-    <span class="c"># MA(1) - coef applied to the previous error</span>
-    <span class="n">ts3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span> <span class="o">+</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_1</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># MA(1) - coef applied to the previous error
+</span>    <span class="n">ts3</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span> <span class="o">+</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_1</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
-<span class="n">ts3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
+<span class="n">ts3</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
 
 <span class="n">plot_acf</span><span class="p">(</span><span class="n">ts3</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">ts3</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_ma1.png" alt="MA(1)" /></p>
@@ -248,9 +248,9 @@
 <p>To summarize, when trying to identify what kind of model we try to fit, we have the following rules:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">AR(p)</code> - ACF falls off slowly, PACF has sharp drop after lag = p</li>
-  <li><code class="highlighter-rouge">MA(q)</code> - ACF has a sharp drop after lag = q,  PACF falls off slowly</li>
-  <li><code class="highlighter-rouge">ARMA(p,q)</code> - No sharp cutoff, neither for ACF nor for PACF</li>
+  <li><code class="language-plaintext highlighter-rouge">AR(p)</code> - ACF falls off slowly, PACF has sharp drop after lag = p</li>
+  <li><code class="language-plaintext highlighter-rouge">MA(q)</code> - ACF has a sharp drop after lag = q,  PACF falls off slowly</li>
+  <li><code class="language-plaintext highlighter-rouge">ARMA(p,q)</code> - No sharp cutoff, neither for ACF nor for PACF</li>
 </ul>
 
 <h3 id="fitting-arima-models">Fitting ARIMA Models</h3>
@@ -258,25 +258,25 @@
 <p>An ARIMA model has 3 parameters:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">p</code> : the order of autoregression (the summation of the weighted lags) - <code class="highlighter-rouge">AR</code></li>
-  <li><code class="highlighter-rouge">d</code> : the degree of differencing (used to make the dataset stationary if it is not) - <code class="highlighter-rouge">I</code></li>
-  <li><code class="highlighter-rouge">q</code> : the order of moving average (the summation of the lags of the forecast errors) - <code class="highlighter-rouge">MA</code></li>
+  <li><code class="language-plaintext highlighter-rouge">p</code> : the order of autoregression (the summation of the weighted lags) - <code class="language-plaintext highlighter-rouge">AR</code></li>
+  <li><code class="language-plaintext highlighter-rouge">d</code> : the degree of differencing (used to make the dataset stationary if it is not) - <code class="language-plaintext highlighter-rouge">I</code></li>
+  <li><code class="language-plaintext highlighter-rouge">q</code> : the order of moving average (the summation of the lags of the forecast errors) - <code class="language-plaintext highlighter-rouge">MA</code></li>
 </ul>
 
-<p>Examples (<code class="highlighter-rouge">ARIMA(p, d, q)</code>):</p>
+<p>Examples (<code class="language-plaintext highlighter-rouge">ARIMA(p, d, q)</code>):</p>
 
 <ul>
-  <li><code class="highlighter-rouge">ARIMA (p=1, d=0, q=0) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + error(t)</code> - lag 1 autoregressive model</li>
-  <li><code class="highlighter-rouge">ARIMA (p=1, d=0, q=1) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + theta_1 * error(t-1) + error(t)</code> -</li>
-  <li><code class="highlighter-rouge">ARIMA (p=0, d=1, q=0) &lt;=&gt; Y(t) = coef + Y(t-1) + error(t)</code> is a random walk. The differencing equation, <code class="highlighter-rouge">Y(t) - Y(t-1) = coef + error(t)</code>, is needed so that the remaining <code class="highlighter-rouge">ARMA</code> model is applied on stationary data. A random walk is not stationary.</li>
-  <li><code class="highlighter-rouge">ARIMA(p=0, d=1, q=1)</code> is an exponential smoothing model</li>
+  <li><code class="language-plaintext highlighter-rouge">ARIMA (p=1, d=0, q=0) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + error(t)</code> - lag 1 autoregressive model</li>
+  <li><code class="language-plaintext highlighter-rouge">ARIMA (p=1, d=0, q=1) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + theta_1 * error(t-1) + error(t)</code> -</li>
+  <li><code class="language-plaintext highlighter-rouge">ARIMA (p=0, d=1, q=0) &lt;=&gt; Y(t) = coef + Y(t-1) + error(t)</code> is a random walk. The differencing equation, <code class="language-plaintext highlighter-rouge">Y(t) - Y(t-1) = coef + error(t)</code>, is needed so that the remaining <code class="language-plaintext highlighter-rouge">ARMA</code> model is applied on stationary data. A random walk is not stationary.</li>
+  <li><code class="language-plaintext highlighter-rouge">ARIMA(p=0, d=1, q=1)</code> is an exponential smoothing model</li>
 </ul>
 
 <h3 id="arima-model-parameter-selection">ARIMA Model Parameter Selection</h3>
 
-<p>First step is to check for stationarity using the Augmented Dickey-Fuller test. If the data is not stationary, we need to set the <code class="highlighter-rouge">d</code> parameter.</p>
+<p>First step is to check for stationarity using the Augmented Dickey-Fuller test. If the data is not stationary, we need to set the <code class="language-plaintext highlighter-rouge">d</code> parameter.</p>
 
-<p>The second step is to set the <code class="highlighter-rouge">p</code> and <code class="highlighter-rouge">q</code> parameters by inspecting the <code class="highlighter-rouge">ACF</code> and <code class="highlighter-rouge">PACF</code> plots, as described before.</p>
+<p>The second step is to set the <code class="language-plaintext highlighter-rouge">p</code> and <code class="language-plaintext highlighter-rouge">q</code> parameters by inspecting the <code class="language-plaintext highlighter-rouge">ACF</code> and <code class="language-plaintext highlighter-rouge">PACF</code> plots, as described before.</p>
 
 <p>To avoid over-fitting, a rule of thumb is to start the parameter selection with the plot that has the least amount of lags outside of the significance bands and then consider the lowest reasonable amount of lags. The ARIMA model is not necessary unique, as we will see in the following example where we start from a complex timeseries which can be approximated very well with a simpler model.</p>
 
@@ -289,26 +289,26 @@
 <span class="n">theta_1</span> <span class="o">=</span> <span class="mf">0.2</span>
 <span class="n">theta_2</span> <span class="o">=</span> <span class="mf">0.2</span>
 
-<span class="c"># AR(2) I(0) MA(2)</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-    <span class="n">arma_series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> \
+<span class="c1"># AR(2) I(0) MA(2)
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="n">arma_series</span><span class="p">.</span><span class="n">append</span><span class="p">(</span> \
         <span class="n">m</span> <span class="o">+</span> \
         <span class="n">arma_series</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_1</span> <span class="o">+</span> <span class="n">arma_series</span> <span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_2</span> <span class="o">+</span> \
         <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_1</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_2</span> <span class="o">*</span> <span class="n">white_noise</span> <span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="n">adf</span> <span class="o">=</span> <span class="n">adfuller</span><span class="p">(</span><span class="n">arma_series</span><span class="p">,</span> <span class="n">autolag</span><span class="o">=</span><span class="s">'AIC'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-<span class="k">print</span><span class="p">(</span><span class="n">adf</span><span class="p">)</span> <span class="c"># stationary</span>
+<span class="k">print</span><span class="p">(</span><span class="n">adf</span><span class="p">)</span> <span class="c1"># stationary
+</span>
+<span class="n">arma_series</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
 
-<span class="n">arma_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
-
-<span class="c"># fit the model</span>
-<span class="n">plot_acf</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c1"># fit the model
+</span><span class="n">plot_acf</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 <p><img src="https://alexandrugris.github.io/assets/ts_ts.png" alt="Time Series" /></p>
 
@@ -316,35 +316,35 @@
 
 <p><img src="https://alexandrugris.github.io/assets/ts_ts_pacf.png" alt="Time Series PACF" /></p>
 
-<p>We observe a sharp cutoff in the PACF after lag 1 and slow decay in the ACF. This leads to try to fit an <code class="highlighter-rouge">ARIMA(1, 0, 0)</code>.</p>
+<p>We observe a sharp cutoff in the PACF after lag 1 and slow decay in the ACF. This leads to try to fit an <code class="language-plaintext highlighter-rouge">ARIMA(1, 0, 0)</code>.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.tsa.arima.model</span> <span class="kn">import</span> <span class="n">ARIMA</span>
 
 <span class="n">m</span> <span class="o">=</span> <span class="n">ARIMA</span><span class="p">(</span><span class="n">arma_series</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">arparams</span><span class="p">)</span> <span class="c"># 0.78</span>
-</code></pre></div></div>
+<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">arparams</span><span class="p">)</span> <span class="c1"># 0.78
+</span></code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_ts_fitted.png" alt="Fitted time series (orange)" /></p>
 
 <p>A pretty good approximation of the initial complex model can be obtained with an AR(1) model. Let’s analyse the residuals to see how much information did we capture in our model and if there are autoregressive behaviors we have missed. In our case residuals are normally distributed as seen in the histogram and proven by the Shapiro test and in the ACF and PACF plots we do not see any autoregressive tendencies we might have missed.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">resid</span> <span class="o">=</span> <span class="n">arma_series</span> <span class="o">-</span> <span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">resid</span> <span class="o">=</span> <span class="n">arma_series</span> <span class="o">-</span> <span class="n">results</span><span class="p">.</span><span class="n">fittedvalues</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="n">stats</span>
-<span class="c"># visual inspection of the residuals</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
-<span class="c"># Shapiro test for normality</span>
-<span class="n">stats</span><span class="o">.</span><span class="n">shapiro</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">resid</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
+<span class="c1"># visual inspection of the residuals
+</span><span class="n">plt</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="c1"># Shapiro test for normality
+</span><span class="n">stats</span><span class="p">.</span><span class="n">shapiro</span><span class="p">(</span><span class="n">stats</span><span class="p">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">resid</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
 
-<span class="c"># no autocorrelation</span>
-<span class="n">plot_acf</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c1"># no autocorrelation
+</span><span class="n">plot_acf</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plot_pacf</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/ts_residuals.png" alt="Residuals Histogram" /></p>
@@ -357,10 +357,10 @@
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.tsa.arima.model</span> <span class="kn">import</span> <span class="n">ARIMA</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">ARIMA</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">arparams</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">"orange"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">arparams</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/tsa_lynx_arima.png" alt="Lynx model fit" /></p>

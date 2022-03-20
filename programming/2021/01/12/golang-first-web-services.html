@@ -72,143 +72,143 @@
 
 <p>For building HTTP services, golang comes with all batteries included. There’s no need to install any additional package, everything is already available in the standard library. The APIs are straight forward and the code is short and fast.</p>
 
-<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">main</span><span class="x">
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
 
-</span><span class="k">import</span><span class="x"> </span><span class="p">(</span><span class="x">
-	</span><span class="s">"log"</span><span class="x">
-	</span><span class="s">"net/http"</span><span class="x">
-</span><span class="p">)</span><span class="x">
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"log"</span>
+	<span class="s">"net/http"</span>
+<span class="p">)</span>
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">customEndpoint</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="n">bytes</span><span class="p">(</span><span class="s">"Hello World"</span><span class="p">))</span><span class="x">
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Served."</span><span class="p">)</span><span class="x">
-</span><span class="p">}</span><span class="x">
+<span class="k">func</span> <span class="n">customEndpoint</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="n">bytes</span><span class="p">(</span><span class="s">"Hello World"</span><span class="p">))</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Served."</span><span class="p">)</span>
+<span class="p">}</span>
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">main</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
 
-	</span><span class="c">// a /custom endpoint</span><span class="x">
-	</span><span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/custom"</span><span class="p">,</span><span class="x"> </span><span class="n">customEndpoint</span><span class="p">)</span><span class="x">
+	<span class="c">// a /custom endpoint</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/custom"</span><span class="p">,</span> <span class="n">customEndpoint</span><span class="p">)</span>
 
-	</span><span class="c">// listen on localhost, port :8080</span><span class="x">
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span><span class="x"> </span><span class="no">nil</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="c">// listen on localhost, port :8080</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="no">nil</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
 
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h3 id="handling-json">Handling JSON</h3>
 
 <p>If we want to export a field from a structure to JSON, its name has to start with a capital letter, making it a public symbol. Otherwise it will be considered as private and it will not appear in the output string.</p>
 
-<p>We use annotations, which are accessible at runtime through reflection, to specify how the field will be serialized. There is no space between <code class="highlighter-rouge">json</code>, <code class="highlighter-rouge">:</code> and the name. If we skip the annotation, the structure will be serialized with its fields as JSON fields.</p>
+<p>We use annotations, which are accessible at runtime through reflection, to specify how the field will be serialized. There is no space between <code class="language-plaintext highlighter-rouge">json</code>, <code class="language-plaintext highlighter-rouge">:</code> and the name. If we skip the annotation, the structure will be serialized with its fields as JSON fields.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span><span class="x"> </span><span class="s">"encoding/json"</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="s">"encoding/json"</span>
 
-</span><span class="k">type</span><span class="x"> </span><span class="n">Product</span><span class="x"> </span><span class="k">struct</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">ProductID</span><span class="x">      </span><span class="kt">int</span><span class="x">    </span><span class="s">`json:"productId"`</span><span class="x">
-	</span><span class="n">Manufacturer</span><span class="x">   </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"manufacturer"`</span><span class="x">
-	</span><span class="n">PricePerUnit</span><span class="x">   </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"pricePerUnit"`</span><span class="x">
-	</span><span class="n">UnitsAvailable</span><span class="x"> </span><span class="kt">int</span><span class="x">    </span><span class="s">`json:"unitsAvailable"`</span><span class="x">
-	</span><span class="n">ProductName</span><span class="x">    </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"productName"`</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<span class="k">type</span> <span class="n">Product</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">ProductID</span>      <span class="kt">int</span>    <span class="s">`json:"productId"`</span>
+	<span class="n">Manufacturer</span>   <span class="kt">string</span> <span class="s">`json:"manufacturer"`</span>
+	<span class="n">PricePerUnit</span>   <span class="kt">string</span> <span class="s">`json:"pricePerUnit"`</span>
+	<span class="n">UnitsAvailable</span> <span class="kt">int</span>    <span class="s">`json:"unitsAvailable"`</span>
+	<span class="n">ProductName</span>    <span class="kt">string</span> <span class="s">`json:"productName"`</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>To serialize JSON we do the following:</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="x"> </span><span class="n">bytes</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Product</span><span class="p">{</span><span class="x">
-	</span><span class="n">ProductID</span><span class="o">:</span><span class="x">      </span><span class="m">0</span><span class="p">,</span><span class="x">
-	</span><span class="n">Manufacturer</span><span class="o">:</span><span class="x">   </span><span class="s">"Apple"</span><span class="p">,</span><span class="x">
-	</span><span class="n">PricePerUnit</span><span class="o">:</span><span class="x">   </span><span class="s">"2500EUR"</span><span class="p">,</span><span class="x">
-	</span><span class="n">UnitsAvailable</span><span class="o">:</span><span class="x"> </span><span class="m">15</span><span class="p">,</span><span class="x">
-	</span><span class="n">ProductName</span><span class="o">:</span><span class="x">    </span><span class="s">"MacBook Pro"</span><span class="p">,</span><span class="x">
-</span><span class="p">});</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Successfully serialized to JSON"</span><span class="p">)</span><span class="x">
-</span><span class="p">}</span><span class="x"> </span><span class="k">else</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Failed to serialize object"</span><span class="p">)</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="n">bytes</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Product</span><span class="p">{</span>
+	<span class="n">ProductID</span><span class="o">:</span>      <span class="m">0</span><span class="p">,</span>
+	<span class="n">Manufacturer</span><span class="o">:</span>   <span class="s">"Apple"</span><span class="p">,</span>
+	<span class="n">PricePerUnit</span><span class="o">:</span>   <span class="s">"2500EUR"</span><span class="p">,</span>
+	<span class="n">UnitsAvailable</span><span class="o">:</span> <span class="m">15</span><span class="p">,</span>
+	<span class="n">ProductName</span><span class="o">:</span>    <span class="s">"MacBook Pro"</span><span class="p">,</span>
+<span class="p">});</span> <span class="n">err</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Successfully serialized to JSON"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Failed to serialize object"</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>To deserialize, the following:</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">product</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">Product</span><span class="p">{}</span><span class="x">
-</span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">serializedJSONString</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">product</span><span class="p">)</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">product</span> <span class="o">:=</span> <span class="n">Product</span><span class="p">{}</span>
+<span class="n">err</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">serializedJSONString</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">product</span><span class="p">)</span>
 
-</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Could not unmarshal"</span><span class="p">)</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Could not unmarshal"</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h3 id="handling-of-http-verbs">Handling of HTTP Verbs</h3>
 
 <p>A simple WebService, handling the GET method, returning a list of products from an in-memory structure.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">main</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
 
-</span><span class="k">import</span><span class="x"> </span><span class="p">(</span><span class="x">
-	</span><span class="s">"encoding/json"</span><span class="x">
-	</span><span class="s">"fmt"</span><span class="x">
-	</span><span class="s">"log"</span><span class="x">
-	</span><span class="s">"math/rand"</span><span class="x">
-	</span><span class="s">"net/http"</span><span class="x">
-</span><span class="p">)</span><span class="x">
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"encoding/json"</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"log"</span>
+	<span class="s">"math/rand"</span>
+	<span class="s">"net/http"</span>
+<span class="p">)</span>
 
-</span><span class="c">// Product type</span><span class="x">
-</span><span class="k">type</span><span class="x"> </span><span class="n">Product</span><span class="x"> </span><span class="k">struct</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="n">ProductID</span><span class="x">      </span><span class="kt">int</span><span class="x">    </span><span class="s">`json:"productId"`</span><span class="x">
-	</span><span class="n">Manufacturer</span><span class="x">   </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"manufacturer"`</span><span class="x">
-	</span><span class="n">PricePerUnit</span><span class="x">   </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"pricePerUnit"`</span><span class="x">
-	</span><span class="n">UnitsAvailable</span><span class="x"> </span><span class="kt">int</span><span class="x">    </span><span class="s">`json:"unitsAvailable"`</span><span class="x">
-	</span><span class="n">ProductName</span><span class="x">    </span><span class="kt">string</span><span class="x"> </span><span class="s">`json:"productName"`</span><span class="x">
-</span><span class="p">}</span><span class="x">
+<span class="c">// Product type</span>
+<span class="k">type</span> <span class="n">Product</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">ProductID</span>      <span class="kt">int</span>    <span class="s">`json:"productId"`</span>
+	<span class="n">Manufacturer</span>   <span class="kt">string</span> <span class="s">`json:"manufacturer"`</span>
+	<span class="n">PricePerUnit</span>   <span class="kt">string</span> <span class="s">`json:"pricePerUnit"`</span>
+	<span class="n">UnitsAvailable</span> <span class="kt">int</span>    <span class="s">`json:"unitsAvailable"`</span>
+	<span class="n">ProductName</span>    <span class="kt">string</span> <span class="s">`json:"productName"`</span>
+<span class="p">}</span>
 
-</span><span class="c">// some products stored in memory to play a bit</span><span class="x">
-</span><span class="k">var</span><span class="x"> </span><span class="n">products</span><span class="x"> </span><span class="p">[]</span><span class="o">*</span><span class="n">Product</span><span class="x">
+<span class="c">// some products stored in memory to play a bit</span>
+<span class="k">var</span> <span class="n">products</span> <span class="p">[]</span><span class="o">*</span><span class="n">Product</span>
 
-</span><span class="c">// endpoint handler</span><span class="x">
-</span><span class="k">func</span><span class="x"> </span><span class="n">productsHandler</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="c">// endpoint handler</span>
+<span class="k">func</span> <span class="n">productsHandler</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
 
-	</span><span class="k">switch</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="k">switch</span> <span class="n">r</span><span class="o">.</span><span class="n">Method</span> <span class="p">{</span>
 
-	</span><span class="c">// handling the GET verb</span><span class="x">
-	</span><span class="k">case</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodGet</span><span class="o">:</span><span class="x">
-		</span><span class="n">jsonStr</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="x">
-		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-			</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span><span class="x">
-		</span><span class="p">}</span><span class="x"> </span><span class="k">else</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span><span class="x"> </span><span class="s">"application/json"</span><span class="p">)</span><span class="x">
-			</span><span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">jsonStr</span><span class="p">))</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="c">// everything else, not impemented</span><span class="x">
-	</span><span class="k">default</span><span class="o">:</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusNotImplemented</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
+	<span class="c">// handling the GET verb</span>
+	<span class="k">case</span> <span class="n">http</span><span class="o">.</span><span class="n">MethodGet</span><span class="o">:</span>
+		<span class="n">jsonStr</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">products</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">jsonStr</span><span class="p">))</span>
+		<span class="p">}</span>
+	<span class="c">// everything else, not impemented</span>
+	<span class="k">default</span><span class="o">:</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusNotImplemented</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">main</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
 
-	</span><span class="c">// init a few products in memory</span><span class="x">
-	</span><span class="n">products</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="p">[]</span><span class="o">*</span><span class="n">Product</span><span class="p">{}</span><span class="x">
+	<span class="c">// init a few products in memory</span>
+	<span class="n">products</span> <span class="o">=</span> <span class="p">[]</span><span class="o">*</span><span class="n">Product</span><span class="p">{}</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="m">0</span><span class="p">;</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">&lt;</span><span class="x"> </span><span class="m">10</span><span class="p">;</span><span class="x"> </span><span class="n">i</span><span class="o">++</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">products</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">append</span><span class="p">(</span><span class="n">products</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">Product</span><span class="p">{</span><span class="x">
-			</span><span class="n">ProductID</span><span class="o">:</span><span class="x">      </span><span class="n">i</span><span class="p">,</span><span class="x">
-			</span><span class="n">Manufacturer</span><span class="o">:</span><span class="x">   </span><span class="s">"Apple"</span><span class="p">,</span><span class="x">
-			</span><span class="n">PricePerUnit</span><span class="o">:</span><span class="x">   </span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%vEUR"</span><span class="p">,</span><span class="x"> </span><span class="p">(</span><span class="n">rand</span><span class="o">.</span><span class="n">Int</span><span class="p">()</span><span class="o">%</span><span class="m">10</span><span class="p">)</span><span class="o">*</span><span class="m">100</span><span class="o">+</span><span class="m">500</span><span class="p">),</span><span class="x">
-			</span><span class="n">UnitsAvailable</span><span class="o">:</span><span class="x"> </span><span class="n">rand</span><span class="o">.</span><span class="n">Int</span><span class="p">()</span><span class="x"> </span><span class="o">%</span><span class="x"> </span><span class="m">15</span><span class="p">,</span><span class="x">
-			</span><span class="n">ProductName</span><span class="o">:</span><span class="x">    </span><span class="s">"MacBook Pro"</span><span class="p">,</span><span class="x">
-		</span><span class="p">})</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="m">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+		<span class="n">products</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">products</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">Product</span><span class="p">{</span>
+			<span class="n">ProductID</span><span class="o">:</span>      <span class="n">i</span><span class="p">,</span>
+			<span class="n">Manufacturer</span><span class="o">:</span>   <span class="s">"Apple"</span><span class="p">,</span>
+			<span class="n">PricePerUnit</span><span class="o">:</span>   <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%vEUR"</span><span class="p">,</span> <span class="p">(</span><span class="n">rand</span><span class="o">.</span><span class="n">Int</span><span class="p">()</span><span class="o">%</span><span class="m">10</span><span class="p">)</span><span class="o">*</span><span class="m">100</span><span class="o">+</span><span class="m">500</span><span class="p">),</span>
+			<span class="n">UnitsAvailable</span><span class="o">:</span> <span class="n">rand</span><span class="o">.</span><span class="n">Int</span><span class="p">()</span> <span class="o">%</span> <span class="m">15</span><span class="p">,</span>
+			<span class="n">ProductName</span><span class="o">:</span>    <span class="s">"MacBook Pro"</span><span class="p">,</span>
+		<span class="p">})</span>
+	<span class="p">}</span>
 
-	</span><span class="c">// handler</span><span class="x">
-	</span><span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/products"</span><span class="p">,</span><span class="x"> </span><span class="n">productsHandler</span><span class="p">)</span><span class="x">
+	<span class="c">// handler</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/products"</span><span class="p">,</span> <span class="n">productsHandler</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span><span class="x"> </span><span class="no">nil</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="no">nil</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>And the output:</p>
 
@@ -216,205 +216,205 @@
 
 <p>To create a new product, we update the switch block from above with the following:</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">case</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodPost</span><span class="o">:</span><span class="x">
-	</span><span class="n">body</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">ioutil</span><span class="o">.</span><span class="n">ReadAll</span><span class="p">(</span><span class="x">
-		</span><span class="o">&amp;</span><span class="n">io</span><span class="o">.</span><span class="n">LimitedReader</span><span class="p">{</span><span class="x"> </span><span class="c">// ensure we don't get DoS</span><span class="x">
-			</span><span class="n">R</span><span class="o">:</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span><span class="x">
-			</span><span class="n">N</span><span class="o">:</span><span class="x"> </span><span class="m">1024</span><span class="p">})</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">case</span> <span class="n">http</span><span class="o">.</span><span class="n">MethodPost</span><span class="o">:</span>
+	<span class="n">body</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">ioutil</span><span class="o">.</span><span class="n">ReadAll</span><span class="p">(</span>
+		<span class="o">&amp;</span><span class="n">io</span><span class="o">.</span><span class="n">LimitedReader</span><span class="p">{</span> <span class="c">// ensure we don't get DoS</span>
+			<span class="n">R</span><span class="o">:</span> <span class="n">r</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span>
+			<span class="n">N</span><span class="o">:</span> <span class="m">1024</span><span class="p">})</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="p">)</span><span class="x">
-		</span><span class="k">return</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
 
-	</span><span class="n">product</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">Product</span><span class="p">{}</span><span class="x">
-	</span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">body</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">product</span><span class="p">)</span><span class="x">
+	<span class="n">product</span> <span class="o">:=</span> <span class="n">Product</span><span class="p">{}</span>
+	<span class="n">err</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">product</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="o">||</span><span class="x"> </span><span class="n">product</span><span class="o">.</span><span class="n">ProductID</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="m">0</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="o">||</span> <span class="n">product</span><span class="o">.</span><span class="n">ProductID</span> <span class="o">!=</span> <span class="m">0</span> <span class="p">{</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">errors</span><span class="o">.</span><span class="n">New</span><span class="p">(</span><span class="s">"ProductID should be 0 - if you know the ID, use PUT"</span><span class="p">)</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">if</span> <span class="n">err</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">err</span> <span class="o">=</span> <span class="n">errors</span><span class="o">.</span><span class="n">New</span><span class="p">(</span><span class="s">"ProductID should be 0 - if you know the ID, use PUT"</span><span class="p">)</span>
+		<span class="p">}</span>
 
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="p">)</span><span class="x">
-		</span><span class="k">return</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+		<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
 
-	</span><span class="c">// give them an increment</span><span class="x">
-	</span><span class="c">// for now assume products are in incremental order, sorted</span><span class="x">
-	</span><span class="c">// ensure safe to this data structure</span><span class="x">
-	</span><span class="n">mtx</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span><span class="x">
-	</span><span class="k">defer</span><span class="x"> </span><span class="n">mtx</span><span class="o">.</span><span class="n">Unlock</span><span class="p">()</span><span class="x">
+	<span class="c">// give them an increment</span>
+	<span class="c">// for now assume products are in incremental order, sorted</span>
+	<span class="c">// ensure safe to this data structure</span>
+	<span class="n">mtx</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+	<span class="k">defer</span> <span class="n">mtx</span><span class="o">.</span><span class="n">Unlock</span><span class="p">()</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="nb">len</span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="x"> </span><span class="o">&gt;</span><span class="x"> </span><span class="m">0</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">product</span><span class="o">.</span><span class="n">ProductID</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">products</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="o">-</span><span class="m">1</span><span class="p">]</span><span class="o">.</span><span class="n">ProductID</span><span class="x"> </span><span class="o">+</span><span class="x"> </span><span class="m">1</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">products</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+		<span class="n">product</span><span class="o">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">products</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="o">-</span><span class="m">1</span><span class="p">]</span><span class="o">.</span><span class="n">ProductID</span> <span class="o">+</span> <span class="m">1</span>
+	<span class="p">}</span>
 
-	</span><span class="n">products</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">append</span><span class="p">(</span><span class="n">products</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">product</span><span class="p">)</span><span class="x">
-	</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Location"</span><span class="p">,</span><span class="x"> </span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"/products/%v"</span><span class="p">,</span><span class="x"> </span><span class="n">product</span><span class="o">.</span><span class="n">ProductID</span><span class="p">))</span><span class="x">
-	</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusCreated</span><span class="p">)</span><span class="x">
-</span></code></pre></div></div>
+	<span class="n">products</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">products</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">product</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Location"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"/products/%v"</span><span class="p">,</span> <span class="n">product</span><span class="o">.</span><span class="n">ProductID</span><span class="p">))</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusCreated</span><span class="p">)</span>
+</code></pre></div></div>
 
 <p>To test the service we just do</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X POST -H "Content-Type: application/json" -d '{"productId" : 0, "manufacturer": "Microsoft", "productName": "MS Surface"}' localhost:8080/products
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X POST -H "Content-Type: application/json" -d '{"productId" : 0, "manufacturer": "Microsoft", "productName": "MS Surface"}' localhost:8080/products
 </code></pre></div></div>
 
 <p>And we get the expected response back</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/1.1 201 Created
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/1.1 201 Created
 Date: Sat, 16 Jan 2021 09:09:20 GMT
 Content-Length: 0
 </code></pre></div></div>
 
-<p>What we are going to do now is to implement <code class="highlighter-rouge">GET</code> for a specific product ID and <code class="highlighter-rouge">PUT</code> for updating a specific ID.</p>
+<p>What we are going to do now is to implement <code class="language-plaintext highlighter-rouge">GET</code> for a specific product ID and <code class="language-plaintext highlighter-rouge">PUT</code> for updating a specific ID.</p>
 
-<p>To do this, we need a new handler which we add to the main function. This will match the trailing <code class="highlighter-rouge">/</code>.</p>
+<p>To do this, we need a new handler which we add to the main function. This will match the trailing <code class="language-plaintext highlighter-rouge">/</code>.</p>
 
-<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// handler for GET id and PUT id</span><span class="x">
-</span><span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/products/"</span><span class="p">,</span><span class="x"> </span><span class="n">productHandler</span><span class="p">)</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// handler for GET id and PUT id</span>
+<span class="n">http</span><span class="o">.</span><span class="n">HandleFunc</span><span class="p">(</span><span class="s">"/products/"</span><span class="p">,</span> <span class="n">productHandler</span><span class="p">)</span>
+</code></pre></div></div>
 
-<p>The URLs that will go to this handler take the form <code class="highlighter-rouge">http://localhost:8080/products/id</code>. We are also going to structure a bit better the handler, so the error handling is factored out of the main function.</p>
+<p>The URLs that will go to this handler take the form <code class="language-plaintext highlighter-rouge">http://localhost:8080/products/id</code>. We are also going to structure a bit better the handler, so the error handling is factored out of the main function.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">productHandler</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">productHandler</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
 
-	</span><span class="n">retCode</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">func</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="kt">int</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="n">retCode</span> <span class="o">:=</span> <span class="k">func</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
 
-		</span><span class="n">pathSegments</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">strings</span><span class="o">.</span><span class="n">Split</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">URL</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span><span class="x"> </span><span class="s">"/products/"</span><span class="p">)</span><span class="x">
+		<span class="n">pathSegments</span> <span class="o">:=</span> <span class="n">strings</span><span class="o">.</span><span class="n">Split</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">URL</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="s">"/products/"</span><span class="p">)</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="nb">len</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">)</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="m">2</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">)</span> <span class="o">!=</span> <span class="m">2</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span>
+		<span class="p">}</span>
 
-		</span><span class="n">productID</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">strconv</span><span class="o">.</span><span class="n">Atoi</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">)</span><span class="o">-</span><span class="m">1</span><span class="p">])</span><span class="x">
+		<span class="n">productID</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">strconv</span><span class="o">.</span><span class="n">Atoi</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">)</span><span class="o">-</span><span class="m">1</span><span class="p">])</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span>
+		<span class="p">}</span>
 
-		</span><span class="n">product</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">findProductByID</span><span class="p">(</span><span class="n">productID</span><span class="p">)</span><span class="x">
+		<span class="n">product</span> <span class="o">:=</span> <span class="n">findProductByID</span><span class="p">(</span><span class="n">productID</span><span class="p">)</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">product</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusNotFound</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">if</span> <span class="n">product</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusNotFound</span>
+		<span class="p">}</span>
 
-		</span><span class="k">switch</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">case</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodGet</span><span class="o">:</span><span class="x">
+		<span class="k">switch</span> <span class="n">r</span><span class="o">.</span><span class="n">Method</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="n">http</span><span class="o">.</span><span class="n">MethodGet</span><span class="o">:</span>
 
-			</span><span class="n">mtx</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span><span class="x">
-			</span><span class="k">defer</span><span class="x"> </span><span class="n">mtx</span><span class="o">.</span><span class="n">RUnlock</span><span class="p">()</span><span class="x">
+			<span class="n">mtx</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+			<span class="k">defer</span> <span class="n">mtx</span><span class="o">.</span><span class="n">RUnlock</span><span class="p">()</span>
 
-			</span><span class="n">jsonStr</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">product</span><span class="p">)</span><span class="x">
-			</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="x">
-			</span><span class="p">}</span><span class="x">
+			<span class="n">jsonStr</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span>
+			<span class="p">}</span>
 
-			</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span><span class="x"> </span><span class="s">"application/json"</span><span class="p">)</span><span class="x">
-			</span><span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">jsonStr</span><span class="p">))</span><span class="x">
+			<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">jsonStr</span><span class="p">))</span>
 
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusOK</span><span class="x">
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusOK</span>
 
-		</span><span class="k">case</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodPut</span><span class="o">:</span><span class="x">
+		<span class="k">case</span> <span class="n">http</span><span class="o">.</span><span class="n">MethodPut</span><span class="o">:</span>
 
-			</span><span class="n">mtx</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span><span class="x">
-			</span><span class="k">defer</span><span class="x"> </span><span class="n">mtx</span><span class="o">.</span><span class="n">Unlock</span><span class="p">()</span><span class="x">
+			<span class="n">mtx</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+			<span class="k">defer</span> <span class="n">mtx</span><span class="o">.</span><span class="n">Unlock</span><span class="p">()</span>
 
-			</span><span class="n">body</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">ioutil</span><span class="o">.</span><span class="n">ReadAll</span><span class="p">(</span><span class="x">
-				</span><span class="o">&amp;</span><span class="n">io</span><span class="o">.</span><span class="n">LimitedReader</span><span class="p">{</span><span class="x">
-					</span><span class="n">R</span><span class="o">:</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span><span class="x">
-					</span><span class="n">N</span><span class="o">:</span><span class="x"> </span><span class="m">1024</span><span class="p">})</span><span class="x">
+			<span class="n">body</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">ioutil</span><span class="o">.</span><span class="n">ReadAll</span><span class="p">(</span>
+				<span class="o">&amp;</span><span class="n">io</span><span class="o">.</span><span class="n">LimitedReader</span><span class="p">{</span>
+					<span class="n">R</span><span class="o">:</span> <span class="n">r</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span>
+					<span class="n">N</span><span class="o">:</span> <span class="m">1024</span><span class="p">})</span>
 
-			</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="o">||</span><span class="x"> </span><span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">body</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">product</span><span class="p">)</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-				</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span><span class="x">
-			</span><span class="p">}</span><span class="x">
+			<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="o">||</span> <span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">product</span><span class="p">)</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusBadRequest</span>
+			<span class="p">}</span>
 
-			</span><span class="c">// ensure ID stays the same</span><span class="x">
-			</span><span class="n">product</span><span class="o">.</span><span class="n">ProductID</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">productID</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusAccepted</span><span class="x">
-		</span><span class="k">default</span><span class="o">:</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">StatusMethodNotAllowed</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+			<span class="c">// ensure ID stays the same</span>
+			<span class="n">product</span><span class="o">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">productID</span>
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusAccepted</span>
+		<span class="k">default</span><span class="o">:</span>
+			<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusMethodNotAllowed</span>
+		<span class="p">}</span>
 
-	</span><span class="p">}(</span><span class="n">w</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="p">)</span><span class="x">
+	<span class="p">}(</span><span class="n">w</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
 
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">URL</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span><span class="x">
-	</span><span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">retCode</span><span class="p">)</span><span class="x">
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">URL</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">retCode</span><span class="p">)</span>
 
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>Since we store the products in an array in memory, the find function is as simple as it gets.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="x">
-</span><span class="k">var</span><span class="x"> </span><span class="n">mtx</span><span class="x"> </span><span class="n">sync</span><span class="o">.</span><span class="n">RWMutex</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">var</span> <span class="n">mtx</span> <span class="n">sync</span><span class="o">.</span><span class="n">RWMutex</span>
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">findProductByID</span><span class="p">(</span><span class="n">id</span><span class="x"> </span><span class="kt">int</span><span class="p">)</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="k">func</span> <span class="n">findProductByID</span><span class="p">(</span><span class="n">id</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="n">Product</span> <span class="p">{</span>
 
-	</span><span class="n">mtx</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span><span class="x">
-	</span><span class="k">defer</span><span class="x"> </span><span class="n">mtx</span><span class="o">.</span><span class="n">RUnlock</span><span class="p">()</span><span class="x">
+	<span class="n">mtx</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+	<span class="k">defer</span> <span class="n">mtx</span><span class="o">.</span><span class="n">RUnlock</span><span class="p">()</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">products</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">if</span><span class="x"> </span><span class="n">p</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="o">&amp;&amp;</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">ProductID</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="n">id</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="k">return</span><span class="x"> </span><span class="n">p</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-	</span><span class="k">return</span><span class="x"> </span><span class="no">nil</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">products</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="no">nil</span> <span class="o">&amp;&amp;</span> <span class="n">p</span><span class="o">.</span><span class="n">ProductID</span> <span class="o">==</span> <span class="n">id</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">p</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="no">nil</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>We can test our code easily from the command line invoking</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X GET http://localhost:8080/products/2
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X GET http://localhost:8080/products/2
 </code></pre></div></div>
 
 <p>and</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X PUT -H "Content-Type: application/json" -d '{"productId": 0, "manufacturer": "Microsoft", "productName": "MS Surface"}' localhost:8080/products/2
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$curl -D - -X PUT -H "Content-Type: application/json" -d '{"productId": 0, "manufacturer": "Microsoft", "productName": "MS Surface"}' localhost:8080/products/2
 </code></pre></div></div>
 
 <h3 id="adding-middlewares---cors-example">Adding Middlewares - CORS Example</h3>
 
 <p>The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. For this example, we will modify our code to add a CORS middleware.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">handler</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="p">)</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">corsMiddleware</span><span class="p">(</span><span class="n">handler</span> <span class="n">http</span><span class="o">.</span><span class="n">Handler</span><span class="p">)</span> <span class="n">http</span><span class="o">.</span><span class="n">Handler</span> <span class="p">{</span>
 
-	</span><span class="k">return</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="k">func</span><span class="p">(</span><span class="n">w</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="x"> </span><span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+	<span class="k">return</span> <span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="k">func</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
 
-		</span><span class="c">// before the handler</span><span class="x">
-		</span><span class="c">// add the cors middleware headers</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Origin"</span><span class="p">,</span><span class="s">"*"</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Methods"</span><span class="p">,</span><span class="s">"POST, GET, OPTIONS, PUT, DELETE"</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Headers"</span><span class="p">,</span><span class="s">"Accept, Content-Type, Content-Length"</span><span class="p">)</span><span class="x">
-		</span><span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span><span class="x"> </span><span class="s">"application/json"</span><span class="p">)</span><span class="x">
+		<span class="c">// before the handler</span>
+		<span class="c">// add the cors middleware headers</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Origin"</span><span class="p">,</span><span class="s">"*"</span><span class="p">)</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Methods"</span><span class="p">,</span><span class="s">"POST, GET, OPTIONS, PUT, DELETE"</span><span class="p">)</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Access-Control-Allow-Headers"</span><span class="p">,</span><span class="s">"Accept, Content-Type, Content-Length"</span><span class="p">)</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">r</span><span class="o">.</span><span class="n">Method</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">MethodOptions</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="c">// the pre-flight request, make sure it is handled</span><span class="x">
-			</span><span class="k">return</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">Method</span> <span class="o">==</span> <span class="n">http</span><span class="o">.</span><span class="n">MethodOptions</span> <span class="p">{</span>
+			<span class="c">// the pre-flight request, make sure it is handled</span>
+			<span class="k">return</span>
+		<span class="p">}</span>
 
-		</span><span class="c">// the actual handler</span><span class="x">
-		</span><span class="n">handler</span><span class="o">.</span><span class="n">ServeHTTP</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="x"> </span><span class="n">r</span><span class="p">)</span><span class="x">
+		<span class="c">// the actual handler</span>
+		<span class="n">handler</span><span class="o">.</span><span class="n">ServeHTTP</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
 
-		</span><span class="c">// after handler</span><span class="x">
-	</span><span class="p">})</span><span class="x">
-</span><span class="p">}</span><span class="x">
+		<span class="c">// after handler</span>
+	<span class="p">})</span>
+<span class="p">}</span>
 
 
-</span><span class="k">func</span><span class="x"> </span><span class="n">main</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
 
-	</span><span class="c">// handler for GET all and POST</span><span class="x">
-	</span><span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products"</span><span class="p">,</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productsHandler</span><span class="p">)))</span><span class="x">
-	</span><span class="c">// handler for GET id and PUT</span><span class="x">
-	</span><span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products/"</span><span class="p">,</span><span class="x"> </span><span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productHandler</span><span class="p">)))</span><span class="x">
+	<span class="c">// handler for GET all and POST</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products"</span><span class="p">,</span> <span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productsHandler</span><span class="p">)))</span>
+	<span class="c">// handler for GET id and PUT</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="s">"/products/"</span><span class="p">,</span> <span class="n">corsMiddleware</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">HandlerFunc</span><span class="p">(</span><span class="n">productHandler</span><span class="p">)))</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span><span class="x"> </span><span class="no">nil</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="no">nil</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>The full code, refactored with persitence in an in-memory map can be found <a href="https://github.com/alexandrugris/learngolang1/tree/persistence_in_memory_map">here</a></p>
 
@@ -422,23 +422,23 @@ Content-Length: 0
 
 <p>First thing, we are going to install Postgres. Assuming docker is installed and running, we do</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
 </code></pre></div></div>
 
-<p>Now I am running the Postgres server portmapped on 5432, with usename <code class="highlighter-rouge">posgres</code> having the password <code class="highlighter-rouge">mysecretpassword</code></p>
+<p>Now I am running the Postgres server portmapped on 5432, with usename <code class="language-plaintext highlighter-rouge">posgres</code> having the password <code class="language-plaintext highlighter-rouge">mysecretpassword</code></p>
 
 <p>To connect to the server we do</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$psql -p 5432 -h localhost -U postgres
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$psql -p 5432 -h localhost -U postgres
 </code></pre></div></div>
 
-<p>In the screenshot below, I have also created a database called <code class="highlighter-rouge">products</code> and connected to it using the <code class="highlighter-rouge">\c</code> command</p>
+<p>In the screenshot below, I have also created a database called <code class="language-plaintext highlighter-rouge">products</code> and connected to it using the <code class="language-plaintext highlighter-rouge">\c</code> command</p>
 
 <p><img src="https://alexandrugris.github.io/assets/gows2.png" alt="Postgres running" /></p>
 
 <p>The next thing to do is to get the Postgres Go driver.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$go get github.com/lib/pq
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$go get github.com/lib/pq
 </code></pre></div></div>
 
 <p>At the time of this writing, the recommended database driver for go is <a href="https://github.com/jackc/pgx">pgx</a>. Its authors recommend to use its own API instead of the standard go SQL package due to higher performance in most Postgres-specific scenarios. For the purpose of this demo we will use the standard SQL package though, as it is portable across databases.</p>
@@ -447,136 +447,136 @@ Content-Length: 0
 
 <p>Let’s dive into the code.</p>
 
-<p>First step is to blank import the driver into our <code class="highlighter-rouge">main.go</code> file. That is because drivers need to register themselves with the SQL package in their <code class="highlighter-rouge">init function</code>(https://golang.org/doc/effective_go.html#init)</p>
+<p>First step is to blank import the driver into our <code class="language-plaintext highlighter-rouge">main.go</code> file. That is because drivers need to register themselves with the SQL package in their <code class="language-plaintext highlighter-rouge">init function</code>(https://golang.org/doc/effective_go.html#init)</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span><span class="x"> </span><span class="n">_</span><span class="x"> </span><span class="s">"github.com/lib/pq"</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="n">_</span> <span class="s">"github.com/lib/pq"</span>
+</code></pre></div></div>
 
 <p>The next step is to declare a database connection pool and open it. The names are exported hence capitalized.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span><span class="x"> </span><span class="n">database</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">database</span>
 
-</span><span class="k">import</span><span class="x"> </span><span class="p">(</span><span class="x">
-	</span><span class="s">"database/sql"</span><span class="x">
-	</span><span class="s">"log"</span><span class="x">
-</span><span class="p">)</span><span class="x">
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"database/sql"</span>
+	<span class="s">"log"</span>
+<span class="p">)</span>
 
-</span><span class="c">// DbConn is our database connection pool</span><span class="x">
-</span><span class="k">var</span><span class="x"> </span><span class="n">DbConn</span><span class="x"> </span><span class="o">*</span><span class="n">sql</span><span class="o">.</span><span class="n">DB</span><span class="x">
+<span class="c">// DbConn is our database connection pool</span>
+<span class="k">var</span> <span class="n">DbConn</span> <span class="o">*</span><span class="n">sql</span><span class="o">.</span><span class="n">DB</span>
 
-</span><span class="c">// Connect opens the connection to the database</span><span class="x">
-</span><span class="k">func</span><span class="x"> </span><span class="n">Connect</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">var</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="kt">error</span><span class="x">
-	</span><span class="n">DbConn</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="x">
-	</span><span class="s">"postgres"</span><span class="p">,</span><span class="x"> 
-	</span><span class="s">"user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword"</span><span class="x">
-	</span><span class="p">)</span><span class="x">
+<span class="c">// Connect opens the connection to the database</span>
+<span class="k">func</span> <span class="n">Connect</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">var</span> <span class="n">err</span> <span class="kt">error</span>
+	<span class="n">DbConn</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span>
+	<span class="s">"postgres"</span><span class="p">,</span> 
+	<span class="s">"user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword"</span>
+	<span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
-<p>We are going to create the Products table and seed our database, but only if a <code class="highlighter-rouge">--dbinit</code> flag is sent to our executable. We add to our main function the following:</p>
+<p>We are going to create the Products table and seed our database, but only if a <code class="language-plaintext highlighter-rouge">--dbinit</code> flag is sent to our executable. We add to our main function the following:</p>
 
-<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="k">range</span><span class="x"> </span><span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">]</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">switch</span><span class="x"> </span><span class="n">v</span><span class="x"> </span><span class="p">{</span><span class="x">
-	</span><span class="k">case</span><span class="x"> </span><span class="s">"--dbinit"</span><span class="o">:</span><span class="x">
-		</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">Init</span><span class="p">();</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">]</span> <span class="p">{</span>
+	<span class="k">switch</span> <span class="n">v</span> <span class="p">{</span>
+	<span class="k">case</span> <span class="s">"--dbinit"</span><span class="o">:</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">database</span><span class="o">.</span><span class="n">Init</span><span class="p">();</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
-<p>To create our database, we are going to play a bit with reflection and automatically discover the fields from our <code class="highlighter-rouge">Product</code> type. This discovery by reflection is something that all ORMs do. Since we are not going to build our own ORM here, this is the only place where we will play with reflection.</p>
+<p>To create our database, we are going to play a bit with reflection and automatically discover the fields from our <code class="language-plaintext highlighter-rouge">Product</code> type. This discovery by reflection is something that all ORMs do. Since we are not going to build our own ORM here, this is the only place where we will play with reflection.</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="n">Init</span><span class="p">()</span><span class="x"> </span><span class="kt">error</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">Init</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">DbConn</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">errors</span><span class="o">.</span><span class="n">New</span><span class="p">(</span><span class="s">"Database not opened"</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">DbConn</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">errors</span><span class="o">.</span><span class="n">New</span><span class="p">(</span><span class="s">"Database not opened"</span><span class="p">)</span>
+	<span class="p">}</span>
 
-	</span><span class="n">query</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="s">"CREATE TABLE IF NOT EXISTS Products ("</span><span class="x">
+	<span class="n">query</span> <span class="o">:=</span> <span class="s">"CREATE TABLE IF NOT EXISTS Products ("</span>
 
-	</span><span class="n">t</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">reflect</span><span class="o">.</span><span class="n">TypeOf</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">Product</span><span class="p">{})</span><span class="x">
+	<span class="n">t</span> <span class="o">:=</span> <span class="n">reflect</span><span class="o">.</span><span class="n">TypeOf</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">Product</span><span class="p">{})</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="m">0</span><span class="p">;</span><span class="x"> </span><span class="n">i</span><span class="x"> </span><span class="o">&lt;</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">();</span><span class="x"> </span><span class="n">i</span><span class="o">++</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">f</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="x">
-		</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Name</span><span class="x"> </span><span class="o">+</span><span class="x"> </span><span class="s">" "</span><span class="x">
+	<span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+		<span class="n">f</span> <span class="o">:=</span> <span class="n">t</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+		<span class="n">query</span> <span class="o">+=</span> <span class="n">f</span><span class="o">.</span><span class="n">Name</span> <span class="o">+</span> <span class="s">" "</span>
 
-		</span><span class="k">switch</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">case</span><span class="x"> </span><span class="s">"string"</span><span class="o">:</span><span class="x">
-			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">"varchar (100)"</span><span class="x">
-		</span><span class="k">default</span><span class="o">:</span><span class="x">
-			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span><span class="x">
-		</span><span class="p">}</span><span class="x">
+		<span class="k">switch</span> <span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="s">"string"</span><span class="o">:</span>
+			<span class="n">query</span> <span class="o">+=</span> <span class="s">"varchar (100)"</span>
+		<span class="k">default</span><span class="o">:</span>
+			<span class="n">query</span> <span class="o">+=</span> <span class="n">f</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">Name</span><span class="p">()</span>
+		<span class="p">}</span>
 
-		</span><span class="k">if</span><span class="x"> </span><span class="n">i</span><span class="o">+</span><span class="m">1</span><span class="x"> </span><span class="o">&lt;</span><span class="x"> </span><span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-			</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">", "</span><span class="x">
-		</span><span class="p">}</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-	</span><span class="n">query</span><span class="x"> </span><span class="o">+=</span><span class="x"> </span><span class="s">");"</span><span class="x">
-	</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="x">
+		<span class="k">if</span> <span class="n">i</span><span class="o">+</span><span class="m">1</span> <span class="o">&lt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NumField</span><span class="p">()</span> <span class="p">{</span>
+			<span class="n">query</span> <span class="o">+=</span> <span class="s">", "</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">query</span> <span class="o">+=</span> <span class="s">");"</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="n">query</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="n">query</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"DELETE FROM Products"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"DELETE FROM Products"</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"ALTER TABLE Products ADD PRIMARY KEY (ProductID)"</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="s">"ALTER TABLE Products ADD PRIMARY KEY (ProductID)"</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">_</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span><span class="x">
-		</span><span class="s">`CREATE SEQUENCE IF NOT EXISTS pk_product 
-		CACHE 100 OWNED BY Product.ProductID`</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="n">err</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">DbConn</span><span class="o">.</span><span class="n">Exec</span><span class="p">(</span>
+		<span class="s">`CREATE SEQUENCE IF NOT EXISTS pk_product 
+		CACHE 100 OWNED BY Product.ProductID`</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
 
-	</span><span class="k">return</span><span class="x"> </span><span class="no">nil</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">return</span> <span class="no">nil</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
-<p>The next step is to implement the full <code class="highlighter-rouge">product.Map</code> interface and switch from an in-memory map to database calls. A better name would have been <code class="highlighter-rouge">product.Repository</code> but we will not refactor the code now. The full code can be found <a href="https://github.com/alexandrugris/learngolang1/blob/with_database/product/product.data.go">here</a> and we are only going to exemplify in this blogpost how to create a new product.</p>
+<p>The next step is to implement the full <code class="language-plaintext highlighter-rouge">product.Map</code> interface and switch from an in-memory map to database calls. A better name would have been <code class="language-plaintext highlighter-rouge">product.Repository</code> but we will not refactor the code now. The full code can be found <a href="https://github.com/alexandrugris/learngolang1/blob/with_database/product/product.data.go">here</a> and we are only going to exemplify in this blogpost how to create a new product.</p>
 
-<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">m</span><span class="x"> </span><span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span><span class="x"> </span><span class="n">CreateNew</span><span class="p">(</span><span class="n">p</span><span class="x"> </span><span class="o">*</span><span class="n">Product</span><span class="p">)</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="p">(</span><span class="n">m</span> <span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span> <span class="n">CreateNew</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span><span class="n">Product</span><span class="p">)</span> <span class="p">{</span>
 
-	</span><span class="n">stmt</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">Prepare</span><span class="p">(</span><span class="s">`INSERT INTO 
+	<span class="n">stmt</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">Prepare</span><span class="p">(</span><span class="s">`INSERT INTO 
 		Products(Manufacturer, PricePerUnit, UnitsAvailable, ProductName, ProductID) 
-		VALUES ($1, $2, $3, $4, nextval('pk_product')) RETURNING ProductID`</span><span class="p">)</span><span class="x">
+		VALUES ($1, $2, $3, $4, nextval('pk_product')) RETURNING ProductID`</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">stmt</span><span class="x"> </span><span class="o">==</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="o">||</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">stmt</span> <span class="o">==</span> <span class="no">nil</span> <span class="o">||</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
 
-	</span><span class="n">sqlRow</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">stmt</span><span class="o">.</span><span class="n">QueryRow</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span><span class="x"> </span><span class="n">p</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span><span class="x">
+	<span class="n">sqlRow</span> <span class="o">:=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">QueryRow</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">sqlRow</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="o">.</span><span class="n">ProductID</span><span class="p">);</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">sqlRow</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="o">.</span><span class="n">ProductID</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatal</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>The full source code for this implementation can be found <a href="https://github.com/alexandrugris/learngolang1/tree/with_database">here</a>.</p>
 
 <h3 id="contexts">Contexts</h3>
 
-<p>If we want to setup a timeout for a query, golang provides the <code class="highlighter-rouge">Context</code> mechanism. Each database function has a <code class="highlighter-rouge">Context</code> method. The call to <code class="highlighter-rouge">cancel()</code> when the operation is completed successfully allows to end the context and release all associated resources.</p>
+<p>If we want to setup a timeout for a query, golang provides the <code class="language-plaintext highlighter-rouge">Context</code> mechanism. Each database function has a <code class="language-plaintext highlighter-rouge">Context</code> method. The call to <code class="language-plaintext highlighter-rouge">cancel()</code> when the operation is completed successfully allows to end the context and release all associated resources.</p>
 
 <p>An example below:</p>
 
-<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span><span class="x"> </span><span class="p">(</span><span class="n">m</span><span class="x"> </span><span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span><span class="x"> </span><span class="n">GetAll</span><span class="p">()</span><span class="x"> </span><span class="p">[]</span><span class="o">*</span><span class="n">Product</span><span class="x"> </span><span class="p">{</span><span class="x">
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="p">(</span><span class="n">m</span> <span class="o">*</span><span class="n">mapInternal</span><span class="p">)</span> <span class="n">GetAll</span><span class="p">()</span> <span class="p">[]</span><span class="o">*</span><span class="n">Product</span> <span class="p">{</span>
 
-	</span><span class="c">// this will allow the queries to timeout</span><span class="x">
-	</span><span class="n">ctx</span><span class="p">,</span><span class="x"> </span><span class="n">cancel</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">context</span><span class="o">.</span><span class="n">WithTimeout</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">Background</span><span class="p">(),</span><span class="x"> </span><span class="m">15</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span><span class="x">
-	</span><span class="k">defer</span><span class="x"> </span><span class="n">cancel</span><span class="p">()</span><span class="x">
+	<span class="c">// this will allow the queries to timeout</span>
+	<span class="n">ctx</span><span class="p">,</span> <span class="n">cancel</span> <span class="o">:=</span> <span class="n">context</span><span class="o">.</span><span class="n">WithTimeout</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">Background</span><span class="p">(),</span> <span class="m">15</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span>
+	<span class="k">defer</span> <span class="n">cancel</span><span class="p">()</span>
 
-	</span><span class="n">results</span><span class="p">,</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">QueryContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="x"> </span><span class="s">`
+	<span class="n">results</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">database</span><span class="o">.</span><span class="n">DbConn</span><span class="o">.</span><span class="n">QueryContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s">`
 	SELECT 
 		ProductID, 
 		Manufacturer, 
@@ -584,33 +584,33 @@ Content-Length: 0
 		UnitsAvailable, 
 		ProductName 
 	FROM Products
-	`</span><span class="p">)</span><span class="x">
+	`</span><span class="p">)</span>
 
-	</span><span class="k">if</span><span class="x"> </span><span class="n">err</span><span class="x"> </span><span class="o">!=</span><span class="x"> </span><span class="no">nil</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="x">
-		</span><span class="k">return</span><span class="x"> </span><span class="no">nil</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="k">return</span> <span class="no">nil</span>
+	<span class="p">}</span>
 
-	</span><span class="k">defer</span><span class="x"> </span><span class="n">results</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span><span class="x">
+	<span class="k">defer</span> <span class="n">results</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
 
-	</span><span class="n">ret</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="nb">make</span><span class="p">([]</span><span class="o">*</span><span class="n">Product</span><span class="p">,</span><span class="x"> </span><span class="m">0</span><span class="p">,</span><span class="x"> </span><span class="m">100</span><span class="p">)</span><span class="x">
+	<span class="n">ret</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="o">*</span><span class="n">Product</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">100</span><span class="p">)</span>
 
-	</span><span class="k">for</span><span class="x"> </span><span class="n">results</span><span class="o">.</span><span class="n">Next</span><span class="p">()</span><span class="x"> </span><span class="p">{</span><span class="x">
-		</span><span class="n">v</span><span class="x"> </span><span class="o">:=</span><span class="x"> </span><span class="n">Product</span><span class="p">{}</span><span class="x">
+	<span class="k">for</span> <span class="n">results</span><span class="o">.</span><span class="n">Next</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">v</span> <span class="o">:=</span> <span class="n">Product</span><span class="p">{}</span>
 
-		</span><span class="n">results</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="x">
-			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductID</span><span class="p">,</span><span class="x">
-			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span><span class="x">
-			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span><span class="x">
-			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span><span class="x">
-			</span><span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span><span class="x">
+		<span class="n">results</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span>
+			<span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductID</span><span class="p">,</span>
+			<span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">Manufacturer</span><span class="p">,</span>
+			<span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">PricePerUnit</span><span class="p">,</span>
+			<span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">UnitsAvailable</span><span class="p">,</span>
+			<span class="o">&amp;</span><span class="n">v</span><span class="o">.</span><span class="n">ProductName</span><span class="p">)</span>
 
-		</span><span class="n">ret</span><span class="x"> </span><span class="o">=</span><span class="x"> </span><span class="nb">append</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span><span class="x"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">)</span><span class="x">
-	</span><span class="p">}</span><span class="x">
+		<span class="n">ret</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v</span><span class="p">)</span>
+	<span class="p">}</span>
 
-	</span><span class="k">return</span><span class="x"> </span><span class="n">ret</span><span class="x">
-</span><span class="p">}</span><span class="x">
-</span></code></pre></div></div>
+	<span class="k">return</span> <span class="n">ret</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
   </div>
 

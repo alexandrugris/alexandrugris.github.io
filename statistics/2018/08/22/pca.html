@@ -72,15 +72,15 @@
 
 <p>PCA is mathematical optimization problem. It aims to find the direction line along which the distance between projected data points is the greatest, that is it has the largest variance. We choose this direction because the largest amount of information about the value of each point is preserved in this projection. The second principal component is an axis perpendicular to the first axis and so on, for multi-dimensional coordinate spaces. This choice of axes not only preserves the most amount of information, but also avoids multicollinearity, as the principal components are always perpendicular to each other.</p>
 
-<p>The problem can be rephrased as: given a set of highly correlated factors, <code class="highlighter-rouge">[X1 ... Xn]</code>, find a equal number of factors, <code class="highlighter-rouge">[F1 ... Fn]</code>, completely uncorrelated to each other, sorted so that <code class="highlighter-rouge">Var(F1) &gt; ... &gt; Var(Fn)</code>, on which we are able to describe our regression problem as <code class="highlighter-rouge">Y = A + B1 * F1 + ... Bn * Fn</code>. These factors satisfy the equality <code class="highlighter-rouge">Var(F) == Var(X)</code>, meaning we don’t lose information when we do the decomposition along these new axes.</p>
+<p>The problem can be rephrased as: given a set of highly correlated factors, <code class="language-plaintext highlighter-rouge">[X1 ... Xn]</code>, find a equal number of factors, <code class="language-plaintext highlighter-rouge">[F1 ... Fn]</code>, completely uncorrelated to each other, sorted so that <code class="language-plaintext highlighter-rouge">Var(F1) &gt; ... &gt; Var(Fn)</code>, on which we are able to describe our regression problem as <code class="language-plaintext highlighter-rouge">Y = A + B1 * F1 + ... Bn * Fn</code>. These factors satisfy the equality <code class="language-plaintext highlighter-rouge">Var(F) == Var(X)</code>, meaning we don’t lose information when we do the decomposition along these new axes.</p>
 
 <p><em>It is important to notice the inequality, ``Var(F1) &gt; … &gt; Var(Fn)`. The higher the variance along that particular axis, the more information is contained in that axis.</em>.</p>
 
 <p>The linear algebra problem that helps us find these factors is called <em>eigenvalue decomposition</em> and can be phrased as:</p>
 
-<p>Find <code class="highlighter-rouge">F1 = a1X1 + ... + anXn</code> such that <code class="highlighter-rouge">Var(F1)</code> is maximized and the coefficients <code class="highlighter-rouge">a1 .. an</code> satisfy the constraint <code class="highlighter-rouge">a1^2 + ... + an^2 = 1</code>. <code class="highlighter-rouge">F1</code> is the principal component 1, <code class="highlighter-rouge">v1 = [a1,...,an]</code> is called <em>eigenvector 1</em> and <code class="highlighter-rouge">e1 = Var(F1)</code> is called the <em>eigenvalue</em> of the principal component <code class="highlighter-rouge">F1</code>.</p>
+<p>Find <code class="language-plaintext highlighter-rouge">F1 = a1X1 + ... + anXn</code> such that <code class="language-plaintext highlighter-rouge">Var(F1)</code> is maximized and the coefficients <code class="language-plaintext highlighter-rouge">a1 .. an</code> satisfy the constraint <code class="language-plaintext highlighter-rouge">a1^2 + ... + an^2 = 1</code>. <code class="language-plaintext highlighter-rouge">F1</code> is the principal component 1, <code class="language-plaintext highlighter-rouge">v1 = [a1,...,an]</code> is called <em>eigenvector 1</em> and <code class="language-plaintext highlighter-rouge">e1 = Var(F1)</code> is called the <em>eigenvalue</em> of the principal component <code class="language-plaintext highlighter-rouge">F1</code>.</p>
 
-<p>Principal component <code class="highlighter-rouge">F2 = b1(X1 - F1) + ... + bn(Xn - F1)</code> is subject to the same constraints. Like this, we have defined a recurrent problem which allows us to find all <code class="highlighter-rouge">Fn</code> components.</p>
+<p>Principal component <code class="language-plaintext highlighter-rouge">F2 = b1(X1 - F1) + ... + bn(Xn - F1)</code> is subject to the same constraints. Like this, we have defined a recurrent problem which allows us to find all <code class="language-plaintext highlighter-rouge">Fn</code> components.</p>
 
 <p>Results from this decomposition are:</p>
 
@@ -93,22 +93,22 @@
   </li>
   <li>
     <p><em>eigenvectors:</em> which are needed to calculate the principal components as follows:
-<code class="highlighter-rouge">[Fi] = [Xi] * [Vi]</code>. That is, the column matrix containing all factors is the matrix product between the column matrix of eigenvectors <code class="highlighter-rouge">Vi=[a1 ... an]</code> and the original factor matrix, <code class="highlighter-rouge">X=[X1 ... Xn]</code>, (n factors, each with k elements)</p>
+<code class="language-plaintext highlighter-rouge">[Fi] = [Xi] * [Vi]</code>. That is, the column matrix containing all factors is the matrix product between the column matrix of eigenvectors <code class="language-plaintext highlighter-rouge">Vi=[a1 ... an]</code> and the original factor matrix, <code class="language-plaintext highlighter-rouge">X=[X1 ... Xn]</code>, (n factors, each with k elements)</p>
   </li>
 </ul>
 
-<p>Now, dividing each eigenvalue <code class="highlighter-rouge">ei=Var(Fi)</code> to the total variance of F, <code class="highlighter-rouge">Var(F) = Var(F1) + ... Var(Fn)</code> since <code class="highlighter-rouge">Covar(Fi, Fj) = 0</code>, we obtain a vector <code class="highlighter-rouge">v</code> with <code class="highlighter-rouge">sum(vi) = 1</code>. The plot of this vector is called <em>scree plot</em> and shows how much each factor contributes to explaining the variance of the original data. This is the most important decision tool for us to decide which factors we keep in our analysis.</p>
+<p>Now, dividing each eigenvalue <code class="language-plaintext highlighter-rouge">ei=Var(Fi)</code> to the total variance of F, <code class="language-plaintext highlighter-rouge">Var(F) = Var(F1) + ... Var(Fn)</code> since <code class="language-plaintext highlighter-rouge">Covar(Fi, Fj) = 0</code>, we obtain a vector <code class="language-plaintext highlighter-rouge">v</code> with <code class="language-plaintext highlighter-rouge">sum(vi) = 1</code>. The plot of this vector is called <em>scree plot</em> and shows how much each factor contributes to explaining the variance of the original data. This is the most important decision tool for us to decide which factors we keep in our analysis.</p>
 
 <p>More information <a href="https://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix">here</a></p>
 
 <h3 id="eigenvalue-decomposition">Eigenvalue Decomposition</h3>
 
-<p>The following Python code uses the power method together with deflation for computing the eigenvectors and eigenvalues for a square matrix <code class="highlighter-rouge">A</code>.</p>
+<p>The following Python code uses the power method together with deflation for computing the eigenvectors and eigenvalues for a square matrix <code class="language-plaintext highlighter-rouge">A</code>.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 
 <span class="k">def</span> <span class="nf">vector_norm</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">dominant_eigenvector</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
     
@@ -117,45 +117,45 @@
     Uses the power method technique.
     """</span>
     
-    <span class="c"># check that A is square</span>
-    <span class="k">assert</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># check that A is square
+</span>    <span class="k">assert</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     
-    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">v_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">rand</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">v_prim</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     
     <span class="n">lmbda</span> <span class="o">=</span> <span class="mi">0</span>
     
-    <span class="c"># TODO: add raleigh for faster convergence</span>
-    
-    <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="o">-</span><span class="n">v_prim</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
-       <span class="n">v_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="c1"># TODO: add raleigh for faster convergence
+</span>    
+    <span class="k">while</span> <span class="n">np</span><span class="p">.</span><span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="o">-</span><span class="n">v_prim</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+       <span class="n">v_prim</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
        <span class="n">lmbda</span> <span class="o">=</span> <span class="n">vector_norm</span><span class="p">(</span><span class="n">v_prim</span><span class="p">)</span>
        <span class="n">v</span><span class="p">,</span> <span class="n">v_prim</span> <span class="o">=</span> <span class="p">(</span><span class="n">v_prim</span> <span class="o">/</span> <span class="n">lmbda</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
        
-    <span class="c"># eigenvalue, normalized eigenvector</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">lmbda</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="c1"># eigenvalue, normalized eigenvector
+</span>    <span class="k">return</span> <span class="p">(</span><span class="n">lmbda</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">eigen_decomposition</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
     
-    <span class="c"># check that A is square</span>
-    <span class="k">assert</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># check that A is square
+</span>    <span class="k">assert</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     
     <span class="n">vectors</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">lambdas</span> <span class="o">=</span> <span class="p">[]</span>
     
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
         
         <span class="n">lmbda</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">dominant_eigenvector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         
-        <span class="n">vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
-        <span class="n">lambdas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lmbda</span><span class="p">)</span>
+        <span class="n">vectors</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+        <span class="n">lambdas</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">lmbda</span><span class="p">)</span>
         
-        <span class="c"># power method deflation eigenvectors</span>
-        <span class="c"># idea is to remove the initial contribution from the initial space</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">-</span> <span class="n">lmbda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="c1"># power method deflation eigenvectors
+</span>        <span class="c1"># idea is to remove the initial contribution from the initial space
+</span>        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">-</span> <span class="n">lmbda</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">v</span><span class="p">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         
-        <span class="c"># each vector is perpendicular to the rest</span>
-       
+        <span class="c1"># each vector is perpendicular to the rest
+</span>       
     
     <span class="k">return</span> <span class="p">(</span><span class="n">lambdas</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
 </code></pre></div></div>
@@ -163,80 +163,80 @@
 <p>The correctness is very simple to check. Just do the following:</p>
 
 <ol>
-  <li>Check that <code class="highlighter-rouge">A * lambda == lambda * v</code> - condition for eigenvector</li>
-  <li>Check that all vectors are perpendicular to each other: <code class="highlighter-rouge">np.dot(v1, v2) == 0</code> - condition for all the eigenvectors</li>
+  <li>Check that <code class="language-plaintext highlighter-rouge">A * lambda == lambda * v</code> - condition for eigenvector</li>
+  <li>Check that all vectors are perpendicular to each other: <code class="language-plaintext highlighter-rouge">np.dot(v1, v2) == 0</code> - condition for all the eigenvectors</li>
 </ol>
 
 <h3 id="principal-factor-determination">Principal Factor Determination</h3>
 
-<p>Let’s setup a test bed of linear-dependent variables. We will want to predict <code class="highlighter-rouge">Y</code> based on <code class="highlighter-rouge">A</code> - see below:</p>
+<p>Let’s setup a test bed of linear-dependent variables. We will want to predict <code class="language-plaintext highlighter-rouge">Y</code> based on <code class="language-plaintext highlighter-rouge">A</code> - see below:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
-<span class="c"># 2 factors, 1000 points each</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+<span class="c1"># 2 factors, 1000 points each
+</span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 
-<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
-<span class="n">Y</span> <span class="o">=</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">2.3</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">2.3</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>Let’s compute the covariance of and correlation of the two vectors, <code class="highlighter-rouge">a</code> and <code class="highlighter-rouge">b</code>:</p>
+<p>Let’s compute the covariance of and correlation of the two vectors, <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code>:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">covar</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="p">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="p">.</span><span class="n">flatten</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">x</span><span class="p">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="p">.</span><span class="n">size</span><span class="p">:</span>
         <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"x and y should have the same size"</span><span class="p">)</span>
 
-    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
-    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">size</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">corr_mtx</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">covar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="n">covar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">var</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
                       
 <span class="k">def</span> <span class="nf">covar_mtx</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">covar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="n">covar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
 
-<span class="c"># high Corr above / below diagonal =&gt; the two factors are highly correlated =&gt; we should switch to PCA</span>
-<span class="c"># in our case, corr above diagonal is 0.83</span>
-<span class="c"># this can be seen also from plotting a vs b</span>
-<span class="n">Corr_AA</span> <span class="o">=</span> <span class="n">corr_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="c1"># high Corr above / below diagonal =&gt; the two factors are highly correlated =&gt; we should switch to PCA
+# in our case, corr above diagonal is 0.83
+# this can be seen also from plotting a vs b
+</span><span class="n">Corr_AA</span> <span class="o">=</span> <span class="n">corr_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Eigenvalue decomposition is applied to the covariance matrix. So let’s do just that:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># eigen value decomposition is applied on the covariance matrix</span>
-<span class="n">Covar_AA</span> <span class="o">=</span> <span class="n">covar_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># eigen value decomposition is applied on the covariance matrix
+</span><span class="n">Covar_AA</span> <span class="o">=</span> <span class="n">covar_mtx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
 
-<span class="c"># lmbdas contain the eigenvalues and v the normalized eigenvectors</span>
-<span class="n">lmbdas</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">eigen_decomposition</span><span class="p">(</span><span class="n">Covar_AA</span><span class="p">)</span>
+<span class="c1"># lmbdas contain the eigenvalues and v the normalized eigenvectors
+</span><span class="n">lmbdas</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">eigen_decomposition</span><span class="p">(</span><span class="n">Covar_AA</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>We can quickly check that the two <code class="highlighter-rouge">v's</code> are perpendicular to each other, by doing</p>
+<p>We can quickly check that the two <code class="language-plaintext highlighter-rouge">v's</code> are perpendicular to each other, by doing</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>np.dot(v[0], v[1])
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>np.dot(v[0], v[1])
 Out[209]: -9.731923600320158e-11
 </code></pre></div></div>
 
-<p>Now we can call the following function which computes the principal factors (vector <code class="highlighter-rouge">F</code> described in the <em>PCA</em> section) based on the initial matrix <code class="highlighter-rouge">A</code> and the eigenvalues vector <code class="highlighter-rouge">v</code>.</p>
+<p>Now we can call the following function which computes the principal factors (vector <code class="language-plaintext highlighter-rouge">F</code> described in the <em>PCA</em> section) based on the initial matrix <code class="language-plaintext highlighter-rouge">A</code> and the eigenvalues vector <code class="language-plaintext highlighter-rouge">v</code>.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
-    <span class="c"># rough check that all vectors are normalized</span>
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
-        <span class="k">assert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">vector_norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span>
+    <span class="c1"># rough check that all vectors are normalized
+</span>    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">vector_norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span>
 
-    <span class="n">Fs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">([</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Fs</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">([</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">Fs</span><span class="p">).</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>and then</p>
@@ -244,32 +244,32 @@ Out[209]: -9.731923600320158e-11
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Fs</span> <span class="o">=</span> <span class="n">factors</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>Now we can quickly check that, indeed, <code class="highlighter-rouge">Var(Fs[i]) == lmdas[i]</code>:</p>
+<p>Now we can quickly check that, indeed, <code class="language-plaintext highlighter-rouge">Var(Fs[i]) == lmdas[i]</code>:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">var</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">226</span><span class="p">]:</span> <span class="n">array</span><span class="p">([</span><span class="mf">10333.05692141</span><span class="p">,</span>   <span class="mf">199.78928639</span><span class="p">])</span>
 
 <span class="n">lmbdas</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">227</span><span class="p">]:</span> <span class="p">[</span><span class="mf">10333.056921412048</span><span class="p">,</span> <span class="mf">199.78928639278513</span><span class="p">]</span>
 </code></pre></div></div>
 
-<p>This also shows that the fist factor contributes <code class="highlighter-rouge">98%</code> to the total variance, so we can use it alone in regression.</p>
+<p>This also shows that the fist factor contributes <code class="language-plaintext highlighter-rouge">98%</code> to the total variance, so we can use it alone in regression.</p>
 
 <h3 id="final-regression-and-check">Final Regression and Check</h3>
 
-<p>We will simply plot <code class="highlighter-rouge">Fs[0]</code> vs <code class="highlighter-rouge">Y</code> and <code class="highlighter-rouge">Fs[1]</code> vs <code class="highlighter-rouge">Y</code>. Obviously, much more of the variation is explained by <code class="highlighter-rouge">Fs[0]</code> than <code class="highlighter-rouge">Fs[1]</code>:</p>
+<p>We will simply plot <code class="language-plaintext highlighter-rouge">Fs[0]</code> vs <code class="language-plaintext highlighter-rouge">Y</code> and <code class="language-plaintext highlighter-rouge">Fs[1]</code> vs <code class="language-plaintext highlighter-rouge">Y</code>. Obviously, much more of the variation is explained by <code class="language-plaintext highlighter-rouge">Fs[0]</code> than <code class="language-plaintext highlighter-rouge">Fs[1]</code>:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/pca_1.png" alt="Analysis" /></p>
 
 <h3 id="normalization-of-data">Normalization of Data</h3>
 
-<p>If we end up with the principal <code class="highlighter-rouge">F</code> factor explaining less of the variance any of the <code class="highlighter-rouge">X</code> initial factors, we must standardize our data. For our <code class="highlighter-rouge">A</code> matrix, the matrix of all <code class="highlighter-rouge">X</code> factors, the function is as follows:</p>
+<p>If we end up with the principal <code class="language-plaintext highlighter-rouge">F</code> factor explaining less of the variance any of the <code class="language-plaintext highlighter-rouge">X</code> initial factors, we must standardize our data. For our <code class="language-plaintext highlighter-rouge">A</code> matrix, the matrix of all <code class="language-plaintext highlighter-rouge">X</code> factors, the function is as follows:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">standardize</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">A</span><span class="p">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">).</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">var</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)).</span><span class="n">T</span><span class="p">).</span><span class="n">T</span>
 </code></pre></div></div>
 
-<p>We check this need by calculating the <a href="http://www.stat.yale.edu/Courses/1997-98/101/correl.htm">R^2 metric for each regression (RSQ in Excel)</a> - for the <code class="highlighter-rouge">X</code> factors and then for the <code class="highlighter-rouge">F</code> factors. Now we can safely use the covariance matrix to do PCA.</p>
+<p>We check this need by calculating the <a href="http://www.stat.yale.edu/Courses/1997-98/101/correl.htm">R^2 metric for each regression (RSQ in Excel)</a> - for the <code class="language-plaintext highlighter-rouge">X</code> factors and then for the <code class="language-plaintext highlighter-rouge">F</code> factors. Now we can safely use the covariance matrix to do PCA.</p>
 
 <p>Some notes - <a href="https://alexandrugris.github.io/assets/pca.pdf">example data here</a>:</p>
 
@@ -327,25 +327,25 @@ Out[209]: -9.731923600320158e-11
 <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">zscore</span>
 <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
 
-<span class="c"># https://footystats.org/download-stats-csv</span>
-<span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"./england-premier-league-players-2018-to-2019-stats.csv"</span><span class="p">)</span>
+<span class="c1"># https://footystats.org/download-stats-csv
+</span><span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"./england-premier-league-players-2018-to-2019-stats.csv"</span><span class="p">)</span>
 
-<span class="c"># index by player</span>
-<span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'full_name'</span><span class="p">)</span>
-<span class="c"># we know the league and the season</span>
-<span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span> <span class="p">[</span><span class="s">'league'</span><span class="p">,</span> <span class="s">'season'</span><span class="p">,</span> <span class="s">'nationality'</span><span class="p">]</span> <span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># index by player
+</span><span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'full_name'</span><span class="p">)</span>
+<span class="c1"># we know the league and the season
+</span><span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">.</span><span class="n">drop</span><span class="p">(</span> <span class="p">[</span><span class="s">'league'</span><span class="p">,</span> <span class="s">'season'</span><span class="p">,</span> <span class="s">'nationality'</span><span class="p">]</span> <span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c"># these are filled with wrong values</span>
-<span class="c"># not very relevant for our task</span>
-<span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span> <span class="p">[</span><span class="s">'rank_in_league_top_attackers'</span><span class="p">,</span> 
+<span class="c1"># these are filled with wrong values
+# not very relevant for our task
+</span><span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">.</span><span class="n">drop</span><span class="p">(</span> <span class="p">[</span><span class="s">'rank_in_league_top_attackers'</span><span class="p">,</span> 
                                <span class="s">'rank_in_league_top_midfielders'</span><span class="p">,</span> 
                                <span class="s">'rank_in_league_top_defenders'</span><span class="p">,</span> 
                                <span class="s">'rank_in_club_top_scorer'</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c"># keep only the overall</span>
-<span class="c"># the home and away should be used for clustering </span>
-<span class="c"># when pitching teams against each other</span>
-<span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">[[</span><span class="s">'age'</span><span class="p">,</span> 
+<span class="c1"># keep only the overall
+# the home and away should be used for clustering 
+# when pitching teams against each other
+</span><span class="n">pd_players</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">[[</span><span class="s">'age'</span><span class="p">,</span> 
                          <span class="s">'position'</span><span class="p">,</span> 
                          <span class="s">'Current Club'</span><span class="p">,</span> 
                          <span class="s">'minutes_played_overall'</span><span class="p">,</span> 
@@ -360,26 +360,26 @@ Out[209]: -9.731923600320158e-11
                          <span class="s">'red_cards_overall'</span><span class="p">]]</span>
 
 
-<span class="n">players_with_dummies_not_zscored</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">pd_players</span><span class="p">)</span>
-<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">players_with_dummies_not_zscored</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">zscore</span><span class="p">)</span>
+<span class="n">players_with_dummies_not_zscored</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">pd_players</span><span class="p">)</span>
+<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">players_with_dummies_not_zscored</span><span class="p">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">zscore</span><span class="p">)</span>
 
-<span class="c"># here we add some weights for the goal scored</span>
-<span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+<span class="c1"># here we add some weights for the goal scored
+</span><span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">.</span><span class="n">columns</span><span class="p">))</span>
 
-<span class="c"># increase a little bit the weight for non-club features</span>
-<span class="n">np</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="mf">1.1</span><span class="p">)</span> 
+<span class="c1"># increase a little bit the weight for non-club features
+</span><span class="n">np</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="mf">1.1</span><span class="p">)</span> 
 
-<span class="c"># since we are looking mostly at goals, </span>
-<span class="c"># we want the clustering to focus on goals as the main success measure</span>
-<span class="c"># the other dimensions being used mostly for smoothing out the outliers</span>
-
-<span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="c"># goals</span>
-<span class="n">w</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c"># position</span>
-<span class="n">w</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c"># position</span>
-<span class="n">w</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c"># position</span>
-<span class="n">w</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c"># position</span>
-
-<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># since we are looking mostly at goals, 
+# we want the clustering to focus on goals as the main success measure
+# the other dimensions being used mostly for smoothing out the outliers
+</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="c1"># goals
+</span><span class="n">w</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c1"># position
+</span><span class="n">w</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c1"># position
+</span><span class="n">w</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c1"># position
+</span><span class="n">w</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="c1"># position
+</span>
+<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="p">.</span><span class="nb">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>This is how the data looks after preprocessing:</p>
@@ -390,42 +390,42 @@ Out[209]: -9.731923600320158e-11
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
 
-<span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span> <span class="c"># explained variance - 80%</span>
-<span class="n">pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
+<span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span> <span class="c1"># explained variance - 80%
+</span><span class="n">pca</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
 
-<span class="c"># number of features</span>
-<span class="c"># len(pca.explained_variance_ratio_)</span>
-<span class="c"># explained variance ratio</span>
-<span class="c"># sum(pca.explained_variance_ratio_)</span>
+<span class="c1"># number of features
+# len(pca.explained_variance_ratio_)
+# explained variance ratio
+# sum(pca.explained_variance_ratio_)
+</span>
+<span class="c1"># preserve the columns and index of the dataset
+</span><span class="n">columns</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="p">.</span><span class="n">columns</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="p">.</span><span class="n">index</span>
 
-<span class="c"># preserve the columns and index of the dataset</span>
-<span class="n">columns</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="o">.</span><span class="n">columns</span>
-<span class="n">index</span> <span class="o">=</span> <span class="n">players_with_dummies</span><span class="o">.</span><span class="n">index</span>
-
-<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
+<span class="n">players_with_dummies</span> <span class="o">=</span> <span class="n">pca</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>We see in the picture below the explained variance of <code class="highlighter-rouge">75%</code> as well as the reduction of features from <code class="highlighter-rouge">35</code> to <code class="highlighter-rouge">17</code>.</p>
+<p>We see in the picture below the explained variance of <code class="language-plaintext highlighter-rouge">75%</code> as well as the reduction of features from <code class="language-plaintext highlighter-rouge">35</code> to <code class="language-plaintext highlighter-rouge">17</code>.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/pca_3.png" alt="Explained variance" /></p>
 
 <p>Now we are going to perform clustering on the reduced feature set, as well as transform back the cluster values from the PCA features to the original features.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-<span class="c"># we will split in 10 clusters</span>
-<span class="n">players</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">players</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
+<span class="c1"># we will split in 10 clusters
+</span><span class="n">players</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">players</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">players_with_dummies</span><span class="p">)</span>
 
-<span class="c"># transform the clusters to original features</span>
-<span class="n">clusters</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">players</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">)</span>
-<span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+<span class="c1"># transform the clusters to original features
+</span><span class="n">clusters</span> <span class="o">=</span> <span class="n">pca</span><span class="p">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">players</span><span class="p">.</span><span class="n">cluster_centers_</span><span class="p">)</span>
+<span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
 
-<span class="c"># inverse weights</span>
-<span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">1</span><span class="o">/</span><span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="c"># inverse the zscore</span>
-<span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span> <span class="o">*</span> <span class="n">players_with_dummies_not_zscored</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">players_with_dummies_not_zscored</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="c"># set to 0 all annomalies, values less than 0</span>
-<span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># inverse weights
+</span><span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="p">.</span><span class="nb">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">1</span><span class="o">/</span><span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># inverse the zscore
+</span><span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span> <span class="o">*</span> <span class="n">players_with_dummies_not_zscored</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">players_with_dummies_not_zscored</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># set to 0 all annomalies, values less than 0
+</span><span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 </code></pre></div></div>
 
 <p>The centers of our clusters:</p>
@@ -434,9 +434,9 @@ Out[209]: -9.731923600320158e-11
 
 <p>And each player assigned to its cluster, with predicted goals for the season:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]</span> <span class="o">=</span> <span class="n">players</span><span class="o">.</span><span class="n">labels_</span>
-<span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Goals'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]])[</span><span class="s">'goals_overall'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-<span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Appearances'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]])[</span><span class="s">'appearances_overall'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]</span> <span class="o">=</span> <span class="n">players</span><span class="p">.</span><span class="n">labels_</span>
+<span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Goals'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusters</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]])[</span><span class="s">'goals_overall'</span><span class="p">].</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Appearances'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusters</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd_players</span><span class="p">[</span><span class="s">'Cluster'</span><span class="p">]])[</span><span class="s">'appearances_overall'</span><span class="p">].</span><span class="n">to_numpy</span><span class="p">()</span>
 <span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Goal Rate'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Goals'</span><span class="p">]</span> <span class="o">/</span> <span class="n">pd_players</span><span class="p">[</span><span class="s">'Predicted Appearances'</span><span class="p">]</span>
 </code></pre></div></div>
 

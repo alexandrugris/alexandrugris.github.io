@@ -154,7 +154,7 @@
 
 <p><img src="https://alexandrugris.github.io/assets/tiny_3.png" alt="Head" /></p>
 
-<p>Since <code class="highlighter-rouge">projectionTransform</code> and <code class="highlighter-rouge">cameraTransform</code> are identity matrices, it means that the only transformation in place is the <code class="highlighter-rouge">viewportTransform</code>. This transform takes a coordiante space defined by the rectangle <code class="highlighter-rouge">x, y = [-1, 1], [-1, 1]</code>, with <code class="highlighter-rouge">y</code> pointing upwards, and transforms it to pixel on the screen coordiantes.</p>
+<p>Since <code class="language-plaintext highlighter-rouge">projectionTransform</code> and <code class="language-plaintext highlighter-rouge">cameraTransform</code> are identity matrices, it means that the only transformation in place is the <code class="language-plaintext highlighter-rouge">viewportTransform</code>. This transform takes a coordiante space defined by the rectangle <code class="language-plaintext highlighter-rouge">x, y = [-1, 1], [-1, 1]</code>, with <code class="language-plaintext highlighter-rouge">y</code> pointing upwards, and transforms it to pixel on the screen coordiantes.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
   * Transforms from [-1..1] to [0, w] and [h, 0] respectively.
@@ -181,11 +181,11 @@
 
 <p><img src="https://alexandrugris.github.io/assets/tiny_4.png" alt="Head" /></p>
 
-<p>For this, let’s look at our <code class="highlighter-rouge">generateImage</code> function and what it does if the <code class="highlighter-rouge">wireframe</code> parameter is set to <code class="highlighter-rouge">true</code>.</p>
+<p>For this, let’s look at our <code class="language-plaintext highlighter-rouge">generateImage</code> function and what it does if the <code class="language-plaintext highlighter-rouge">wireframe</code> parameter is set to <code class="language-plaintext highlighter-rouge">true</code>.</p>
 
 <p>The first step is to clear the background and the z-buffer. For wireframe rendering we don’t care about the z-buffer, but we do care about not drawing on top of an older image. So we put all pixels to green.</p>
 
-<p>Another thing we care about is transforming our vertices from their world coordinates to their corresponding screen coordinates. For this we have a chain of transformations (matrix multiplications) we apply to each vertex. Transform <code class="highlighter-rouge">transformsWordToSreen</code> matrix takes a position in world coordinates and transforms it to <code class="highlighter-rouge">[x, y, z]</code> in screen space. We will use the <code class="highlighter-rouge">x</code> and <code class="highlighter-rouge">y</code> to put the pixel on the screen and <code class="highlighter-rouge">z</code> to know if it is the topmost pixel and thus not hidden by another pixel. In <code class="highlighter-rouge">varrrayW</code> we keep the vertices in world coordinates, in <code class="highlighter-rouge">varray</code> in screen coordinates.</p>
+<p>Another thing we care about is transforming our vertices from their world coordinates to their corresponding screen coordinates. For this we have a chain of transformations (matrix multiplications) we apply to each vertex. Transform <code class="language-plaintext highlighter-rouge">transformsWordToSreen</code> matrix takes a position in world coordinates and transforms it to <code class="language-plaintext highlighter-rouge">[x, y, z]</code> in screen space. We will use the <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> to put the pixel on the screen and <code class="language-plaintext highlighter-rouge">z</code> to know if it is the topmost pixel and thus not hidden by another pixel. In <code class="language-plaintext highlighter-rouge">varrrayW</code> we keep the vertices in world coordinates, in <code class="language-plaintext highlighter-rouge">varray</code> in screen coordinates.</p>
 
 <p>The loop that follows  generates the faces, the triangles of our model. As mentioned before, this is an indexed geometry so for each face we need to lookup by index the coresponding vertex in vertex array. We do the same for the normals and for the texture coordinates. These are not relevant for the wireframe rendering, but they are relevant for the next chapter when we shade the triangle. In the last loop, we draw the line.</p>
 
@@ -267,7 +267,7 @@
 
 <h3 id="putpixel-and-line-drawing">PutPixel and Line Drawing</h3>
 
-<p>As mentioned before, we don’t use any library for this demo. So we will implement our <code class="highlighter-rouge">drawLine</code> from scratch. Here it is how it goes. <code class="highlighter-rouge">screenBuffer</code> is our pixel matrix, organized as <code class="highlighter-rouge">RGBA</code>, each one byte in length.</p>
+<p>As mentioned before, we don’t use any library for this demo. So we will implement our <code class="language-plaintext highlighter-rouge">drawLine</code> from scratch. Here it is how it goes. <code class="language-plaintext highlighter-rouge">screenBuffer</code> is our pixel matrix, organized as <code class="language-plaintext highlighter-rouge">RGBA</code>, each one byte in length.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">putPixel</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">r</span><span class="o">=</span><span class="mh">0xff</span><span class="p">,</span> <span class="nx">g</span><span class="o">=</span><span class="mh">0x00</span><span class="p">,</span> <span class="nx">b</span><span class="o">=</span><span class="mh">0x00</span><span class="p">)</span> <span class="p">{</span>
 
@@ -299,9 +299,9 @@
 
 <h3 id="positions-and-directions-in-homogenous-coordinates">Positions and Directions in Homogenous Coordinates</h3>
 
-<p>In order to be able to add a rotation, a translation and a projection in a single matrix multiplication step, we extend our <code class="highlighter-rouge">[x, y, z]</code> notion of a point in 3D space to <code class="highlighter-rouge">[x, y, z, w]</code>, which is congruent to the <code class="highlighter-rouge">[x/w, y/w, z/w, 1]</code>. This division is, in fact, a projection from the 4D space to the 3D space.</p>
+<p>In order to be able to add a rotation, a translation and a projection in a single matrix multiplication step, we extend our <code class="language-plaintext highlighter-rouge">[x, y, z]</code> notion of a point in 3D space to <code class="language-plaintext highlighter-rouge">[x, y, z, w]</code>, which is congruent to the <code class="language-plaintext highlighter-rouge">[x/w, y/w, z/w, 1]</code>. This division is, in fact, a projection from the 4D space to the 3D space.</p>
 
-<p>For orthogonal transformations, e.g. world-space transformations, vectors that represent points have <code class="highlighter-rouge">w == 1</code> and vectors that represent directions, defined as <code class="highlighter-rouge">p1 - p2</code>, have their <code class="highlighter-rouge">w == 0</code>.</p>
+<p>For orthogonal transformations, e.g. world-space transformations, vectors that represent points have <code class="language-plaintext highlighter-rouge">w == 1</code> and vectors that represent directions, defined as <code class="language-plaintext highlighter-rouge">p1 - p2</code>, have their <code class="language-plaintext highlighter-rouge">w == 0</code>.</p>
 
 <h3 id="rendering-full-triangles">Rendering Full Triangles</h3>
 
@@ -315,9 +315,9 @@
 <span class="kd">let</span> <span class="nx">visible</span> <span class="o">=</span> <span class="nx">dot</span><span class="p">(</span><span class="nx">cameraDir</span><span class="p">,</span> <span class="nx">faceNormal</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">;</span>
 </code></pre></div></div>
 
-<p>We compute the face normal using the <code class="highlighter-rouge">crossProduct3</code> function which, given a plane (3 points), computes a fourth vector perpendicular to the others. Then we check to see if the face normal and the <code class="highlighter-rouge">cameraDir</code> face in the opposite direction. This is what the <code class="highlighter-rouge">dot</code> product does.</p>
+<p>We compute the face normal using the <code class="language-plaintext highlighter-rouge">crossProduct3</code> function which, given a plane (3 points), computes a fourth vector perpendicular to the others. Then we check to see if the face normal and the <code class="language-plaintext highlighter-rouge">cameraDir</code> face in the opposite direction. This is what the <code class="language-plaintext highlighter-rouge">dot</code> product does.</p>
 
-<p>The remaining part is covered in the <code class="highlighter-rouge">drawTriangle</code> function. The algorithm is very simple and it fits very well on massively parallel hardware as all triangles can be processed in parallel.</p>
+<p>The remaining part is covered in the <code class="language-plaintext highlighter-rouge">drawTriangle</code> function. The algorithm is very simple and it fits very well on massively parallel hardware as all triangles can be processed in parallel.</p>
 <ul>
   <li>Find a bounding box for our triangle</li>
   <li>Shade each point from the bounding box only if inside the triangle</li>
@@ -325,9 +325,9 @@
 
 <p>The parameters for the function are:</p>
 <ul>
-  <li><code class="highlighter-rouge">v1, v2, v3</code> - triangle vertices transformed in screen space</li>
-  <li><code class="highlighter-rouge">vn1, vn2, vn3</code> - vertex normals</li>
-  <li><code class="highlighter-rouge">tx0, tx1, tx2</code> - texture coordinates for each vertex</li>
+  <li><code class="language-plaintext highlighter-rouge">v1, v2, v3</code> - triangle vertices transformed in screen space</li>
+  <li><code class="language-plaintext highlighter-rouge">vn1, vn2, vn3</code> - vertex normals</li>
+  <li><code class="language-plaintext highlighter-rouge">tx0, tx1, tx2</code> - texture coordinates for each vertex</li>
 </ul>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">drawTriangle</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">,</span> <span class="nx">v3</span><span class="p">,</span> <span class="nx">vn1</span><span class="p">,</span> <span class="nx">vn2</span><span class="p">,</span> <span class="nx">vn3</span><span class="p">,</span> <span class="nx">tx0</span><span class="p">,</span> <span class="nx">tx1</span><span class="p">,</span> <span class="nx">tx2</span><span class="p">){</span>
@@ -380,25 +380,25 @@
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The most interesting point of this function is transforming each pixel inside the triangle to its <a href="https://en.wikipedia.org/wiki/Barycentric_coordinate_system">barycentric coordinates</a>. These coordiantes are 3 numbers, <code class="highlighter-rouge">s, t, u</code>, which give weights to how close the point is to each vertex. That is, <code class="highlighter-rouge">v1</code> would have barycentric coordiantes of <code class="highlighter-rouge">1, 0, 0</code>, <code class="highlighter-rouge">v2</code> would have its barycentric coordinates at <code class="highlighter-rouge">0, 1, 0</code> and <code class="highlighter-rouge">v3</code> at <code class="highlighter-rouge">0, 0, 1</code>. Obviously, <code class="highlighter-rouge">s + t + u == 1</code> and they allow linear interpolation for each pixel based on values stored in the face vertices. If a pixel is outside of our triangle, at least of its barycentric coordinates is negative.</p>
+<p>The most interesting point of this function is transforming each pixel inside the triangle to its <a href="https://en.wikipedia.org/wiki/Barycentric_coordinate_system">barycentric coordinates</a>. These coordiantes are 3 numbers, <code class="language-plaintext highlighter-rouge">s, t, u</code>, which give weights to how close the point is to each vertex. That is, <code class="language-plaintext highlighter-rouge">v1</code> would have barycentric coordiantes of <code class="language-plaintext highlighter-rouge">1, 0, 0</code>, <code class="language-plaintext highlighter-rouge">v2</code> would have its barycentric coordinates at <code class="language-plaintext highlighter-rouge">0, 1, 0</code> and <code class="language-plaintext highlighter-rouge">v3</code> at <code class="language-plaintext highlighter-rouge">0, 0, 1</code>. Obviously, <code class="language-plaintext highlighter-rouge">s + t + u == 1</code> and they allow linear interpolation for each pixel based on values stored in the face vertices. If a pixel is outside of our triangle, at least of its barycentric coordinates is negative.</p>
 
 <p>So what do we do if the pixel is inside the triangle:</p>
 
 <ul>
   <li>
-    <p>We check if the pixel is not under another pixel previously rendered (z-buffer check). We can simply interpolate the <code class="highlighter-rouge">z value</code> for the pixel and compare it with what is stored in the z-buffer. Since everything is already projected on the screen, we take the z directly without any other transformation.</p>
+    <p>We check if the pixel is not under another pixel previously rendered (z-buffer check). We can simply interpolate the <code class="language-plaintext highlighter-rouge">z value</code> for the pixel and compare it with what is stored in the z-buffer. Since everything is already projected on the screen, we take the z directly without any other transformation.</p>
   </li>
   <li>
     <p>We interpolate between the texture coordiantes for each vertex and take the corresponding diffuse value.</p>
   </li>
   <li>
-    <p>We interpolate between the normals of each vertex to compute a pixel normal and <code class="highlighter-rouge">dot</code> it with the light direction to see how much light falls on that point. This is called <code class="highlighter-rouge">Phong Shading</code>, as opposed to <code class="highlighter-rouge">Gouraud Shading</code> where the light is calculated per vertex and then interpolated over the surphace.</p>
+    <p>We interpolate between the normals of each vertex to compute a pixel normal and <code class="language-plaintext highlighter-rouge">dot</code> it with the light direction to see how much light falls on that point. This is called <code class="language-plaintext highlighter-rouge">Phong Shading</code>, as opposed to <code class="language-plaintext highlighter-rouge">Gouraud Shading</code> where the light is calculated per vertex and then interpolated over the surphace.</p>
   </li>
 </ul>
 
 <h3 id="what-else">What Else?</h3>
 
-<p>Building the camera matrix, which is similar to the <code class="highlighter-rouge">gluLookAt</code> from OpenGL. The two functions are interesting becasue they show two things:</p>
+<p>Building the camera matrix, which is similar to the <code class="language-plaintext highlighter-rouge">gluLookAt</code> from OpenGL. The two functions are interesting becasue they show two things:</p>
 <ul>
   <li>How to make the inverse of an homogenous orthogonal matrix based on the transposed rotation.</li>
   <li>How to extract the axes of abject. Axes are oriented on columns.</li>
@@ -463,11 +463,11 @@
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">makeFullScreenCanvas</span><span class="p">(){</span>
 
-    <span class="kd">const</span> <span class="nx">cvs</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">'myCanvas'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">cvs</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">'</span><span class="s1">myCanvas</span><span class="dl">'</span><span class="p">);</span>
     <span class="nx">cvs</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="p">;</span>
     <span class="nx">cvs</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">;</span>
 
-    <span class="kd">const</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">cvs</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s2">"2d"</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">cvs</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="dl">"</span><span class="s2">2d</span><span class="dl">"</span><span class="p">);</span>
     <span class="nx">screenBuffer</span> <span class="o">=</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">createImageData</span><span class="p">(</span><span class="nx">cvs</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">cvs</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
     <span class="nx">zBuffer</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Float32Array</span><span class="p">(</span><span class="nx">cvs</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">cvs</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
 

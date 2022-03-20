@@ -81,7 +81,7 @@ While it adds a layer of complexity to the language and how surely lenghens the 
   <li>Storing a full type in a std:vector was in most of the cases a no-go, due to the overhead associated with repeated construction and destruction of each object, whenever the vector increased in size. 
 Therefore we usually stored only pointers (or smart pointers :) ) in such containers.</li>
   <li>In order to have move-like semantics, one had o open the implementation and re-target the copy operators to move pointers or, in best case, add copy-on-write. This either made the usage of the objects non-obvious and non-uniform (the copy is not really a copy) or added another layer of complexity for the copy-on-write implementation.</li>
-  <li>Libraries (for instance maths) had to be coded in convoluted ways to avoid unnnecessary return copies. For instance, one might simply avoid overloading the <code class="highlighter-rouge">operator+</code> for a matrix class and only provide the <code class="highlighter-rouge">operator +=</code> just to make sure no unnecessary allocations are performed when not needed. This might sound like excessive optimization, but, hey, C++ was designed with the idea of maximum performance everywhere, so why squander it when it can be avoided?</li>
+  <li>Libraries (for instance maths) had to be coded in convoluted ways to avoid unnnecessary return copies. For instance, one might simply avoid overloading the <code class="language-plaintext highlighter-rouge">operator+</code> for a matrix class and only provide the <code class="language-plaintext highlighter-rouge">operator +=</code> just to make sure no unnecessary allocations are performed when not needed. This might sound like excessive optimization, but, hey, C++ was designed with the idea of maximum performance everywhere, so why squander it when it can be avoided?</li>
 </ul>
 
 <p>The addition of move brought in a another nice side benefit. From a esthetical point of view, I personally like the expressiveness of <a href="https://en.wikipedia.org/wiki/Fluent_interface">fluent-style</a> coding. 
@@ -134,8 +134,8 @@ Move makes it easy to have high-performance code written like this.</p>
 </code></pre></div></div>
 
 <p>To keep things simple, we are sticking only with the constructors for the demo, 
-but please consider implemeting also <code class="highlighter-rouge">operator=(MyMoveStuff&amp;&amp; move) noexcept</code>. 
-Just like you would do with <code class="highlighter-rouge">operator=(const MyMoveStuff&amp; m)</code>.</p>
+but please consider implemeting also <code class="language-plaintext highlighter-rouge">operator=(MyMoveStuff&amp;&amp; move) noexcept</code>. 
+Just like you would do with <code class="language-plaintext highlighter-rouge">operator=(const MyMoveStuff&amp; m)</code>.</p>
 
 <p>Now let’s run this test:</p>
 
@@ -211,7 +211,7 @@ Just like you would do with <code class="highlighter-rouge">operator=(const MyMo
 
 <p><em>Fluent-style</em></p>
 
-<p>Fluent style is possible due to the introduction of reference qualifiers for member functions. That is, the <code class="highlighter-rouge">&amp;</code> and <code class="highlighter-rouge">&amp;&amp;</code> operators appended to the end of the function declaration.
+<p>Fluent style is possible due to the introduction of reference qualifiers for member functions. That is, the <code class="language-plaintext highlighter-rouge">&amp;</code> and <code class="language-plaintext highlighter-rouge">&amp;&amp;</code> operators appended to the end of the function declaration.
 C++ makes a clear distiction between lvalues and rvalues (<a href="https://msdn.microsoft.com/en-us/library/f90831hc.aspx">discussion here, from MSDN</a>). In short:</p>
 
 <blockquote>
@@ -277,7 +277,7 @@ An rvalue is a temporary value that does not persist beyond the expression that 
 
 <p><em>Delegated constructors</em></p>
 
-<p>Please note the private <code class="highlighter-rouge">Test2(int x, int y)</code> and the invocation <code class="highlighter-rouge">Test2() : Test2(0, 0)</code></p>
+<p>Please note the private <code class="language-plaintext highlighter-rouge">Test2(int x, int y)</code> and the invocation <code class="language-plaintext highlighter-rouge">Test2() : Test2(0, 0)</code></p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Test2</span> <span class="p">{</span> <span class="c1">// Delegated constructors</span>
 <span class="k">public</span><span class="p">:</span>
@@ -334,13 +334,13 @@ An rvalue is a temporary value that does not persist beyond the expression that 
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Notable here is the <code class="highlighter-rouge">noexcept</code> keyword which marks that the method does not throw an exception. See above for use, in the “move” section. From the 
+<p>Notable here is the <code class="language-plaintext highlighter-rouge">noexcept</code> keyword which marks that the method does not throw an exception. See above for use, in the “move” section. From the 
 <a href="http://en.cppreference.com/w/cpp/language/noexcept_spec">CPP Reference</a>:</p>
 
 <blockquote>
   <p>The compiler can use this information to enable certain optimizations on non-throwing functions as well as enable the noexcept 
 operator, which can check at compile time if a particular expression is declared to throw any exceptions. 
-For example, containers such as <code class="highlighter-rouge">std::vector</code> will move their elements if the elements’ move constructor 
+For example, containers such as <code class="language-plaintext highlighter-rouge">std::vector</code> will move their elements if the elements’ move constructor 
 is noexcept, and copy otherwise (unless the copy constructor is not accessible, but a potentially 
 throwing move constructor is, in which case the strong exception guarantee is waived).</p>
 </blockquote>

@@ -86,7 +86,7 @@ improve compile-time issue detection and type safety. To refresh my memory and a
 <p>In the 2000s you really had three choices for memory management in the C++ world:</p>
 <ul>
   <li>Manual (new / delete) with clear rules for owership in the “style-guide” of the project.</li>
-  <li>The Boost library’s <code class="highlighter-rouge">shared_ptr</code> and <code class="highlighter-rouge">weak_ptr</code> for shared ownership or <code class="highlighter-rouge">std::auto_ptr</code>, the only smart pointer from the STD library, now deprecated.</li>
+  <li>The Boost library’s <code class="language-plaintext highlighter-rouge">shared_ptr</code> and <code class="language-plaintext highlighter-rouge">weak_ptr</code> for shared ownership or <code class="language-plaintext highlighter-rouge">std::auto_ptr</code>, the only smart pointer from the STD library, now deprecated.</li>
   <li>Custom-built smart pointers, autolists or any other custom constructs.</li>
 </ul>
 
@@ -113,8 +113,8 @@ improve compile-time issue detection and type safety. To refresh my memory and a
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Another smart pointer construct is the <code class="highlighter-rouge">unique_ptr&lt; &gt;</code>, which replaces the now deprecated <code class="highlighter-rouge">auto_ptr</code> .
-I think it is worth considering using it whenever possible instead of <code class="highlighter-rouge">boost::shared_ptr&lt;&gt;</code> and <code class="highlighter-rouge">boost::weak_ptr&lt;&gt;</code>.
+<p>Another smart pointer construct is the <code class="language-plaintext highlighter-rouge">unique_ptr&lt; &gt;</code>, which replaces the now deprecated <code class="language-plaintext highlighter-rouge">auto_ptr</code> .
+I think it is worth considering using it whenever possible instead of <code class="language-plaintext highlighter-rouge">boost::shared_ptr&lt;&gt;</code> and <code class="language-plaintext highlighter-rouge">boost::weak_ptr&lt;&gt;</code>.
 I think it sends a stronger signal about ownership intent when used in new code.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">unique_ptr</span><span class="p">&lt;</span><span class="n">Test</span><span class="p">&gt;</span> <span class="nf">source_unique_ptr</span><span class="p">()</span> <span class="p">{</span>
@@ -140,11 +140,11 @@ I think it sends a stronger signal about ownership intent when used in new code.
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p><em>Note:</em> <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. 
-If the receiving function accepts the <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> by value as parameter,
-it can only be passed using the <code class="highlighter-rouge">std::move</code> function, which will nullify the pointer in the calling function. 
-This is called the <em>sink pattern</em> and it is exemplified in the <code class="highlighter-rouge">test_sync</code> function above. 
-The copy constructor for <code class="highlighter-rouge">unique_ptr&lt;&gt;</code> is explicitly deleted (later on this).</p>
+<p><em>Note:</em> <code class="language-plaintext highlighter-rouge">unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. 
+If the receiving function accepts the <code class="language-plaintext highlighter-rouge">unique_ptr&lt;&gt;</code> by value as parameter,
+it can only be passed using the <code class="language-plaintext highlighter-rouge">std::move</code> function, which will nullify the pointer in the calling function. 
+This is called the <em>sink pattern</em> and it is exemplified in the <code class="language-plaintext highlighter-rouge">test_sync</code> function above. 
+The copy constructor for <code class="language-plaintext highlighter-rouge">unique_ptr&lt;&gt;</code> is explicitly deleted (later on this).</p>
 
 <h2 id="improvements-to-collections">Improvements to collections</h2>
 
@@ -153,7 +153,7 @@ The copy constructor for <code class="highlighter-rouge">unique_ptr&lt;&gt;</cod
 <p>Because of the new language features (move semantics, std::initializer_list and variadic templates), collections have become much more useful and expressive 
 For instance, now you can actually consider storing a full instance in a collection instead of just a pointer,
 without worrying about endless copies and reallocations. This improves data locality and cache friendliness (provided that you have the appropriate move operations in place). 
-For instance, old pattern in which we push pointers to <code class="highlighter-rouge">std::vector&lt;FullType*&gt;</code> is now similar in iteration speed with <code class="highlighter-rouge">std::lists&lt;FullType&gt;::emplace_back</code>. See below.</p>
+For instance, old pattern in which we push pointers to <code class="language-plaintext highlighter-rouge">std::vector&lt;FullType*&gt;</code> is now similar in iteration speed with <code class="language-plaintext highlighter-rouge">std::lists&lt;FullType&gt;::emplace_back</code>. See below.</p>
 
 <p>Here are some small examples:</p>
 
@@ -246,13 +246,13 @@ All in all, lambdas are mostly syntactic sugar, but a very useful one.</p>
 
 <p><em>Improvements to lambdas starting with C++14</em></p>
 
-<p>These include type deduction for lambda parameters - no need to send them explicitly, <code class="highlighter-rouge">auto</code> is enough and also 
-initialization for capture parameters - useful when, for instance, you want to <code class="highlighter-rouge">move</code> an object when captured to lambda instead of just simply copy it by value, or apply any type of other transformation.</p>
+<p>These include type deduction for lambda parameters - no need to send them explicitly, <code class="language-plaintext highlighter-rouge">auto</code> is enough and also 
+initialization for capture parameters - useful when, for instance, you want to <code class="language-plaintext highlighter-rouge">move</code> an object when captured to lambda instead of just simply copy it by value, or apply any type of other transformation.</p>
 
-<p>The code below uses another cool feature from C++ 11, the variadic templates. The template <code class="highlighter-rouge">invoke</code> simply invokes the functor it receives with the list of parameters it receives, 
+<p>The code below uses another cool feature from C++ 11, the variadic templates. The template <code class="language-plaintext highlighter-rouge">invoke</code> simply invokes the functor it receives with the list of parameters it receives, 
 all in a typesafe matter. This pattern can be applied when you want a template to store a function and then invoke it later, with different parameters.</p>
 
-<p>Same for lambdas, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an <code class="highlighter-rouge">int</code> and p2 is a <code class="highlighter-rouge">const char*</code>. 
+<p>Same for lambdas, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an <code class="language-plaintext highlighter-rouge">int</code> and p2 is a <code class="language-plaintext highlighter-rouge">const char*</code>. 
 Note though, this check is performed at compile time, so it is not at all a form of dynamic invocation.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">typename</span><span class="p">...</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">void</span> <span class="nf">invoke</span><span class="p">(</span><span class="k">const</span> <span class="n">Fn</span><span class="p">&amp;</span> <span class="n">fn</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="p">&amp;...</span> <span class="k">params</span><span class="p">){</span>
@@ -279,17 +279,17 @@ Note though, this check is performed at compile time, so it is not at all a form
 <p>A little bit of extra explanation.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
-<span class="na">[x = x + 1]</span><span class="p">(){</span>
+<span class="p">[</span><span class="n">x</span> <span class="p">=</span> <span class="n">x</span> <span class="p">+</span> <span class="m">1</span><span class="p">](){</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}();</span>
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 </code></pre></div></div>
 
-<p>This code prints <code class="highlighter-rouge">2</code> followed by <code class="highlighter-rouge">1</code>. The reason is that <code class="highlighter-rouge">x</code> in the lambda is a different variable than <code class="highlighter-rouge">x</code> in the outer function. 
-The code above is identical to the following (also running code, although <code class="highlighter-rouge">__x</code> is not specifically declared anywhere)</p>
+<p>This code prints <code class="language-plaintext highlighter-rouge">2</code> followed by <code class="language-plaintext highlighter-rouge">1</code>. The reason is that <code class="language-plaintext highlighter-rouge">x</code> in the lambda is a different variable than <code class="language-plaintext highlighter-rouge">x</code> in the outer function. 
+The code above is identical to the following (also running code, although <code class="language-plaintext highlighter-rouge">__x</code> is not specifically declared anywhere)</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
-<span class="na">[__x = x + 1]</span><span class="p">(){</span>
+<span class="p">[</span><span class="n">__x</span> <span class="p">=</span> <span class="n">x</span> <span class="p">+</span> <span class="m">1</span><span class="p">](){</span>
 	<span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">__x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
 <span class="p">}();</span>
 <span class="n">cout</span> <span class="p">&lt;&lt;</span> <span class="n">x</span> <span class="p">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
@@ -325,7 +325,7 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p><em><code class="highlighter-rouge">this</code> can also be captured, like in the snipped below:</em></p>
+<p><em><code class="language-plaintext highlighter-rouge">this</code> can also be captured, like in the snipped below:</em></p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="n">CaptureThis</span><span class="p">::</span><span class="nf">CaptureThis</span><span class="p">()</span> <span class="p">{</span>
 	<span class="c1">// "this" must be in the capture list for the following to work</span>
@@ -365,7 +365,7 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 
 <p>The output of this program is:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1
 3
 6
 10
@@ -377,13 +377,13 @@ If an attempt is made to send the lambda by value the code compiles but you get 
 55
 </code></pre></div></div>
 
-<p>Because the lambda was postfixed with the <code class="highlighter-rouge">mutable</code> keyword, it allows me to modify the captured values. 
+<p>Because the lambda was postfixed with the <code class="language-plaintext highlighter-rouge">mutable</code> keyword, it allows me to modify the captured values. 
 However, since the capture was not done by reference, it is not modified in the outer scope. If we were to write in pseudo-c++,
 the generated lambdas are similar with the following classes:</p>
 
-<p>By-value capture without the <code class="highlighter-rouge">mutable</code> postfix:</p>
+<p>By-value capture without the <code class="language-plaintext highlighter-rouge">mutable</code> postfix:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
 	const Type t;
 	operator() {
 		// t cannot change
@@ -391,9 +391,9 @@ the generated lambdas are similar with the following classes:</p>
 }
 </code></pre></div></div>
 
-<p>By-value with the <code class="highlighter-rouge">mutable</code> postfix:</p>
+<p>By-value with the <code class="language-plaintext highlighter-rouge">mutable</code> postfix:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Lambda{
 	Type t;
 	operator () {
 		// t can change
@@ -401,7 +401,7 @@ the generated lambdas are similar with the following classes:</p>
 }
 </code></pre></div></div>
 
-<p>In the example above, since we declared the input parameter for the lambda as a reference (<code class="highlighter-rouge">int&amp;</code>), it gives me direct write access to the <code class="highlighter-rouge">vector</code> content.</p>
+<p>In the example above, since we declared the input parameter for the lambda as a reference (<code class="language-plaintext highlighter-rouge">int&amp;</code>), it gives me direct write access to the <code class="language-plaintext highlighter-rouge">vector</code> content.</p>
 
 <h3 id="decltype-and-declval">Decltype and Declval</h3>
 
@@ -454,7 +454,7 @@ the generated lambdas are similar with the following classes:</p>
 
 <h3 id="variadic-templates-templates-with-a-variable-number-of-arguments">Variadic templates (templates with a variable number of arguments)</h3>
 
-<p>I think this is one of the coolest features of C++11, as it allows very clean usage of libaries. In an example above, we saw the <code class="highlighter-rouge">emplace_back</code> method of std::collections 
+<p>I think this is one of the coolest features of C++11, as it allows very clean usage of libaries. In an example above, we saw the <code class="language-plaintext highlighter-rouge">emplace_back</code> method of std::collections 
 which permits the caller to send the constructor parameters directly to the method, and the method inside does the allocation of the object. Here is a more complex example, 
 which shows how to:</p>
 
@@ -484,7 +484,7 @@ which shows how to:</p>
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">CSVPrinter</code> class is clearly a template of type <code class="highlighter-rouge">Stream</code> which includes a method, <code class="highlighter-rouge">print_row</code> which receives a variable number of parameters of different types.</p>
+<p>The <code class="language-plaintext highlighter-rouge">CSVPrinter</code> class is clearly a template of type <code class="language-plaintext highlighter-rouge">Stream</code> which includes a method, <code class="language-plaintext highlighter-rouge">print_row</code> which receives a variable number of parameters of different types.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span><span class="p">&lt;</span><span class="n">typename</span> <span class="n">Stream</span><span class="p">&gt;</span> <span class="k">class</span> <span class="nc">CSVPrinter</span> <span class="p">{</span>
 
@@ -533,11 +533,11 @@ which shows how to:</p>
 <span class="p">};</span>
 </code></pre></div></div>
 
-<p>Let’s look at the <code class="highlighter-rouge">print_row</code> function:</p>
+<p>Let’s look at the <code class="language-plaintext highlighter-rouge">print_row</code> function:</p>
 
 <ol>
-  <li>It calls <code class="highlighter-rouge">print_row_internal</code> with <code class="highlighter-rouge">validate(cols)...</code>. This syntax allows calling the <code class="highlighter-rouge">validate</code> function for each <code class="highlighter-rouge">col</code> prior to calling <code class="highlighter-rouge">print_row_internal</code>.</li>
-  <li><code class="highlighter-rouge">print_row_internal</code> has two specializations. One for a single parameter, which closes the recursive loop, and one with one specialized (extracted) parameter and the rest of the <code class="highlighter-rouge">colls</code> as bulk. 
+  <li>It calls <code class="language-plaintext highlighter-rouge">print_row_internal</code> with <code class="language-plaintext highlighter-rouge">validate(cols)...</code>. This syntax allows calling the <code class="language-plaintext highlighter-rouge">validate</code> function for each <code class="language-plaintext highlighter-rouge">col</code> prior to calling <code class="language-plaintext highlighter-rouge">print_row_internal</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">print_row_internal</code> has two specializations. One for a single parameter, which closes the recursive loop, and one with one specialized (extracted) parameter and the rest of the <code class="language-plaintext highlighter-rouge">colls</code> as bulk. 
 This recursive definition allows processing each parameter in a type-safe manner, one by one.</li>
 </ol>
 

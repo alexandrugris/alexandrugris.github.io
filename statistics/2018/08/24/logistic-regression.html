@@ -70,7 +70,7 @@
 
 <h3 id="the-problem">The problem</h3>
 
-<p>The problem we want to solve is: given a vector of factors <code class="highlighter-rouge">X=[X1 ... Xn]</code>, find a model that predicts the probability of a binary outcome to occur, <code class="highlighter-rouge">P(X, outcome = 1)</code>. The input for the model are the previous observations of <code class="highlighter-rouge">X</code> and whether the expected outcome was <code class="highlighter-rouge">0</code> or <code class="highlighter-rouge">1</code>.</p>
+<p>The problem we want to solve is: given a vector of factors <code class="language-plaintext highlighter-rouge">X=[X1 ... Xn]</code>, find a model that predicts the probability of a binary outcome to occur, <code class="language-plaintext highlighter-rouge">P(X, outcome = 1)</code>. The input for the model are the previous observations of <code class="language-plaintext highlighter-rouge">X</code> and whether the expected outcome was <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">1</code>.</p>
 
 <p>One can obviosly try to reduce the problem directly to a linear regression problem, as exemplified in the PDF file <a href="https://alexandrugris.github.io/assets/logistic_regression_1.pdf">here</a> but the shortcomings are immediately apparent:</p>
 
@@ -84,59 +84,59 @@
 
 <h3 id="the-logistic-regression-approach">The Logistic Regression Approach</h3>
 
-<p>We notice that the Logistic function, <code class="highlighter-rouge">f(x) = 1 / (1+e^-(ax+b))</code>, has properties that naturally map to our problem:</p>
+<p>We notice that the Logistic function, <code class="language-plaintext highlighter-rouge">f(x) = 1 / (1+e^-(ax+b))</code>, has properties that naturally map to our problem:</p>
 
 <ul>
   <li>it grows assimptotically from 0 to 1 - which are the natural boundaries of probabilty</li>
   <li>it is continuous</li>
-  <li>has an inflection point from which <code class="highlighter-rouge">f(x)</code> grows quickly from close to 0 to close to 1</li>
+  <li>has an inflection point from which <code class="language-plaintext highlighter-rouge">f(x)</code> grows quickly from close to 0 to close to 1</li>
 </ul>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_8.png" alt="Logistic function" /></p>
 
 <p>And the wikipedia link: <a href="https://en.wikipedia.org/wiki/Logistic_function">Logistic function</a></p>
 
-<p>Therefore, we will find a mathematical model that uses the logistic function to map from causes to probabilities. The model aims to find a vector <code class="highlighter-rouge">B</code> that, when plugged into the logistic function multiplied by the factors <code class="highlighter-rouge">X</code>, the observed results match as closely as possible to the results determined by our model. In this case, our logistic function looks like <code class="highlighter-rouge">f(X_i) = 1 / (1+e^-(b1 * xi_1 + ... bn * xi_n)</code>, where <code class="highlighter-rouge">Xi = [xi_1, ... xi_n]</code> are the observed <code class="highlighter-rouge">X</code> factors at point <code class="highlighter-rouge">i</code>.</p>
+<p>Therefore, we will find a mathematical model that uses the logistic function to map from causes to probabilities. The model aims to find a vector <code class="language-plaintext highlighter-rouge">B</code> that, when plugged into the logistic function multiplied by the factors <code class="language-plaintext highlighter-rouge">X</code>, the observed results match as closely as possible to the results determined by our model. In this case, our logistic function looks like <code class="language-plaintext highlighter-rouge">f(X_i) = 1 / (1+e^-(b1 * xi_1 + ... bn * xi_n)</code>, where <code class="language-plaintext highlighter-rouge">Xi = [xi_1, ... xi_n]</code> are the observed <code class="language-plaintext highlighter-rouge">X</code> factors at point <code class="language-plaintext highlighter-rouge">i</code>.</p>
 
 <p>We will further define our problem like this:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">Xi = [xi_1 ... xi_n]</code> - factors, with i between 1 and k. Attention, one of the factors needs to be <code class="highlighter-rouge">1</code>, the intercept - see the excel example below</li>
-  <li><code class="highlighter-rouge">B = [b1 ... bn]</code> - coefficients</li>
-  <li><code class="highlighter-rouge">Y = [y1 ... yk]</code> - a vector of 1 and 0 of k elements</li>
-  <li><code class="highlighter-rouge">dot(Xi, B) == Xi_1 * b1 + ... Xi_n * bn</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Xi = [xi_1 ... xi_n]</code> - factors, with i between 1 and k. Attention, one of the factors needs to be <code class="language-plaintext highlighter-rouge">1</code>, the intercept - see the excel example below</li>
+  <li><code class="language-plaintext highlighter-rouge">B = [b1 ... bn]</code> - coefficients</li>
+  <li><code class="language-plaintext highlighter-rouge">Y = [y1 ... yk]</code> - a vector of 1 and 0 of k elements</li>
+  <li><code class="language-plaintext highlighter-rouge">dot(Xi, B) == Xi_1 * b1 + ... Xi_n * bn</code></li>
 </ul>
 
 <p>This is a fancy way of describing a table with n colums defined by X, the regression factors, and 1 column defined by Y, the observed result, with k rows.</p>
 
 <p>The core of the model is assuming that the probability of Y being 1 is given by the logistic function:</p>
 <ul>
-  <li><code class="highlighter-rouge">P(1|Xi) = f(Xi) = 1 / (1+e^-dot(Xi,B))</code></li>
+  <li><code class="language-plaintext highlighter-rouge">P(1|Xi) = f(Xi) = 1 / (1+e^-dot(Xi,B))</code></li>
 </ul>
 
 <p>Which makes:</p>
 <ul>
-  <li><code class="highlighter-rouge">P(0|Xi) = 1 - P(1|Xi)</code></li>
+  <li><code class="language-plaintext highlighter-rouge">P(0|Xi) = 1 - P(1|Xi)</code></li>
 </ul>
 
 <p>So, in compact form:</p>
 <ul>
-  <li><code class="highlighter-rouge">P(yi | Xi) = (P(1 | Xi) ^ yi) * (P(0 | Xi) ^ (1 - yi)</code>), since <code class="highlighter-rouge">yi</code> is either <code class="highlighter-rouge">0</code> or <code class="highlighter-rouge">1</code></li>
+  <li><code class="language-plaintext highlighter-rouge">P(yi | Xi) = (P(1 | Xi) ^ yi) * (P(0 | Xi) ^ (1 - yi)</code>), since <code class="language-plaintext highlighter-rouge">yi</code> is either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">1</code></li>
 </ul>
 
-<p>We conclude that <code class="highlighter-rouge">P(yi | X)</code> is another column, that of probabilities, but we cannot fully compute it because we are missing the vector <code class="highlighter-rouge">B</code>.</p>
+<p>We conclude that <code class="language-plaintext highlighter-rouge">P(yi | X)</code> is another column, that of probabilities, but we cannot fully compute it because we are missing the vector <code class="language-plaintext highlighter-rouge">B</code>.</p>
 
-<p>A perfect fit means <code class="highlighter-rouge">P(yi | Xi) == 1</code>, whatever <code class="highlighter-rouge">i=1..k</code>, which reads <em>given the set of inputs Xi we estimate with absolute certainty that the result is yi, 0 or 1, just as observed in the real world.</em> This leads to a <em>real world</em> equation of <code class="highlighter-rouge">PRODUCT(P(yi | Xi), for i = 0..k) == 1</code></p>
+<p>A perfect fit means <code class="language-plaintext highlighter-rouge">P(yi | Xi) == 1</code>, whatever <code class="language-plaintext highlighter-rouge">i=1..k</code>, which reads <em>given the set of inputs Xi we estimate with absolute certainty that the result is yi, 0 or 1, just as observed in the real world.</em> This leads to a <em>real world</em> equation of <code class="language-plaintext highlighter-rouge">PRODUCT(P(yi | Xi), for i = 0..k) == 1</code></p>
 
-<p>But since we only aim to model the real world, we are happy if this product is merely maximized by our estimated probability function (logistic) with <code class="highlighter-rouge">B</code> plugged in. That is,</p>
+<p>But since we only aim to model the real world, we are happy if this product is merely maximized by our estimated probability function (logistic) with <code class="language-plaintext highlighter-rouge">B</code> plugged in. That is,</p>
 
-<p><code class="highlighter-rouge">PRODUCT(P(yi | Xi), for i = 0..k) = P(y1 | X1) * P(y2 | X2) * ...</code> is maximized, as close as possible to 1.</p>
+<p><code class="language-plaintext highlighter-rouge">PRODUCT(P(yi | Xi), for i = 0..k) = P(y1 | X1) * P(y2 | X2) * ...</code> is maximized, as close as possible to 1.</p>
 
 <p>which is equivalent to</p>
 
-<p><code class="highlighter-rouge">log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM(yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))</code> where <code class="highlighter-rouge">f(Xi) = 1 / (1+e^-dot(Xi,B))</code> is maximized as close as possible to 0.</p>
+<p><code class="language-plaintext highlighter-rouge">log(PRODUCT) = SUM(log(P(yi | Xi)) = SUM(yi * log(f(Xi)) + (1-yi) * log(1-f(Xi)))</code> where <code class="language-plaintext highlighter-rouge">f(Xi) = 1 / (1+e^-dot(Xi,B))</code> is maximized as close as possible to 0.</p>
 
-<p>Now we can use gradient descent to find the vector <code class="highlighter-rouge">B</code>. Unfortunately this method might be slow for large datasets because, for every incremental change in any <code class="highlighter-rouge">B</code>, all the exponentials and the logarithms for each line in the dataset need to be recomputed.</p>
+<p>Now we can use gradient descent to find the vector <code class="language-plaintext highlighter-rouge">B</code>. Unfortunately this method might be slow for large datasets because, for every incremental change in any <code class="language-plaintext highlighter-rouge">B</code>, all the exponentials and the logarithms for each line in the dataset need to be recomputed.</p>
 
 <h3 id="implementation-in-excel-on-the-iris-dataset">Implementation in Excel on the Iris dataset</h3>
 
@@ -145,12 +145,12 @@
   <li>We setup 3 variables, one for each type of flower. They are 1 if the flower is of that type and 0 otherwise.</li>
   <li>We split the data into trainig and test dataset.</li>
   <li>Add a new column for intercept.</li>
-  <li>Add a new row for the <code class="highlighter-rouge">B</code> vector. These are the values we want to find.</li>
-  <li>Add a new column for <code class="highlighter-rouge">P(setosa)</code>, the probabilities we want as result from the logistic regression. <code class="highlighter-rouge">P(setosa) = 1 / (1 + EXP(-SUMPRODUCT(B, X))</code></li>
-  <li>Add a new column, the log column, <code class="highlighter-rouge">log(P(yi | Xi)</code>, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is <code class="highlighter-rouge">yi * LN(P(setosa) + 0.0001) + (1 - yi) * LN( 1 - P(setosa) + 0.0001)</code>. I added a <code class="highlighter-rouge">0.0001</code> correction factor because, as the maximization algorithm goes on, we might end up with <code class="highlighter-rouge">NaN</code> values due to computing <code class="highlighter-rouge">P(setosa) = 0</code> which leads to <code class="highlighter-rouge">LN(0)</code> which is <code class="highlighter-rouge">-infinity</code>.</li>
-  <li>Add a summary value for the column at 7, as <code class="highlighter-rouge">SUM(log(P(yi | Xi)))</code>.</li>
+  <li>Add a new row for the <code class="language-plaintext highlighter-rouge">B</code> vector. These are the values we want to find.</li>
+  <li>Add a new column for <code class="language-plaintext highlighter-rouge">P(setosa)</code>, the probabilities we want as result from the logistic regression. <code class="language-plaintext highlighter-rouge">P(setosa) = 1 / (1 + EXP(-SUMPRODUCT(B, X))</code></li>
+  <li>Add a new column, the log column, <code class="language-plaintext highlighter-rouge">log(P(yi | Xi)</code>, the column for which the sum we want to optimize as close as possible to 0. The formula for each of the elements in the column is <code class="language-plaintext highlighter-rouge">yi * LN(P(setosa) + 0.0001) + (1 - yi) * LN( 1 - P(setosa) + 0.0001)</code>. I added a <code class="language-plaintext highlighter-rouge">0.0001</code> correction factor because, as the maximization algorithm goes on, we might end up with <code class="language-plaintext highlighter-rouge">NaN</code> values due to computing <code class="language-plaintext highlighter-rouge">P(setosa) = 0</code> which leads to <code class="language-plaintext highlighter-rouge">LN(0)</code> which is <code class="language-plaintext highlighter-rouge">-infinity</code>.</li>
+  <li>Add a summary value for the column at 7, as <code class="language-plaintext highlighter-rouge">SUM(log(P(yi | Xi)))</code>.</li>
   <li>Use Excel Solver plugin to maximize the value of this summary value to as close to 0 as possible.</li>
-  <li>Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the <code class="highlighter-rouge">1/1+EXP(-SUMPRODUCT)</code> not to overflow, I added a constraint for the <code class="highlighter-rouge">-SUMPRODUCT()</code> to be less or equal to 50. This does not seem to impact the quality of the regression.</li>
+  <li>Because the setosa is strictly separated from the other two types, the solver steps continues until the regression becomes very tight and the coefficients very large. In order for the <code class="language-plaintext highlighter-rouge">1/1+EXP(-SUMPRODUCT)</code> not to overflow, I added a constraint for the <code class="language-plaintext highlighter-rouge">-SUMPRODUCT()</code> to be less or equal to 50. This does not seem to impact the quality of the regression.</li>
   <li>Check the test data.</li>
 </ol>
 
@@ -162,25 +162,25 @@
 
 <p>Performing the same steps for <em>virginica</em> leads also to very good results, while for <em>versicolor</em> the results are barely above random choice.</p>
 
-<p>In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the <code class="highlighter-rouge">log(odds)</code> vs <code class="highlighter-rouge">most important factor</code> chart, sorted by <code class="highlighter-rouge">odds = P(1) / P(0)</code>, the ratio between the probability of <code class="highlighter-rouge">1</code> and <code class="highlighter-rouge">0</code>. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.</p>
+<p>In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the <code class="language-plaintext highlighter-rouge">log(odds)</code> vs <code class="language-plaintext highlighter-rouge">most important factor</code> chart, sorted by <code class="language-plaintext highlighter-rouge">odds = P(1) / P(0)</code>, the ratio between the probability of <code class="language-plaintext highlighter-rouge">1</code> and <code class="language-plaintext highlighter-rouge">0</code>. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_2.png" alt="Standardized Data" /></p>
 
 <p><em>Note:</em></p>
 
-<p>The factor we are minimizing, <code class="highlighter-rouge">ce = -(y * ln(p) + (1 - y) * ln(1-p))</code>, where y is the observed value (0 or 1) and <code class="highlighter-rouge">p</code> is the probability given by our model, is called <em>cross entropy</em>. <a href="https://www.quora.com/Whats-an-intuitive-way-to-think-of-cross-entropy">Awesome explanation here</a></p>
+<p>The factor we are minimizing, <code class="language-plaintext highlighter-rouge">ce = -(y * ln(p) + (1 - y) * ln(1-p))</code>, where y is the observed value (0 or 1) and <code class="language-plaintext highlighter-rouge">p</code> is the probability given by our model, is called <em>cross entropy</em>. <a href="https://www.quora.com/Whats-an-intuitive-way-to-think-of-cross-entropy">Awesome explanation here</a></p>
 
 <h3 id="linear-regression-and-logistic-regression">Linear Regression and Logistic Regression</h3>
 
-<p>By the choice for the logistic function, <code class="highlighter-rouge">p = 1 / (1+EXP(-SUMPROD(Beta, X)))</code>, with <code class="highlighter-rouge">Beta</code> the coefficients for each of the factors X included in the regression, including the intercept, Logistic Regression hints stongly towards the linear regression.</p>
+<p>By the choice for the logistic function, <code class="language-plaintext highlighter-rouge">p = 1 / (1+EXP(-SUMPROD(Beta, X)))</code>, with <code class="language-plaintext highlighter-rouge">Beta</code> the coefficients for each of the factors X included in the regression, including the intercept, Logistic Regression hints stongly towards the linear regression.</p>
 
-<p>We introduce the function <code class="highlighter-rouge">Odds(p) = p / 1-p</code> with its inverse, <code class="highlighter-rouge">p = Odds / (1+Odds)</code>.</p>
+<p>We introduce the function <code class="language-plaintext highlighter-rouge">Odds(p) = p / 1-p</code> with its inverse, <code class="language-plaintext highlighter-rouge">p = Odds / (1+Odds)</code>.</p>
 
-<p>By simple arithmetic, we conclude that <code class="highlighter-rouge">Odds(p) = EXP(SUMPRODUCT(Beta, X))</code> which leads to <code class="highlighter-rouge">LN(Odds(p)) = SUMPRODUCT(Beta, X)</code> which is a linear function.</p>
+<p>By simple arithmetic, we conclude that <code class="language-plaintext highlighter-rouge">Odds(p) = EXP(SUMPRODUCT(Beta, X))</code> which leads to <code class="language-plaintext highlighter-rouge">LN(Odds(p)) = SUMPRODUCT(Beta, X)</code> which is a linear function.</p>
 
-<p>Please remember that <code class="highlighter-rouge">p</code> is the probability for the event to happen, that is proability for the flower to be setosa, in the example above.</p>
+<p>Please remember that <code class="language-plaintext highlighter-rouge">p</code> is the probability for the event to happen, that is proability for the flower to be setosa, in the example above.</p>
 
-<p>This function, <code class="highlighter-rouge">ln(Odds(p)) = ln(p/1-p)</code>, called the <em>logit function</em>, maps the probability space <code class="highlighter-rouge">[0,1]</code> to a linear space <code class="highlighter-rouge">[-inf, inf]</code> in which we can do the regression.</p>
+<p>This function, <code class="language-plaintext highlighter-rouge">ln(Odds(p)) = ln(p/1-p)</code>, called the <em>logit function</em>, maps the probability space <code class="language-plaintext highlighter-rouge">[0,1]</code> to a linear space <code class="language-plaintext highlighter-rouge">[-inf, inf]</code> in which we can do the regression.</p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_3.png" alt="Logit function" /></p>
 
@@ -222,29 +222,29 @@
 <p>The second step, also for both regressions, is to add the following columns:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">Log(Odds Observed) = LN(P_observed / 1 - (P_observed))</code> where <code class="highlighter-rouge">P_observed = hypertensives / total number of men in that category</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">Log(Odds Observed) = LN(P_observed / 1 - (P_observed))</code> where <code class="language-plaintext highlighter-rouge">P_observed = hypertensives / total number of men in that category</code>.</li>
   <li>Smoking, obesity, snoring, codified as 1 if the person is smoking, obese or snoring.</li>
   <li>Intercept, all values equal to 1.</li>
 </ul>
 
 <p>As result, we have:</p>
 <ul>
-  <li><code class="highlighter-rouge">Log(Odds regressed)</code>, the result of the linear regression</li>
-  <li><code class="highlighter-rouge">P Logistic</code> which is the probability as computed from the logistic regression.</li>
+  <li><code class="language-plaintext highlighter-rouge">Log(Odds regressed)</code>, the result of the linear regression</li>
+  <li><code class="language-plaintext highlighter-rouge">P Logistic</code> which is the probability as computed from the logistic regression.</li>
 </ul>
 
 <p>We also added two more tables:</p>
 
 <ul>
   <li>One under the logistic regression for drawing and validating how probabilities change for various fractions of Snoring, Smoking and Obese predictor variables.</li>
-  <li>One under the linear regression to validate how many standard deviations the observed ratio (probability) is from the theoretical probability obtained from the logistic regression. That is, assuming the probabilities from the regression are correct, how likely it is to have observed the value we have observed. For this, we used the theoretical mean and variance for the <em>binomial distribution</em>, <code class="highlighter-rouge">mean = sample_size * p</code> and <code class="highlighter-rouge">variance = sample_size * p * (1-p)</code></li>
+  <li>One under the linear regression to validate how many standard deviations the observed ratio (probability) is from the theoretical probability obtained from the logistic regression. That is, assuming the probabilities from the regression are correct, how likely it is to have observed the value we have observed. For this, we used the theoretical mean and variance for the <em>binomial distribution</em>, <code class="language-plaintext highlighter-rouge">mean = sample_size * p</code> and <code class="language-plaintext highlighter-rouge">variance = sample_size * p * (1-p)</code></li>
 </ul>
 
 <p>First run, the results without taking into consideration the sample size: <a href="https://alexandrugris.github.io/assets/logistic_regression_6.png">Logistic Regression</a></p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_6.png" alt="Logistic Regression" /></p>
 
-<p>The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the <code class="highlighter-rouge">Bs</code> by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. <a href="https://alexandrugris.github.io/assets/logistic_regression_7.png">Weighted Logistic Regression</a></p>
+<p>The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the <code class="language-plaintext highlighter-rouge">Bs</code> by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. <a href="https://alexandrugris.github.io/assets/logistic_regression_7.png">Weighted Logistic Regression</a></p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_7.png" alt="Weighted Logistic Regression" /></p>
 
@@ -254,8 +254,8 @@
 
 <p>In order to use linear regression to determine the coefficients, the data needs to be binned, put in a form from which we can extract probabilities. For the Iris dataset, I did this with the following Python script:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding: utf-8 -*-</span>
-<span class="s">"""
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding: utf-8 -*-
+</span><span class="s">"""
 Created on Fri Aug 26 15:07:47 2018
 
 @author: alexandru gris
@@ -264,57 +264,57 @@ Created on Fri Aug 26 15:07:47 2018
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span><span class="p">,</span> <span class="nb">reduce</span>
 
-<span class="c"># columns used as predictors</span>
-<span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="s">'sepal_length'</span><span class="p">,</span>
+<span class="c1"># columns used as predictors
+</span><span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="s">'sepal_length'</span><span class="p">,</span>
  <span class="s">'sepal_width'</span><span class="p">,</span>
  <span class="s">'petal_length'</span><span class="p">,</span>
  <span class="s">'petal_width'</span><span class="p">]</span>
 
-<span class="c"># columns for the result on which we train the algorithm</span>
-<span class="n">Y</span> <span class="o">=</span> <span class="p">[</span><span class="s">'setosa'</span><span class="p">,</span>
+<span class="c1"># columns for the result on which we train the algorithm
+</span><span class="n">Y</span> <span class="o">=</span> <span class="p">[</span><span class="s">'setosa'</span><span class="p">,</span>
  <span class="s">'versicolor'</span><span class="p">,</span>
  <span class="s">'virginica'</span><span class="p">]</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"iris.csv"</span><span class="p">)[</span><span class="n">X</span> <span class="o">+</span> <span class="n">Y</span><span class="p">]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"iris.csv"</span><span class="p">)[</span><span class="n">X</span> <span class="o">+</span> <span class="n">Y</span><span class="p">]</span>
 
-<span class="c"># split each dimension intro two groups, low and high</span>
-<span class="c"># each group should have a representative number of elements in it</span>
-<span class="c"># had we had more items in the dataset, we could have simply increased the group count to 3</span>
-<span class="c"># by binning, part of the information is lost but we hope to compensate through </span>
-<span class="c"># the curvy form of the logistic function</span>
-<span class="n">groups</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># split each dimension intro two groups, low and high
+# each group should have a representative number of elements in it
+# had we had more items in the dataset, we could have simply increased the group count to 3
+# by binning, part of the information is lost but we hope to compensate through 
+# the curvy form of the logistic function
+</span><span class="n">groups</span> <span class="o">=</span> <span class="mi">2</span>
 
-<span class="c"># 1e-10 below is a small hack to include the last item in the last group</span>
-<span class="c"># the split could / should have been done based on percentiles, not range</span>
-<span class="c"># we will do by range just to keep the code simple</span>
-<span class="n">stats</span> <span class="o">=</span> <span class="p">{</span> <span class="n">x</span> <span class="p">:</span> <span class="p">{</span><span class="s">'range'</span><span class="p">:</span> <span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">,</span> <span class="s">'min'</span><span class="p">:</span> <span class="n">mn</span><span class="p">,</span> <span class="s">'grp_range'</span><span class="p">:</span> <span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span> <span class="o">/</span> <span class="n">groups</span> <span class="p">}</span> \
-            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mn</span> <span class="ow">in</span> <span class="p">(</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="nb">min</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="p">}</span>
+<span class="c1"># 1e-10 below is a small hack to include the last item in the last group
+# the split could / should have been done based on percentiles, not range
+# we will do by range just to keep the code simple
+</span><span class="n">stats</span> <span class="o">=</span> <span class="p">{</span> <span class="n">x</span> <span class="p">:</span> <span class="p">{</span><span class="s">'range'</span><span class="p">:</span> <span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">,</span> <span class="s">'min'</span><span class="p">:</span> <span class="n">mn</span><span class="p">,</span> <span class="s">'grp_range'</span><span class="p">:</span> <span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span> <span class="o">/</span> <span class="n">groups</span> <span class="p">}</span> \
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mn</span> <span class="ow">in</span> <span class="p">(</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="nb">max</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="nb">min</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="p">}</span>
 
-<span class="c"># the function which will compute the new index for grouping</span>
-<span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span> 
+<span class="c1"># the function which will compute the new index for grouping
+</span><span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span> 
     <span class="s">"""x - column. idx - current index for the row"""</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">-</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'min'</span><span class="p">])</span> <span class="o">*</span> <span class="n">groups</span> <span class="o">/</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'range'</span><span class="p">])</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">data</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">-</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'min'</span><span class="p">])</span> <span class="o">*</span> <span class="n">groups</span> <span class="o">/</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'range'</span><span class="p">])</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>  <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'grp_range'</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">'min'</span><span class="p">]</span>
     
-<span class="c"># create the summary table</span>
-<span class="n">agg</span> <span class="o">=</span> <span class="p">{</span><span class="n">y</span> <span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="nb">sum</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">}</span>
-<span class="n">x</span> <span class="o">=</span>  <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">agg</span><span class="p">)</span>
+<span class="c1"># create the summary table
+</span><span class="n">agg</span> <span class="o">=</span> <span class="p">{</span><span class="n">y</span> <span class="p">:</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">.</span><span class="nb">sum</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">}</span>
+<span class="n">x</span> <span class="o">=</span>  <span class="n">data</span><span class="p">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">]).</span><span class="n">agg</span><span class="p">(</span><span class="n">agg</span><span class="p">)</span>
 
-<span class="c"># add the totals and the probabilities column for each vector</span>
-<span class="c"># totals:</span>
-<span class="n">x</span><span class="p">[</span><span class="s">'totals'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">:</span> <span class="n">c1</span> <span class="o">+</span> <span class="n">c2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">])</span>
-<span class="c"># probabilities for setosa, versicolor, virginica:</span>
-<span class="k">for</span> <span class="n">prob</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">((</span><span class="s">"p_"</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">):</span>
+<span class="c1"># add the totals and the probabilities column for each vector
+# totals:
+</span><span class="n">x</span><span class="p">[</span><span class="s">'totals'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">:</span> <span class="n">c1</span> <span class="o">+</span> <span class="n">c2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">])</span>
+<span class="c1"># probabilities for setosa, versicolor, virginica:
+</span><span class="k">for</span> <span class="n">prob</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">((</span><span class="s">"p_"</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">):</span>
     <span class="n">x</span><span class="p">[</span><span class="n">prob</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="s">'totals'</span><span class="p">]</span>
 
-<span class="c"># print a csv file for further processing in excel</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"iris_processed.csv"</span><span class="p">,</span> <span class="s">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>    
+<span class="c1"># print a csv file for further processing in excel
+</span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"iris_processed.csv"</span><span class="p">,</span> <span class="s">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>    
     <span class="n">pf</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="k">print</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">X</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+    <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">X</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
     
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-        <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">))]))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">x</span><span class="p">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">pf</span><span class="p">(</span><span class="s">","</span><span class="p">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">))]))</span>
 </code></pre></div></div>
 
 <p>Summarized data looks like this:</p>
@@ -333,12 +333,12 @@ Created on Fri Aug 26 15:07:47 2018
 <p>Neither of the two last scenarios account for a usable probability, but we have enough data in those bins to draw a conclusion that we cannot simply discard. I used two approaches and the results for the regression were very similar:</p>
 <ul>
   <li>Use the beta distribution and start from an a-priori value of 50%-50% (alpha=1, beta=1), which is equivalent to saying <em>just before we started to count we have observed an opposite value</em> and adjust the probability based on this formula - this gives us an upper (or lower) bound for the probability of 1 in that particular bin.</li>
-  <li>Assume that the string of 0s or 1s was a random extraction from the all possible extractiobs but that it had a rather high probability to occur (of 50% in this case, a value which seemed right to me :) ). Thus consider <code class="highlighter-rouge">p^bin_size = 0.5</code> and compute <code class="highlighter-rouge">p=EXP(LN(0.5) / bin_size)</code>.</li>
+  <li>Assume that the string of 0s or 1s was a random extraction from the all possible extractiobs but that it had a rather high probability to occur (of 50% in this case, a value which seemed right to me :) ). Thus consider <code class="language-plaintext highlighter-rouge">p^bin_size = 0.5</code> and compute <code class="language-plaintext highlighter-rouge">p=EXP(LN(0.5) / bin_size)</code>.</li>
 </ul>
 
 <p>Excel file <a href="https://alexandrugris.github.io/assets/iris_processed.xlsx">here</a></p>
 
-<p>Results for the regression at a <code class="highlighter-rouge">0.5</code> threshold were not as good as with direct maximization of the log-of-probabilities, but rasing the threshhold at <code class="highlighter-rouge">0.8</code> leads to perfect prediction. Picture below:</p>
+<p>Results for the regression at a <code class="language-plaintext highlighter-rouge">0.5</code> threshold were not as good as with direct maximization of the log-of-probabilities, but rasing the threshhold at <code class="language-plaintext highlighter-rouge">0.8</code> leads to perfect prediction. Picture below:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/logistic_regression_10.png" alt="Logistic regression" /></p>
 
@@ -350,11 +350,11 @@ Created on Fri Aug 26 15:07:47 2018
 
 <h3 id="additional-notes---decision-boundary">Additional notes - decision boundary</h3>
 
-<p>If we set the classification decision to <code class="highlighter-rouge">1</code> when <code class="highlighter-rouge">p(1) &gt; 0.5</code>, given the equation of the logistic function, it is equivalent to saying <code class="highlighter-rouge">y = b0 + ... bn*xn &gt; 0</code>. <em>This is the equation of a line which divides the factor space in two sections.</em></p>
+<p>If we set the classification decision to <code class="language-plaintext highlighter-rouge">1</code> when <code class="language-plaintext highlighter-rouge">p(1) &gt; 0.5</code>, given the equation of the logistic function, it is equivalent to saying <code class="language-plaintext highlighter-rouge">y = b0 + ... bn*xn &gt; 0</code>. <em>This is the equation of a line which divides the factor space in two sections.</em></p>
 
-<p><em>If we want to divide the space into an enclosed area, with outside and inside spaces,</em> we can set, for instance, the regression to include squares of its factors, like <code class="highlighter-rouge">y = b0 + b1*x1 + b2*x2 + b3*x1^2 + b4 *x2^1</code>. In this example, for instance, if we set <code class="highlighter-rouge">b0 = -1, b1 = 0, b2 = 0, b3 = 1, b4 = 1</code>, at the boundary condition we arrive precisely at the equation for a cirle, <code class="highlighter-rouge">1 = x1^2 + x2^2</code>.</p>
+<p><em>If we want to divide the space into an enclosed area, with outside and inside spaces,</em> we can set, for instance, the regression to include squares of its factors, like <code class="language-plaintext highlighter-rouge">y = b0 + b1*x1 + b2*x2 + b3*x1^2 + b4 *x2^1</code>. In this example, for instance, if we set <code class="language-plaintext highlighter-rouge">b0 = -1, b1 = 0, b2 = 0, b3 = 1, b4 = 1</code>, at the boundary condition we arrive precisely at the equation for a cirle, <code class="language-plaintext highlighter-rouge">1 = x1^2 + x2^2</code>.</p>
 
-<p>The beauty of logistic regression is that the decision boundary can be visualised by just comparing the regression term to 0, since we know that in that particular point <code class="highlighter-rouge">P=1/(1+e^0) = 0.5</code></p>
+<p>The beauty of logistic regression is that the decision boundary can be visualised by just comparing the regression term to 0, since we know that in that particular point <code class="language-plaintext highlighter-rouge">P=1/(1+e^0) = 0.5</code></p>
 
 
   </div>

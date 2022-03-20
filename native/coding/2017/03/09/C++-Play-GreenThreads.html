@@ -76,7 +76,7 @@
 
 <h3 id="the-api-and-the-test-scenario">The API and the test scenario</h3>
 
-<p>For this demo I will only implement <code class="highlighter-rouge">wait-for</code> (waiting for a thread to finish) and <code class="highlighter-rouge">yield</code> (give control to the next thread). Any other operations would only make the code more complex to read but not add much clarity into the concepts. Here is my test bed:</p>
+<p>For this demo I will only implement <code class="language-plaintext highlighter-rouge">wait-for</code> (waiting for a thread to finish) and <code class="language-plaintext highlighter-rouge">yield</code> (give control to the next thread). Any other operations would only make the code more complex to read but not add much clarity into the concepts. Here is my test bed:</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">void</span> <span class="nf">fn</span><span class="p">(</span><span class="n">thread_pool</span><span class="p">::</span><span class="n">thread_ctx</span> <span class="p">*</span><span class="n">ctx</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p2</span><span class="p">)</span> <span class="p">{</span>
 
@@ -128,19 +128,19 @@
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>In <code class="highlighter-rouge">main</code> I simply call on the main thread, which I named “THREAD_0”, a procedure, <code class="highlighter-rouge">fn</code>, defined above. This is (and should be) a synchronous call. <code class="highlighter-rouge">fn</code> should wait for all spawned threads to be finished. Note: when I say “thread”, I mean a “green thread”. All my threads share the same OS thread. In this sample there is no OS multithreading involved. From the OS perspective the application is single threaded.</p>
+<p>In <code class="language-plaintext highlighter-rouge">main</code> I simply call on the main thread, which I named “THREAD_0”, a procedure, <code class="language-plaintext highlighter-rouge">fn</code>, defined above. This is (and should be) a synchronous call. <code class="language-plaintext highlighter-rouge">fn</code> should wait for all spawned threads to be finished. Note: when I say “thread”, I mean a “green thread”. All my threads share the same OS thread. In this sample there is no OS multithreading involved. From the OS perspective the application is single threaded.</p>
 
-<p>The <code class="highlighter-rouge">fn</code> function spawns recursively many other child-threads which are waited for at the end of the function. Context switching happens when control reaches the <code class="highlighter-rouge">ctx-&gt;yield()</code> call. <code class="highlighter-rouge">ctx</code> is our current thread (an instance of the <code class="highlighter-rouge">thread_context</code> class). If control does not reach a <code class="highlighter-rouge">ctx-&gt;yield()</code>, the function is simply executed on the stack of the caller, synchronously, like a normal function. When control reaches <code class="highlighter-rouge">ctx-&gt;yield()</code> the function will be put on hold and the rest of the threads will be executed. On the spawning thread, control is given back to the caller, asynchronously, not waiting for the new thread to finish. The result is a <code class="highlighter-rouge">thread_ctx</code> object which can be queried for work completion or waited for. When a thread is spawned, parameters can be sent to it like to any other function, on the stack - the implementation is based on a variadic template. In our case I send two <code class="highlighter-rouge">ints</code>.</p>
+<p>The <code class="language-plaintext highlighter-rouge">fn</code> function spawns recursively many other child-threads which are waited for at the end of the function. Context switching happens when control reaches the <code class="language-plaintext highlighter-rouge">ctx-&gt;yield()</code> call. <code class="language-plaintext highlighter-rouge">ctx</code> is our current thread (an instance of the <code class="language-plaintext highlighter-rouge">thread_context</code> class). If control does not reach a <code class="language-plaintext highlighter-rouge">ctx-&gt;yield()</code>, the function is simply executed on the stack of the caller, synchronously, like a normal function. When control reaches <code class="language-plaintext highlighter-rouge">ctx-&gt;yield()</code> the function will be put on hold and the rest of the threads will be executed. On the spawning thread, control is given back to the caller, asynchronously, not waiting for the new thread to finish. The result is a <code class="language-plaintext highlighter-rouge">thread_ctx</code> object which can be queried for work completion or waited for. When a thread is spawned, parameters can be sent to it like to any other function, on the stack - the implementation is based on a variadic template. In our case I send two <code class="language-plaintext highlighter-rouge">ints</code>.</p>
 
 <h3 id="api-description">API description:</h3>
 
-<p><code class="highlighter-rouge">template&lt;class fn, typename... T&gt; void thread_pool::call_fn(unsigned int stack_size, const char* name, fn* f, T... params)</code> - creates the parent thread. It is the way to initialize the threading library because for the parent thread return information should be stored in the main process stack. The function should wait for all its children to finish before exiting.</p>
+<p><code class="language-plaintext highlighter-rouge">template&lt;class fn, typename... T&gt; void thread_pool::call_fn(unsigned int stack_size, const char* name, fn* f, T... params)</code> - creates the parent thread. It is the way to initialize the threading library because for the parent thread return information should be stored in the main process stack. The function should wait for all its children to finish before exiting.</p>
 
-<p><code class="highlighter-rouge">template&lt;class fn, typename... T&gt; shared_ptr&lt;thread_ctx&gt; thread_pool::thread_ctx::call_fn(unsigned int stack_size, const char* name ,fn* f, T... params)</code> - spawns a new child thread.</p>
+<p><code class="language-plaintext highlighter-rouge">template&lt;class fn, typename... T&gt; shared_ptr&lt;thread_ctx&gt; thread_pool::thread_ctx::call_fn(unsigned int stack_size, const char* name ,fn* f, T... params)</code> - spawns a new child thread.</p>
 
-<p><code class="highlighter-rouge">void thread_pool::thread_ctx::wait_for(shared_ptr&lt;thread_ctx&gt;&amp; other)</code> - waits for a child.</p>
+<p><code class="language-plaintext highlighter-rouge">void thread_pool::thread_ctx::wait_for(shared_ptr&lt;thread_ctx&gt;&amp; other)</code> - waits for a child.</p>
 
-<p><code class="highlighter-rouge">void thread_pool::thread_ctx::yield()</code> - gives control to the next thread waiting for execution in a round-robin fashion.</p>
+<p><code class="language-plaintext highlighter-rouge">void thread_pool::thread_ctx::yield()</code> - gives control to the next thread waiting for execution in a round-robin fashion.</p>
 
 <h3 id="implementation">Implementation</h3>
 
@@ -458,21 +458,21 @@
 </code></pre></div></div>
 
 <ul>
-  <li><code class="highlighter-rouge">thread_ctx</code> - our thread.</li>
-  <li><code class="highlighter-rouge">thread_name</code> - a private variable used for debug - helps identifying our thread.</li>
-  <li><code class="highlighter-rouge">stack</code> - the <code class="highlighter-rouge">new</code>-allocated stack for our thread.</li>
-  <li><code class="highlighter-rouge">stack_ptr</code> - stack pointer (esp). When a context switch is performed, <code class="highlighter-rouge">esp</code> is saved / restored to / from this variable.</li>
-  <li><code class="highlighter-rouge">continuation_location</code> - pointer to the code location from which the thread was interrupted. It is saved and jumped to on context switch.</li>
-  <li><code class="highlighter-rouge">thread_pool</code> - the parent thread, pool,</li>
-  <li><code class="highlighter-rouge">b_finished</code> set if the thread has finished its work.</li>
-  <li><code class="highlighter-rouge">b_yielded</code> an internal status set to true if the thread was ever interrupted. This is critical because, if the thread has been interrupted, the invocation will return asynchronously to the parent through an out-of-order return (<code class="highlighter-rouge">void assign_fn(thread_ctx* parent_thread, fn* f, T... params)</code>). The function will then continue, without another return to the caller. When it finishes, it just forwards control to the next waiting thread (a final call to <code class="highlighter-rouge">yield()</code>) and sets the <code class="highlighter-rouge">b_finished</code> flag.</li>
+  <li><code class="language-plaintext highlighter-rouge">thread_ctx</code> - our thread.</li>
+  <li><code class="language-plaintext highlighter-rouge">thread_name</code> - a private variable used for debug - helps identifying our thread.</li>
+  <li><code class="language-plaintext highlighter-rouge">stack</code> - the <code class="language-plaintext highlighter-rouge">new</code>-allocated stack for our thread.</li>
+  <li><code class="language-plaintext highlighter-rouge">stack_ptr</code> - stack pointer (esp). When a context switch is performed, <code class="language-plaintext highlighter-rouge">esp</code> is saved / restored to / from this variable.</li>
+  <li><code class="language-plaintext highlighter-rouge">continuation_location</code> - pointer to the code location from which the thread was interrupted. It is saved and jumped to on context switch.</li>
+  <li><code class="language-plaintext highlighter-rouge">thread_pool</code> - the parent thread, pool,</li>
+  <li><code class="language-plaintext highlighter-rouge">b_finished</code> set if the thread has finished its work.</li>
+  <li><code class="language-plaintext highlighter-rouge">b_yielded</code> an internal status set to true if the thread was ever interrupted. This is critical because, if the thread has been interrupted, the invocation will return asynchronously to the parent through an out-of-order return (<code class="language-plaintext highlighter-rouge">void assign_fn(thread_ctx* parent_thread, fn* f, T... params)</code>). The function will then continue, without another return to the caller. When it finishes, it just forwards control to the next waiting thread (a final call to <code class="language-plaintext highlighter-rouge">yield()</code>) and sets the <code class="language-plaintext highlighter-rouge">b_finished</code> flag.</li>
 </ul>
 
 <h3 id="some-compiler-specific-assumptions">Some compiler specific assumptions:</h3>
 
 <ul>
-  <li><code class="highlighter-rouge">ebp</code> is the root of the function stack.<a href="https://msdn.microsoft.com/en-us/library/2kxx5t2c.aspx"><code class="highlighter-rouge">/Oy</code> will crash our code</a>. This restriction could be removed through some extra push / pops.</li>
-  <li><code class="highlighter-rouge">ecx</code> stores the <code class="highlighter-rouge">this</code> pointer (<code class="highlighter-rouge">thiscall</code> convention assumed). To access any members from <code class="highlighter-rouge">this</code> we do <code class="highlighter-rouge">mov ..., [ecx + var_name]</code></li>
+  <li><code class="language-plaintext highlighter-rouge">ebp</code> is the root of the function stack.<a href="https://msdn.microsoft.com/en-us/library/2kxx5t2c.aspx"><code class="language-plaintext highlighter-rouge">/Oy</code> will crash our code</a>. This restriction could be removed through some extra push / pops.</li>
+  <li><code class="language-plaintext highlighter-rouge">ecx</code> stores the <code class="language-plaintext highlighter-rouge">this</code> pointer (<code class="language-plaintext highlighter-rouge">thiscall</code> convention assumed). To access any members from <code class="language-plaintext highlighter-rouge">this</code> we do <code class="language-plaintext highlighter-rouge">mov ..., [ecx + var_name]</code></li>
   <li>inline asm assumes VC++ on 32 bits.</li>
 </ul>
 

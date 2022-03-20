@@ -71,7 +71,7 @@ The source code associated with this article can be found <a href="https://githu
 
 <h3 id="how-to-run-apache-kafka">How to run Apache Kafka</h3>
 
-<p>The simplest way: <code class="highlighter-rouge">docker-compose up</code> with the following <code class="highlighter-rouge">docker-compose.yml</code></p>
+<p>The simplest way: <code class="language-plaintext highlighter-rouge">docker-compose up</code> with the following <code class="language-plaintext highlighter-rouge">docker-compose.yml</code></p>
 
 <p><em>To run a single instance of Kafka on the localhost, with ports exposed to localhost:</em></p>
 
@@ -96,7 +96,7 @@ The source code associated with this article can be found <a href="https://githu
       <span class="na">KAFKA_ADVERTISED_HOST_NAME</span><span class="pi">:</span> <span class="s">127.0.0.1</span>
       <span class="na">KAFKA_ZOOKEEPER_CONNECT</span><span class="pi">:</span> <span class="s">zookeeper:2181</span>
       <span class="na">KAFKA_JMX_OPTS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-Dcom.sun.management.jmxremote</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.authenticate=false</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.ssl=false</span><span class="nv"> </span><span class="s">-Djava.rmi.server.hostname=127.0.0.1</span><span class="nv"> </span><span class="s">-Dcom.sun.management.jmxremote.rmi.port=1099"</span>
-      <span class="na">JMX_PORT</span><span class="pi">:</span> <span class="s">1099</span>
+      <span class="na">JMX_PORT</span><span class="pi">:</span> <span class="m">1099</span>
 
     <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
@@ -104,12 +104,12 @@ The source code associated with this article can be found <a href="https://githu
 
 <p><em>Another option, if we want to scale the Kafka cluster is to run:</em></p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose up -d
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose up -d
 </code></pre></div></div>
 
 <p>and then</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose scale kafka=2
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose scale kafka=2
 </code></pre></div></div>
 
 <p>However, in order for this to run, we need to make some changes to our docker-compose file:</p>
@@ -140,21 +140,21 @@ The source code associated with this article can be found <a href="https://githu
       <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
 </code></pre></div></div>
 
-<p>In this docker image, Kafka is installed in <code class="highlighter-rouge">/opt/kafka</code>, thus running</p>
+<p>In this docker image, Kafka is installed in <code class="language-plaintext highlighter-rouge">/opt/kafka</code>, thus running</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec testkafka_kafka_2 ls /opt/kafka/bin
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec testkafka_kafka_2 ls /opt/kafka/bin
 </code></pre></div></div>
 
 <p>will get get us the list of all Kafka binaries. Let’s connect to one of the two Kafka instances.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec -it testkafka_kafka_2 bash
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker exec -it testkafka_kafka_2 bash
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_1.png" alt="Kafka Connection" /></p>
 
-<p>However, if JMX is still specified, the <code class="highlighter-rouge">JMX_PORT</code> is already set and in use by the Kafka daemon, so in order to run commands to Kafka we need to make a little hack:</p>
+<p>However, if JMX is still specified, the <code class="language-plaintext highlighter-rouge">JMX_PORT</code> is already set and in use by the Kafka daemon, so in order to run commands to Kafka we need to make a little hack:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;JMX_PORT=1100
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;JMX_PORT=1100
 $&gt;KAFKA_JMX_OPTS=""
 </code></pre></div></div>
 
@@ -162,14 +162,14 @@ $&gt;KAFKA_JMX_OPTS=""
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_2.png" alt="Kafka Commands" /></p>
 
-<p>To produce messages to <code class="highlighter-rouge">my_topic</code>:</p>
+<p>To produce messages to <code class="language-plaintext highlighter-rouge">my_topic</code>:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-producer.sh --topic my_topic --broker-list testkafka_kafka_1:9092
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-producer.sh --topic my_topic --broker-list testkafka_kafka_1:9092
 </code></pre></div></div>
 
-<p>To read messages from <code class="highlighter-rouge">my_topic</code>:</p>
+<p>To read messages from <code class="language-plaintext highlighter-rouge">my_topic</code>:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-consumer.sh --topic my_topic --zookeeper zookeeper:2181 --from-beginning
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# ./kafka-console-consumer.sh --topic my_topic --zookeeper zookeeper:2181 --from-beginning
 </code></pre></div></div>
 
 <h3 id="basic-concepts">Basic Concepts</h3>
@@ -207,13 +207,13 @@ $&gt;KAFKA_JMX_OPTS=""
 
 <p>Replication factor is set on a topic level, thus can vary from topic to topic but not from partition to partition.</p>
 
-<p>When we connect to both docker instances that we started in our demo cluster, because we set for topic <code class="highlighter-rouge">my_topic</code> 2 partitions and replication factor 2, we see the same picture:</p>
+<p>When we connect to both docker instances that we started in our demo cluster, because we set for topic <code class="language-plaintext highlighter-rouge">my_topic</code> 2 partitions and replication factor 2, we see the same picture:</p>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_3.png" alt="One topic, 2 partitions, replication factor 2" /></p>
 
-<p>In the image above, <code class="highlighter-rouge">ISR</code> means in-sync replicas. If we decide to kill one docker container, we get:</p>
+<p>In the image above, <code class="language-plaintext highlighter-rouge">ISR</code> means in-sync replicas. If we decide to kill one docker container, we get:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
 Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         Topic: my_topic Partition: 0    Leader: 1001    Replicas: 1002,1001     Isr: 1001
         Topic: my_topic Partition: 1    Leader: 1001    Replicas: 1001,1002     Isr: 1001
@@ -223,7 +223,7 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <p>If we start the stopped container again, we get:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
 Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         Topic: my_topic Partition: 0    Leader: 1001    Replicas: 1002,1001     Isr: 1001,1002
         Topic: my_topic Partition: 1    Leader: 1001    Replicas: 1001,1002     Isr: 1001,1002
@@ -239,9 +239,9 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <h3 id="debugging-kafka-clients">Debugging Kafka Clients</h3>
 
-<p>There are two basic ways to debug Kafka clients when you want to run everything on your machine. The simplest way is to run a single kafka instance and map its port to localhost. Thus, in the client application, there will be only one Kafka broker to connect to, that is to <code class="highlighter-rouge">localhost</code>.</p>
+<p>There are two basic ways to debug Kafka clients when you want to run everything on your machine. The simplest way is to run a single kafka instance and map its port to localhost. Thus, in the client application, there will be only one Kafka broker to connect to, that is to <code class="language-plaintext highlighter-rouge">localhost</code>.</p>
 
-<p>However, there is another one, slightly more complex but more rewarding as one can scale as many brokers as he/she wishes. This requires the creation of another service in the docker compose file which runs the Java application to debug, because it is needed that this app runs in the same docker network as the rest of the cluster. It also requires remote debugging enabled and mapping of the project directory in a volume in the docker container that runs the app. Here is the updated <code class="highlighter-rouge">docker-compose.yml</code> as it is configured on my machine.</p>
+<p>However, there is another one, slightly more complex but more rewarding as one can scale as many brokers as he/she wishes. This requires the creation of another service in the docker compose file which runs the Java application to debug, because it is needed that this app runs in the same docker network as the rest of the cluster. It also requires remote debugging enabled and mapping of the project directory in a volume in the docker container that runs the app. Here is the updated <code class="language-plaintext highlighter-rouge">docker-compose.yml</code> as it is configured on my machine.</p>
 
 <div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3'</span>
 
@@ -307,29 +307,29 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <h3 id="partitioning-and-producing-messages">Partitioning and producing messages</h3>
 
-<p>Kafka has a simple yet powerful method for selecting to which partition the message is routed at the time of producing. The topic with its associated partitions is created either automatically when the producer is first run, like it is the case in our demo, or using the <code class="highlighter-rouge">kafka-topics.sh</code> tool. This behavior is configured through a setting in the <code class="highlighter-rouge">config.settings</code> file when the queue is started.</p>
+<p>Kafka has a simple yet powerful method for selecting to which partition the message is routed at the time of producing. The topic with its associated partitions is created either automatically when the producer is first run, like it is the case in our demo, or using the <code class="language-plaintext highlighter-rouge">kafka-topics.sh</code> tool. This behavior is configured through a setting in the <code class="language-plaintext highlighter-rouge">config.settings</code> file when the queue is started.</p>
 
 <p>The algorithm for routing to partitions goes as follows:</p>
 
 <ol>
   <li>If the partition is directly specifiedand it is a valid partition, then the message is routed directly to it.</li>
-  <li>Else, if the key has been specified, then if a custom partitioner is present, specified at the creation of the Producer instance through <code class="highlighter-rouge">partitioner.class</code> property, then this custom partitioner is used.</li>
+  <li>Else, if the key has been specified, then if a custom partitioner is present, specified at the creation of the Producer instance through <code class="language-plaintext highlighter-rouge">partitioner.class</code> property, then this custom partitioner is used.</li>
   <li>If the key has been specified but there is no custom partitioner instantiated, then the default paritioner will hash the key and will perform a modulo operation to assign the designated partition.</li>
 </ol>
 
 <p>The following snippet is the producer code initialized with a by-first-letter partitioner:</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">BasicKafkaProducer</span><span class="o">(</span><span class="n">Properties</span> <span class="n">props</span><span class="o">){</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">BasicKafkaProducer</span><span class="o">(</span><span class="nc">Properties</span> <span class="n">props</span><span class="o">){</span>
     <span class="n">props</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"partitioner.class"</span><span class="o">,</span> <span class="s">"ro.alexandrugris.ByDestinationPartitioner"</span><span class="o">);</span>
-    <span class="n">myProducer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">KafkaProducer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">MyMessage</span><span class="o">&gt;(</span>
+    <span class="n">myProducer</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">KafkaProducer</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">MyMessage</span><span class="o">&gt;(</span>
             <span class="n">props</span><span class="o">,</span>
             <span class="k">new</span> <span class="n">org</span><span class="o">.</span><span class="na">apache</span><span class="o">.</span><span class="na">kafka</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">serialization</span><span class="o">.</span><span class="na">StringSerializer</span><span class="o">(),</span>
-            <span class="k">new</span> <span class="n">ro</span><span class="o">.</span><span class="na">alexandrugris</span><span class="o">.</span><span class="na">ObjectSerializer</span><span class="o">&lt;</span><span class="n">MyMessage</span><span class="o">&gt;()</span>
+            <span class="k">new</span> <span class="n">ro</span><span class="o">.</span><span class="na">alexandrugris</span><span class="o">.</span><span class="na">ObjectSerializer</span><span class="o">&lt;</span><span class="nc">MyMessage</span><span class="o">&gt;()</span>
             <span class="o">);</span>
 <span class="o">}</span>
-<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">try</span> <span class="o">(</span><span class="n">BasicKafkaProducer</span> <span class="n">me</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BasicKafkaProducer</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">getProperties</span><span class="o">()))</span> <span class="o">{</span>
-        <span class="n">me</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">(</span><span class="nc">BasicKafkaProducer</span> <span class="n">me</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BasicKafkaProducer</span><span class="o">(</span><span class="nc">System</span><span class="o">.</span><span class="na">getProperties</span><span class="o">()))</span> <span class="o">{</span>
+        <span class="n">me</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="nc">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span>
                 <span class="k">new</span> <span class="nf">MyMessage</span><span class="o">(</span><span class="s">"alexandru.gris"</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">),</span>
                 <span class="k">new</span> <span class="nf">MyMessage</span><span class="o">(</span><span class="s">"olga.muravska"</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">),</span>
                 <span class="k">new</span> <span class="nf">MyMessage</span><span class="o">(</span><span class="s">"olga.muravska"</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">),</span>
@@ -339,23 +339,23 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
                 <span class="k">new</span> <span class="nf">MyMessage</span><span class="o">(</span><span class="s">"gris.laurian"</span><span class="o">,</span> <span class="s">"Hello World"</span><span class="o">)</span>
         <span class="o">));</span>
     <span class="o">}</span>
-    <span class="k">catch</span><span class="o">(</span><span class="n">Exception</span> <span class="n">exx</span><span class="o">){</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">exx</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+    <span class="k">catch</span><span class="o">(</span><span class="nc">Exception</span> <span class="n">exx</span><span class="o">){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">exx</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
     <span class="o">}</span>
 <span class="o">}</span>
-<span class="kd">private</span> <span class="kt">void</span> <span class="nf">send</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">MyMessage</span><span class="o">&gt;</span> <span class="n">msgs</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">Object</span> <span class="n">lock</span>      <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">();</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">send</span><span class="o">(</span><span class="nc">List</span><span class="o">&lt;</span><span class="nc">MyMessage</span><span class="o">&gt;</span> <span class="n">msgs</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">Object</span> <span class="n">lock</span>      <span class="o">=</span> <span class="k">new</span> <span class="nc">Object</span><span class="o">();</span>
     <span class="kd">class</span> <span class="nc">Counter</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="n">msgs</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
         <span class="kt">int</span> <span class="nf">decrement</span><span class="o">(){</span> <span class="k">return</span> <span class="o">--</span><span class="n">cnt</span><span class="o">;</span> <span class="o">}</span>
     <span class="o">}</span> 
-    <span class="n">Counter</span> <span class="n">cnt</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Counter</span><span class="o">();</span>
-    <span class="k">for</span><span class="o">(</span><span class="n">MyMessage</span> <span class="n">msg</span> <span class="o">:</span> <span class="n">msgs</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">myProducer</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="k">new</span> <span class="n">ProducerRecord</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">MyMessage</span><span class="o">&gt;(</span><span class="n">TOPIC_NAME</span><span class="o">,</span> <span class="n">msg</span><span class="o">.</span><span class="na">destination</span><span class="o">(),</span> <span class="n">msg</span><span class="o">),</span> <span class="o">(</span><span class="n">RecordMetadata</span> <span class="n">metadata</span><span class="o">,</span> <span class="n">Exception</span> <span class="n">exception</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>
+    <span class="nc">Counter</span> <span class="n">cnt</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Counter</span><span class="o">();</span>
+    <span class="k">for</span><span class="o">(</span><span class="nc">MyMessage</span> <span class="n">msg</span> <span class="o">:</span> <span class="n">msgs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">myProducer</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="k">new</span> <span class="nc">ProducerRecord</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">MyMessage</span><span class="o">&gt;(</span><span class="no">TOPIC_NAME</span><span class="o">,</span> <span class="n">msg</span><span class="o">.</span><span class="na">destination</span><span class="o">(),</span> <span class="n">msg</span><span class="o">),</span> <span class="o">(</span><span class="nc">RecordMetadata</span> <span class="n">metadata</span><span class="o">,</span> <span class="nc">Exception</span> <span class="n">exception</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>
                 <span class="k">if</span> <span class="o">(</span><span class="n">exception</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-                    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">exception</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+                    <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">exception</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
                 <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-                    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">metadata</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+                    <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">metadata</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
                 <span class="o">}</span>
                 <span class="kd">synchronized</span> <span class="o">(</span><span class="n">lock</span><span class="o">)</span> <span class="o">{</span>
                     <span class="k">if</span> <span class="o">(</span><span class="n">cnt</span><span class="o">.</span><span class="na">decrement</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="n">lock</span><span class="o">.</span><span class="na">notify</span><span class="o">();</span>
@@ -363,40 +363,40 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
         <span class="o">});</span>
     <span class="o">}</span>
     <span class="kd">synchronized</span> <span class="o">(</span><span class="n">lock</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">try</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="na">wait</span><span class="o">();</span> <span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">Exception</span> <span class="n">exx</span><span class="o">){}</span>
+        <span class="k">try</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="na">wait</span><span class="o">();</span> <span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="nc">Exception</span> <span class="n">exx</span><span class="o">){}</span>
     <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
 
 <p>The producer is thread safe and should generally be shared among all threads for best performance. 
-The producer manages a single background thread that does I/O as well as a TCP connection to each of the brokers it needs to communicate with. Failure to close the producer after use will leak these resources. Apache kafka is optimized for high throughput and, therefore, uses microbatching in its producer and consumer clients (<code class="highlighter-rouge">RecordAccumulator</code> low level class). For each topic-partition combination, internally a <code class="highlighter-rouge">RecordBatch</code> keeps track of these messages.</p>
+The producer manages a single background thread that does I/O as well as a TCP connection to each of the brokers it needs to communicate with. Failure to close the producer after use will leak these resources. Apache kafka is optimized for high throughput and, therefore, uses microbatching in its producer and consumer clients (<code class="language-plaintext highlighter-rouge">RecordAccumulator</code> low level class). For each topic-partition combination, internally a <code class="language-plaintext highlighter-rouge">RecordBatch</code> keeps track of these messages.</p>
 
 <p><em>Batch options:</em></p>
 
 <ul>
-  <li><code class="highlighter-rouge">batch.size</code>: size of each <code class="highlighter-rouge">RecordBatch</code></li>
-  <li><code class="highlighter-rouge">linger.ms</code>: how many milliseconds a buffer waits for new messages if not full</li>
-  <li><code class="highlighter-rouge">batch.memory</code>: memory size for all <code class="highlighter-rouge">RecordBatches</code></li>
-  <li><code class="highlighter-rouge">max.block.ms</code>: how many milliseconds the send method will be blocked for - used for creating back pressure on the producer to generate and send more messages to the buffer</li>
+  <li><code class="language-plaintext highlighter-rouge">batch.size</code>: size of each <code class="language-plaintext highlighter-rouge">RecordBatch</code></li>
+  <li><code class="language-plaintext highlighter-rouge">linger.ms</code>: how many milliseconds a buffer waits for new messages if not full</li>
+  <li><code class="language-plaintext highlighter-rouge">batch.memory</code>: memory size for all <code class="language-plaintext highlighter-rouge">RecordBatches</code></li>
+  <li><code class="language-plaintext highlighter-rouge">max.block.ms</code>: how many milliseconds the send method will be blocked for - used for creating back pressure on the producer to generate and send more messages to the buffer</li>
 </ul>
 
-<p>On return from send, the queue sends back a <code class="highlighter-rouge">RecordMetadata</code> with the result of the successfull or unsuccesfull transmission.</p>
+<p>On return from send, the queue sends back a <code class="language-plaintext highlighter-rouge">RecordMetadata</code> with the result of the successfull or unsuccesfull transmission.</p>
 
 <p><em>Delivery guarantees properties:</em></p>
 
 <ul>
-  <li><code class="highlighter-rouge">acks</code>: (0: fire and forget. 1: leader acknowledgement - only receives from the leader that the message has been stored, not from all the partitions. 2: quorum acknowledgement - all in sync replicas confirm the receipt )</li>
-  <li><code class="highlighter-rouge">retries</code>: how many times the producer will retry sending the message</li>
-  <li><code class="highlighter-rouge">retry.backoff.ms</code>: backoff time between each retry</li>
+  <li><code class="language-plaintext highlighter-rouge">acks</code>: (0: fire and forget. 1: leader acknowledgement - only receives from the leader that the message has been stored, not from all the partitions. 2: quorum acknowledgement - all in sync replicas confirm the receipt )</li>
+  <li><code class="language-plaintext highlighter-rouge">retries</code>: how many times the producer will retry sending the message</li>
+  <li><code class="language-plaintext highlighter-rouge">retry.backoff.ms</code>: backoff time between each retry</li>
 </ul>
 
-<p>Message order is preserved only within a given partition. Retries and backoff destroy this quarantee. If we still want this guarantee enforced, we need to set <code class="highlighter-rouge">max.in.flight.request.per.connection=1</code>, but this dramatically affects performance.</p>
+<p>Message order is preserved only within a given partition. Retries and backoff destroy this quarantee. If we still want this guarantee enforced, we need to set <code class="language-plaintext highlighter-rouge">max.in.flight.request.per.connection=1</code>, but this dramatically affects performance.</p>
 
-<p>All producer configuration options are defined as static strings in the <code class="highlighter-rouge">ProducerConfig</code> class.</p>
+<p>All producer configuration options are defined as static strings in the <code class="language-plaintext highlighter-rouge">ProducerConfig</code> class.</p>
 
 <p>The result of the per-first-letter partitioner when run:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic alexandrugris.my_topic --partition 0 --from-beginning
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$&gt;/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic alexandrugris.my_topic --partition 0 --from-beginning
 </code></pre></div></div>
 
 <p><img src="https://alexandrugris.github.io/assets/kafka_9.png" alt="Messages" /></p>
@@ -413,62 +413,62 @@ The producer manages a single background thread that does I/O as well as a TCP c
 <p><em>Properties:</em></p>
 
 <ul>
-  <li><code class="highlighter-rouge">enable.auto.commit=true</code> - allow Kafka to manage when last committed offset is incremented</li>
-  <li><code class="highlighter-rouge">auto.commit.interval=5000</code> - together with <code class="highlighter-rouge">enable.auto.commit</code> enables Kafka consumer to autocommit every XXX milliseconds.</li>
-  <li><code class="highlighter-rouge">auto.offset.reset="latest" or "earliest"</code> - from where to start reading the messages from a partition - latest / earliest refers to known committed offset.</li>
+  <li><code class="language-plaintext highlighter-rouge">enable.auto.commit=true</code> - allow Kafka to manage when last committed offset is incremented</li>
+  <li><code class="language-plaintext highlighter-rouge">auto.commit.interval=5000</code> - together with <code class="language-plaintext highlighter-rouge">enable.auto.commit</code> enables Kafka consumer to autocommit every XXX milliseconds.</li>
+  <li><code class="language-plaintext highlighter-rouge">auto.offset.reset="latest" or "earliest"</code> - from where to start reading the messages from a partition - latest / earliest refers to known committed offset.</li>
 </ul>
 
-<p>Kafka keeps track of consumer offsets in a Kafka topic named <code class="highlighter-rouge">__consumer_offsets</code>, which is partitioned across 50 partitions.</p>
+<p>Kafka keeps track of consumer offsets in a Kafka topic named <code class="language-plaintext highlighter-rouge">__consumer_offsets</code>, which is partitioned across 50 partitions.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic __consumer_offsets
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic __consumer_offsets
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">KafkaConsumer</code> API has functions to manually retreive and / or reset the position in the stream on a per topic/partition basis. This allows true manual cursor movement, very similar to working with a file. It has also options to pause / resume a subscribed topic when there are higher priority messages to consider.</p>
+<p>The <code class="language-plaintext highlighter-rouge">KafkaConsumer</code> API has functions to manually retreive and / or reset the position in the stream on a per topic/partition basis. This allows true manual cursor movement, very similar to working with a file. It has also options to pause / resume a subscribed topic when there are higher priority messages to consider.</p>
 
 <p><em>Manual offset API</em>:</p>
 <ul>
-  <li><code class="highlighter-rouge">seek()</code></li>
-  <li><code class="highlighter-rouge">seekToBeginning()</code></li>
-  <li><code class="highlighter-rouge">seekToEnd()</code></li>
-  <li><code class="highlighter-rouge">position()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">seek()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">seekToBeginning()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">seekToEnd()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">position()</code></li>
 </ul>
 
 <p><em>Flow control API:</em></p>
 <ul>
-  <li><code class="highlighter-rouge">pause</code> partition</li>
-  <li><code class="highlighter-rouge">resume</code> partition</li>
+  <li><code class="language-plaintext highlighter-rouge">pause</code> partition</li>
+  <li><code class="language-plaintext highlighter-rouge">resume</code> partition</li>
 </ul>
 
 <p><em>Rebalance listeners:</em></p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// subscribe to all partitions in a topic</span>
-<span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="n">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()),</span> <span class="k">new</span> <span class="n">ConsumerRebalanceListener</span><span class="o">()</span> <span class="o">{</span>
+<span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()),</span> <span class="k">new</span> <span class="nc">ConsumerRebalanceListener</span><span class="o">()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPartitionsRevoked</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">TopicPartition</span><span class="o">&gt;</span> <span class="n">partitions</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPartitionsRevoked</span><span class="o">(</span><span class="nc">Collection</span><span class="o">&lt;</span><span class="nc">TopicPartition</span><span class="o">&gt;</span> <span class="n">partitions</span><span class="o">)</span> <span class="o">{</span>
         <span class="c1">// do something here</span>
         <span class="c1">// https://kafka.apache.org/0101/javadoc/org/apache/kafka/clients/consumer/ConsumerRebalanceListener.html</span>
         <span class="c1">// for instance, save restore offset from an external store</span>
     <span class="o">}</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPartitionsAssigned</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">TopicPartition</span><span class="o">&gt;</span> <span class="n">partitions</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPartitionsAssigned</span><span class="o">(</span><span class="nc">Collection</span><span class="o">&lt;</span><span class="nc">TopicPartition</span><span class="o">&gt;</span> <span class="n">partitions</span><span class="o">)</span> <span class="o">{</span>
         <span class="c1">// do something here</span>
     <span class="o">}</span>
 <span class="o">});</span>
 </code></pre></div></div>
 
-<p>If we set the <code class="highlighter-rouge">enable.auto.commit=false</code> we need to use one of the two API functions <code class="highlighter-rouge">commitSync()</code> or <code class="highlighter-rouge">commitAsync()</code> to advance the last known committed offset. <code class="highlighter-rouge">commitSync</code> retries in case of failure. The retry is controlled by the
-<code class="highlighter-rouge">retries.backoff.ms</code> setting. In case of unrecoverable error, a <code class="highlighter-rouge">CommitFailedException</code> is thrown.  <code class="highlighter-rouge">commitAsync</code> receives a callback as parameter for the calling application to know when the commit has occured. It does not automatically retry.</p>
+<p>If we set the <code class="language-plaintext highlighter-rouge">enable.auto.commit=false</code> we need to use one of the two API functions <code class="language-plaintext highlighter-rouge">commitSync()</code> or <code class="language-plaintext highlighter-rouge">commitAsync()</code> to advance the last known committed offset. <code class="language-plaintext highlighter-rouge">commitSync</code> retries in case of failure. The retry is controlled by the
+<code class="language-plaintext highlighter-rouge">retries.backoff.ms</code> setting. In case of unrecoverable error, a <code class="language-plaintext highlighter-rouge">CommitFailedException</code> is thrown.  <code class="language-plaintext highlighter-rouge">commitAsync</code> receives a callback as parameter for the calling application to know when the commit has occured. It does not automatically retry.</p>
 
 <p><a href="https://stackoverflow.com/questions/28561147/how-to-read-data-using-kafka-consumer-api-from-beginning">How to start everytime from beginning in Kafka</a></p>
 
 <p><em>Scaling out - consumer groups:</em></p>
 
-<p>By sharing the <code class="highlighter-rouge">group.id</code> property, a group of processes can consume messages together in parallel, advancing the offset in a collaborative way, thus distributig the burden of message processing to several cores / machines.</p>
+<p>By sharing the <code class="language-plaintext highlighter-rouge">group.id</code> property, a group of processes can consume messages together in parallel, advancing the offset in a collaborative way, thus distributig the burden of message processing to several cores / machines.</p>
 
-<p>The <code class="highlighter-rouge">Group Coordinator</code> is monitoring and taking care of work distribution and group membership. It controls availability of consumer nodes through two parameters:</p>
+<p>The <code class="language-plaintext highlighter-rouge">Group Coordinator</code> is monitoring and taking care of work distribution and group membership. It controls availability of consumer nodes through two parameters:</p>
 <ul>
-  <li><code class="highlighter-rouge">heartbeat.interval.ms=3000</code> - how often consumers send heartbeats to Kafka</li>
-  <li><code class="highlighter-rouge">session.timeout.ms=30000</code> - how long before the consumer is considered down and removed from group membership</li>
+  <li><code class="language-plaintext highlighter-rouge">heartbeat.interval.ms=3000</code> - how often consumers send heartbeats to Kafka</li>
+  <li><code class="language-plaintext highlighter-rouge">session.timeout.ms=30000</code> - how long before the consumer is considered down and removed from group membership</li>
 </ul>
 
 <p><em>Partition allocation in consumer groups:</em></p>
@@ -481,12 +481,12 @@ The producer manages a single background thread that does I/O as well as a TCP c
 
 <p><em>Very important:</em></p>
 
-<p>Partition allocation in consumer groups work as described below IF the consumer subscribes to the full topic. Otherwise, if subscribed directly to partitions, all data will be distributed to all consumers independent of the consumer group allocation. This is because all consumers read from the same last committed offset on, since the commit message (<code class="highlighter-rouge">consumer.commitSync()</code>) arrives to the queue too late, when the messages have already been read.</p>
+<p>Partition allocation in consumer groups work as described below IF the consumer subscribes to the full topic. Otherwise, if subscribed directly to partitions, all data will be distributed to all consumers independent of the consumer group allocation. This is because all consumers read from the same last committed offset on, since the commit message (<code class="language-plaintext highlighter-rouge">consumer.commitSync()</code>) arrives to the queue too late, when the messages have already been read.</p>
 
 <p>This means we need to change the client as follows:</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="c1">// subscribe to all partitions in a topic -&gt; uncomment the line below if part of a consumer group</span>
-<span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="n">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()));</span>
+<span class="n">consumer</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">topicPatterns</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TopicPattern:</span><span class="o">:</span><span class="n">getTopic</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toSet</span><span class="o">()));</span>
 
 <span class="c1">// subscribe to specific partitions -&gt; comment the line below if part of a consumer group</span>
 <span class="c1">// consumer.assign(topicPatterns.stream().map( TopicPattern::getPartition).collect(Collectors.toList()));</span>
