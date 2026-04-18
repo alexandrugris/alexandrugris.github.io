@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elixir Intro | From The Trenches - The Code</title>
+  <meta name="description" content="Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succinct language. I hope, Elixir, someday we will meet for an exciting project together.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Elixir Intro</h1>
+    <p class="post-meta">
+      <time datetime="2019-01-22" itemprop="datePublished">Jan 22, 2019</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>Some fun programming over the weekend, reading a little bit about Elixir, a very beautiful and succinct language. I hope, Elixir, someday we will meet for an exciting project together.</p>
+<h1 id="the-basics">The Basics</h1>
+<p>Starting the REPL</p>
+<div class="codehilite"><pre><span></span><code>&gt;iex
+</code></pre></div>
+
+<p>Atoms are type in Elixir for which their value as string is also their representation in code. E.g. <code>:test</code> has the string value of <code>test</code>. </p>
+<p>All atoms are true except <code>:false</code> and <code>:nil</code>. Operator <code>||</code> will return the first true value. For example, the expression <code>false || :helloworld || true</code> will return <code>:helloworld</code>. Comparing atoms is fast and space efficient. They are similar to comparing enum values in other programming languages.</p>
+<p>All strings are UTF encoded. <code>String.length()</code> - length of the string, <code>&lt;&gt;</code> - concatenation operator. String interpolation is built in, with the syntax <code>"Hello #{name}"</code></p>
+<p>Tuples are defined with the syntax <code>t = {:ok, "Hello world"}</code>. Items in a tuple are accessed with <code>elem(t, 0)</code>. To change a value in a tuple one can use <code>put_elem(t, 1, "Hello Alexandru")</code>, but this will create a new tuple, as the data is immutable. Elixir supports deconstructing tuples with the syntax <code>{returncode, message} = t</code>. </p>
+<p>Lists are composed of heads and tails. <code>l = [1, 2, 3]</code> and then <code>hd(l)</code> will return 1 while <code>tl(l)</code> will return <code>[2, 3]</code>. Deconstructing works with lists as well <code>[h | t] = l</code>.</p>
+<blockquote>
+<p>When counting the elements in a data structure, Elixir also abides by a simple rule: the function is named size<br />
+if the operation is in constant time (i.e. the value is pre-calculated) or length if the operation is linear <br />
+(i.e. calculating the length gets slower as the input grows). As a mnemonic, both “length” and “linear” start <br />
+with “l”. (Elixir Tutorial)</p>
+</blockquote>
+<p>Keyword lists are defined as <code>l = [{:k, :v}]</code> or using the shorthand notation <code>l = [k: :v]</code>. Elements can be accesses as <code>l[:k]</code>.</p>
+<p>Maps are defined as follows: <code>m = %{:first_key =&gt; "this is the value"}</code>. Keys and values can be anything and, if they are atoms, they can be accessed with shortcut notation <code>m.first_key</code>.</p>
+<p>Modules are defined as follows:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">ModuleHello</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">say_hello</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p>and are reloaded in the REPL with <code>r(ModuleHello)</code>.</p>
+<p>Functions and pattern matching</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">PatternMatching</span><span class="w"> </span><span class="k">do</span>
+
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">first</span><span class="p">([])</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="n">nill</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">first</span><span class="p">(</span><span class="w"> </span><span class="p">[</span><span class="n">head</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="bp">_</span><span class="p">])</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="n">head</span>
+
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Invoked as <code>PatternMatching.first([])</code> or <code>PatternMatching.first([1, 2, 3])</code></p>
+<p>An alternative way</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyCalendar</span><span class="w"> </span><span class="k">do</span>
+
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="mi">400</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="no">true</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="no">false</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">rem</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="no">true</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">is_leap_year</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="no">false</span>
+
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Elixir also supports default parameters using the <code>val \\ default_val</code> syntax, private functions, defined with <code>defp</code> instead of def or discarding parameters which are not used using the <code>_</code> placeholder.</p>
+<p>Function address is taken by using the <code>&amp;</code> operator, for instance when sent as a parameter to another function. Anonymous functions are also supported, e.g. <code>Enum.map([1, 2, 3, 4], fn(n) -&gt; n * n end)</code>. Another shorthand notation is the capture-style anonymous function, specified as <code>Enum.reduce([1, 2, 3, 4], 0, &amp;(&amp;1 + &amp;2))</code>. When submitted as a parameter, the syntax for invoking a function is <code>f.(params)</code>.</p>
+<p>The <code>cond</code> block:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyCalendar</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">day_abbr</span><span class="p">(</span><span class="n">day</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span>
+<span class="w">        </span><span class="k">cond</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span>
+<span class="w">            </span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:Monday</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Mon&quot;</span>
+<span class="w">            </span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:Tuesday</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Tue</span>
+<span class="s2">            true -&gt; &quot;</span><span class="nc">Neither</span><span class="w"> </span><span class="nc">Mon</span><span class="w"> </span><span class="n">nor</span><span class="w"> </span><span class="nc">Tue</span><span class="s2">&quot;</span>
+<span class="s2">    end</span>
+<span class="s2">end</span>
+</code></pre></div>
+
+<p>Using pattern matching do execute parts of code:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyCalendar</span><span class="w"> </span><span class="k">do</span>
+
+<span class="w">    </span><span class="kd">def</span><span class="w"> </span><span class="n">describe_date</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span>
+
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span>
+<span class="w">            </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;First day of the month!&quot;</span>
+<span class="w">            </span><span class="p">{</span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Merry Christmas!&quot;</span>
+<span class="w">            </span><span class="p">{</span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Only </span><span class="si">#{</span><span class="mi">12</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">month</span><span class="si">}</span><span class="s2"> months until Christmas&quot;</span>
+<span class="w">            </span><span class="p">{</span><span class="mi">31</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Happy Halloween!&quot;</span>
+<span class="w">            </span><span class="p">{</span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Just an average day&quot;</span>
+<span class="w">            </span><span class="p">{</span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s2">&quot;Invalid month&quot;</span>
+<span class="w">        </span><span class="k">end</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Another useful example of <code>case</code> and pattern matching is handling errors from functions:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">def</span><span class="w"> </span><span class="n">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span>
+<span class="w">        </span><span class="p">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">process_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="n">err</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="w"> </span><span class="s2">&quot;Cannot open file&quot;</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p>To start observing the Erlang VM type <code>iex&gt;  :observer.start()</code></p>
+<p>ASCII code of a letter is given by the <code>?</code> prefix, e.g. <code>?a</code>.</p>
+<h1 id="pattern-matching">Pattern matching</h1>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;&lt;</span><span class="s2">&quot;alexandru&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">::</span><span class="n">binary</span><span class="p">&gt;&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;alexandru gris&quot;</span>
+<span class="s2">&quot;alexandru &quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">gris</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;alexandru gris&quot;</span>
+</code></pre></div>
+
+<h1 id="two-examples">Two examples</h1>
+<p>A slightly more involved example of pattern matching, a binary search tree example:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Tree</span><span class="w"> </span><span class="k">do</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p">},</span><span class="w"> </span><span class="n">nv</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">nv</span><span class="p">}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">},</span><span class="w"> </span><span class="n">nv</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">nv</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">nv</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p">}}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">insert</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">},</span><span class="w"> </span><span class="n">nv</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nv</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">nv</span><span class="p">}}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">insert</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">},</span><span class="w"> </span><span class="n">nv</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">nv</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">insert</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">nv</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">insert</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">},</span><span class="w"> </span><span class="n">nv</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nv</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">insert</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">nv</span><span class="p">)}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">to_list</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p">})</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">[]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">to_list</span><span class="p">({</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">})</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">to_list</span><span class="p">({</span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">})</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">to_list</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="w"> </span><span class="o">++</span><span class="w"> </span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="w"> </span><span class="o">++</span><span class="w"> </span><span class="n">to_list</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">create</span><span class="p">()</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:leaf</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p">}</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Interesting to note how succinct the code is.</p>
+<p>Another one, a small vector class which can be used for maths processing. It uses pattern matching, the pipeline operator and function references to keep the code short. </p>
+<div class="codehilite"><pre><span></span><code><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Vector</span><span class="w"> </span><span class="k">do</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">op</span><span class="p">([</span><span class="n">h1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">t1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">h2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">t2</span><span class="p">],</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span><span class="w"> </span><span class="n">h2</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">op</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">t2</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">)]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">op</span><span class="p">([],</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="bp">_</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">[]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">op</span><span class="p">([</span><span class="n">h1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">t1</span><span class="p">],</span><span class="w"> </span><span class="n">scalar</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">is_number</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">     </span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">op</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">)]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">op</span><span class="p">([],</span><span class="w"> </span><span class="n">scalar</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p">)</span><span class="w"> </span><span class="ow">when</span><span class="w"> </span><span class="n">is_number</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">[]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">add</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">op</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="ni">&amp;2</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="nc">Enum</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">add</span><span class="p">(</span><span class="ni">&amp;1</span><span class="p">,</span><span class="w"> </span><span class="ni">&amp;2</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">subtract</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">op</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="ni">&amp;2</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">negate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">multiply</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">multiply</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">op</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="ni">&amp;2</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">dot</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">multiply</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sum</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="ss">:math</span><span class="o">.</span><span class="n">sqrt</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">normalize</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">op</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="ni">&amp;2</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">multiply</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">weighed_mean</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">multiply</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">multiply</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">))</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">sq_distance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">subtract</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">fn</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">end</span><span class="p">)</span><span class="o">.</span><span class="p">()</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="n">distance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">sq_distance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="ss">:math</span><span class="o">.</span><span class="n">sqrt</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="k">end</span>
+</code></pre></div>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2019/01/06/mmalloc.html">MMalloc</a></span><span><a href="../../../../statistics/2019/07/26/odds-and-models.html">Odds And Models</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

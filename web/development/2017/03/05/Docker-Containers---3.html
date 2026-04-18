@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docker And Containers Part 3 | From The Trenches - The Code</title>
+  <meta name="description" content="This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container, connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases).…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Docker And Containers Part 3</h1>
+    <p class="post-meta">
+      <time datetime="2017-03-05" itemprop="datePublished">Mar 5, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>This is the third part of my personal Docker cheatsheet. The content includes: cleaning up the system, running an SQL Server Windows container, connecting to it through the SQL Server Management Studio and using volumes for storing container persistent data (in this post saving mysql databases). The last part will be dedicated to Docker Compose.</p>
+<h3 id="cleaning-up-the-system">Cleaning up the system:</h3>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker system prune 
+</code></pre></div>
+
+<blockquote>
+<p>WARNING! This will remove:<br />
+   - all stopped containers<br />
+   - all volumes not used by at least one container<br />
+   - all images without at least one container associated to them<br />
+Are you sure you want to continue? [y/N] y</p>
+</blockquote>
+<h3 id="running-sql-server-express-in-docker">Running SQL Server Express in Docker</h3>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker pull microsoft/mssql-server-windows-express
+c:&gt;docker run -d --name SQLServer_AGris 
+    --env sa_password=&quot;QAZxsw1234&quot; 
+    --env ACCEPT_EULA=y microsoft/mssql-server-windows-express
+</code></pre></div>
+
+<p>Because starting the server can take a long time, it is recommended in another window to do:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker logs --follow SQLServer_AGris
+</code></pre></div>
+
+<p>Other useful flags:</p>
+<ul>
+<li><code>-v c:\temp:c:\temp</code> - to mount a folder in the container</li>
+<li><code>-e attach_dbs="[{'dbName':'SampleDb','dbFiles':['C:\\temp\\sampledb.mdf','C:\\temp\\sampledb_log. ldf']}]"</code> - to attach an existing database</li>
+</ul>
+<p>Then get the IP Address (I have installed the Unix tools in Windows):</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker inspect SQLServer_AGris | grep IPAddress | awk &quot;/[0-9]/ { print $2 }&quot; | sed &quot;s/\&quot;,*//g&quot;
+</code></pre></div>
+
+<p>And connect using the SQL Server Management Studio:</p>
+<p><img alt="SQL Server Management Studio" src="../../../../../assets/docker_3_1.png" /></p>
+<h3 id="play-with-volumes-persistent-data-between-containers-start-stop-remove">Play with volumes - persistent data between containers start / stop / remove</h3>
+<div class="codehilite"><pre><span></span><code>-v my_home:/home/agris
+</code></pre></div>
+
+<p>will create a persistent volume called <code>my_home</code> which will be mounted in <code>/home/agris</code> in the container. Everytime a container is started with <code>-v my_home:...</code> the same volume will be mounted.</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker volumes ls
+</code></pre></div>
+
+<p>will display both the named volumes and the unnamed ones.</p>
+<p>For <code>Dockerfile</code>, there is the <code>VOLUME</code>command which creates such a volume for persistent data across container restarts and destruction and is also a hit for us for where the container stores important data. <br />
+For example, in the mysql Dockerfile we find <code>VOLUME /var/lib/mysql</code>. Example with mysql:</p>
+<p>Start myslq with volume mounted:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">c</span><span class="p">:</span><span class="o">&gt;</span><span class="n">docker</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="o">--</span><span class="n">rm</span><span class="w"> </span><span class="o">--</span><span class="n">name</span><span class="w"> </span><span class="n">my_sql_agris</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="mi">3306</span><span class="p">:</span><span class="mi">3306</span><span class="w"> </span><span class="o">-</span><span class="n">e</span><span class="w"> </span><span class="n">MYSQL_ROOT_PASSWORD</span><span class="o">=</span><span class="n">QAZxsw123</span><span class="w"> </span><span class="o">-</span><span class="n">d</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="n">agris_data</span><span class="p">:</span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">mysql</span><span class="w"> </span><span class="n">mysql</span>
+</code></pre></div>
+
+<p>Check logs to see that everything is fine:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker logs my_sql_agris
+</code></pre></div>
+
+<p>List the volumes:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker volume ls
+</code></pre></div>
+
+<p>Start the mysql client to create a database:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker exec -it my_sql_agris mysql --user=root --password=QAZxsw123
+</code></pre></div>
+
+<p>Stop the server container:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker stop my_sql_agris
+</code></pre></div>
+
+<p>Run again the server and the mysql client to verify the database still exists. In this case it was called "test".</p>
+<p><img alt="Database Test still Exists" src="../../../../../assets/docker_3_2.png" /></p>
+<h3 id="docker-compose">Docker Compose</h3>
+<p>First thing, some cleanup:</p>
+<div class="codehilite"><pre><span></span><code>docker ps -a -q | xargs docker rm -f
+</code></pre></div>
+
+<p>docker-compose.yml general structure:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">version</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;3&#39;</span>
+
+<span class="n">services</span><span class="p">:</span>
+<span class="w">    </span><span class="n">mysql_agris</span><span class="p">:</span>
+<span class="w">        </span><span class="n">image</span><span class="p">:</span><span class="w"> </span><span class="n">mysql</span>
+<span class="w">        </span><span class="n">ports</span><span class="p">:</span>
+<span class="w">            </span><span class="o">-</span><span class="w"> </span><span class="mi">3306</span><span class="p">:</span><span class="mi">3306</span>
+<span class="w">        </span><span class="n">environment</span><span class="p">:</span>
+<span class="w">            </span><span class="o">-</span><span class="w"> </span><span class="n">MYSQL_ROOT_PASSWORD</span><span class="o">=</span><span class="n">QAZxsw123</span>
+<span class="w">        </span><span class="n">volumes</span><span class="p">:</span>
+<span class="w">            </span><span class="o">-</span><span class="w"> </span><span class="n">agris_data</span><span class="p">:</span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">mysql</span>
+
+<span class="n">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="n">agris_data</span><span class="p">:</span>
+<span class="w">        </span><span class="n">external</span><span class="p">:</span><span class="w"> </span><span class="bp">true</span>
+</code></pre></div>
+
+<p>Run </p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker-compose up
+</code></pre></div>
+
+<p>Connect to the instance:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it mysql mysql --user=root --password=QAZxsw123 --host=172.22.96.1
+</code></pre></div>
+
+<p>Note: <code>--host=172.22.96.1</code> comes from running <code>ipconfig</code>:</p>
+<p><img alt="ipconfig" src="../../../../../assets/docker_3_3.png" /></p>
+<p>And the result is:</p>
+<p><img alt="Database Test still Exists" src="../../../../../assets/docker_3_4.png" /></p>
+<p>Please note that, because I continue to mount the same volume named <code>agris_data</code>, the database <code>test</code> I have created earlier is still there. <br />
+However, if you deleted the volume, you will get the following error from <code>docker-compose up</code>:</p>
+<blockquote>
+<p>ERROR: Volume agris_data declared as external, but could not be found. <br />
+Please create the volume manually using <code>docker volume create --name=agris_data</code> and try again.</p>
+</blockquote>
+<p>so:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker volume create --name=agris_data
+c:&gt;docker-compose up -d
+</code></pre></div>
+
+<p>If we want to scale one service, we can simply add:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker-compose scale service_name=2
+</code></pre></div>
+
+<p>In this case, <code>service_name</code> would receive another instance. Of course, services scaled like this cannot have ports exposed to host.</p>
+<h3 id="networks">Networks:</h3>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker network ls
+c:&gt;docker network inspect cppplaylinux_default
+</code></pre></div>
+
+<p><img alt="docker network inspect" src="../../../../../assets/docker_3_5.png" /></p>
+<p>And we see:</p>
+<ul>
+<li>we have a new network created automatically by <code>docker-compose</code>, in this case <code>cppplaylinux_default</code></li>
+<li>we have one host  connected to this network, in this case <code>cppplaylinux_mysql_agris_1</code>, which is precisely the container created by the <code>docker-compose</code> and visible through <code>docker ps -a</code>. Actually all containers spawned by <code>docker-compose</code> are attached to the same network, unless specified otherwise.</li>
+</ul>
+<p>Beside using <code>docker-compose</code> to create networks of containers, <code>docker network</code> command offers the options to:</p>
+<ul>
+<li>create networks</li>
+<li>delete networks</li>
+<li>inspect networks</li>
+<li>list networks</li>
+</ul>
+<p>Then you can use the <code>docker run --network</code> to attach a new container to an existing network.</p>
+<p>All user-defined networks have a embedded DNS server. Thus, assuming we add another container to the network, from that container we can simply do <code>ping mysql_agris</code> and it will work.</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it --rm --name ash --network cppplaylinux_default alpine-ssh sh
+</code></pre></div>
+
+<p><img alt="ping" src="../../../../../assets/docker_3_6.png" /></p>
+<p>In the end:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker-compose down
+</code></pre></div>
+
+<p>to tear everything down.</p>
+<p>If we want to keep the network, just do:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker-compose rm
+</code></pre></div>
+
+<p>Speaking of docker-compose, it can be integrated directly with a Dockerfile instead of an existing image. So, instead of doing <code>docker build -t img_name .</code> we can simply add to the <code>docker-compose.yml</code> the following:</p>
+<div class="codehilite"><pre><span></span><code>version: &#39;3&#39;
+
+services:
+    web_layer:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            <span class="k">-</span> 8080:80            
+        environment:
+            <span class="k">-</span> db_conn_str=...
+</code></pre></div>
+
+<p>A useful parameter is <code>depends_on:</code> which instructs docker to only start the container after the dependecies are statisfied. <a href="https://docs.docker.com/compose/compose-file/#dependson">docker</a></p>
+<p>Happy Hacking! :)</p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../web/development/2017/02/25/Docker-Containers---2.html">Docker And Containers Part 2</a></span><span><a href="../../../../../native/coding/2017/03/09/C++-Play-GreenThreads.html">C++ Play - Green Threads in C++</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulated Annealing in Go | From The Trenches - The Code</title>
+  <meta name="description" content="As Go is quickly becoming my favourite programming language, in this post we switch gears and implement an optimization algorithm - simulated annealing. We will solve the travelling salesman problem and, in the process, we will build a desktop app and a bare bones charting library.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Simulated Annealing in Go</h1>
+    <p class="post-meta">
+      <time datetime="2021-02-26" itemprop="datePublished">Feb 26, 2021</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>As Go is quickly becoming my favourite programming language, in this post we switch gears and implement an optimization algorithm - simulated annealing. We will solve the travelling salesman problem and, in the process, we will build a desktop app and a bare bones charting library. </p>
+<h3 id="simulated-annealing">Simulated Annealing</h3>
+<p>Simulated annealing is an optimization algorithm used for solving complex problems where direct algorithmic solutions are hard to find. In cases where gradient descent cannot be used because the optimization function is not continuous we need a different approach, mostly based on trial and error. In such a situation, the solution is to make random moves in the solution space and only accept those moves that offer an optimization over the current state. However such moves can easily converge to a local optimum and get stuck. Therefore, a mechanism in needed to allow escape from the local optimum. Simulated annealing offers a solution to this problem allowing random non-optimal moves to be accepted with decreasing probability, based on a temperature schedule. The solution is borrowed from metalurgy where the steel is forged under slow cooling in order to allow for an optimal alignment of metal particles for increased durability. </p>
+<p>For our problem the metric we want to optimize is the total length of the path. In the picture below you can see such a layout with a shortest path determined by the algorithm.</p>
+<p><img alt="Simulated Annealing Travelling Salesman" src="../../../../assets/sim_annealing2.jpg" /></p>
+<p>For the very same configuration we see the total path length plotted for each iteration.It is interesting to see the inflection point where, after settling on a higher length equilibrium, an local optimum, and a random move, the total length resettles to another, global optimum. We also see how fewer and fewer random moves are accepted, with lower and lower distance increase.</p>
+<p><img alt="Simulated Annealing Distance Evolution" src="../../../../assets/sim_annealing1.jpg" /></p>
+<h3 id="solution-implementation">Solution Implementation</h3>
+<p>The full code is listed below. In short, we are computing the algorithm on a separate thread from the main rendering thread. The config can be reset by pressing <code>ESC</code>. You can add new points to the path by simply clicking somewhere on the screen. The distance evolution over each iteration can be displayed by pressing the <code>P</code> key.</p>
+<p>The algorithm can be tuned by adjusting:<br />
+- The total number of iterations<br />
+- The temperature decay function<br />
+- The function for the probability of acceptance of a bad move</p>
+<p>The algorithm has also a back step - if after accepting a bad move a better move is not found in a predefined number of steps, we backtrack to the best known configuration. </p>
+<p>The move is made by randomly selecting two edges and switching their ends between themselves. Once the swap has been performed, in order fo maintain the path consistency, all edges between the two end points are inverted. This happens in the <code>ComputeNewPath</code> function. </p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;GoAI/plt&quot;</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;github.com/tfriedel6/canvas/sdlcanvas&quot;</span>
+<span class="w">    </span><span class="s">&quot;math&quot;</span>
+<span class="w">    </span><span class="s">&quot;math/rand&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Point</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">X</span><span class="w"> </span><span class="kt">float64</span>
+<span class="w">    </span><span class="nx">Y</span><span class="w"> </span><span class="kt">float64</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Connection</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Start</span><span class="w"> </span><span class="kt">int</span>
+<span class="w">    </span><span class="nx">End</span><span class="w">   </span><span class="kt">int</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Point</span><span class="p">)</span><span class="w"> </span><span class="nx">Subtract</span><span class="p">(</span><span class="nx">other</span><span class="w"> </span><span class="o">*</span><span class="nx">Point</span><span class="p">)</span><span class="w"> </span><span class="nx">Point</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">Point</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">X</span><span class="p">:</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">other</span><span class="p">.</span><span class="nx">X</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">Y</span><span class="p">:</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">Y</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">other</span><span class="p">.</span><span class="nx">Y</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Point</span><span class="p">)</span><span class="w"> </span><span class="nx">DistanceTo</span><span class="p">(</span><span class="nx">other</span><span class="w"> </span><span class="o">*</span><span class="nx">Point</span><span class="p">)</span><span class="w"> </span><span class="kt">float64</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">d</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">other</span><span class="p">.</span><span class="nx">Subtract</span><span class="p">(</span><span class="nx">p</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">X</span><span class="o">*</span><span class="nx">d</span><span class="p">.</span><span class="nx">X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Y</span><span class="o">*</span><span class="nx">d</span><span class="p">.</span><span class="nx">Y</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">ConnsCollection</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Points</span><span class="w"> </span><span class="p">[]</span><span class="nx">Point</span>
+<span class="w">    </span><span class="nx">Conns</span><span class="w">  </span><span class="p">[]</span><span class="nx">Connection</span>
+
+<span class="w">    </span><span class="c1">// map ending to index in Conn</span>
+<span class="w">    </span><span class="nx">endsIn</span><span class="w"> </span><span class="p">[]</span><span class="kt">int</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">cc</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="nx">BuildEndsInMap</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="p">))</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">cn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="p">[</span><span class="nx">cn</span><span class="p">.</span><span class="nx">End</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">i</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">cc</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="nx">ComputeDistance</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">d</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Points</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Points</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="nx">d</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span><span class="p">].</span><span class="nx">DistanceTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="p">])</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">cc</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="nx">other</span><span class="w"> </span><span class="o">**</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">*</span><span class="nx">other</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="nx">other</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">ConnsCollection</span><span class="p">{</span>
+<span class="w">            </span><span class="nx">Points</span><span class="p">:</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Points</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">Conns</span><span class="p">:</span><span class="w">  </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Connection</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="p">)),</span>
+<span class="w">            </span><span class="nx">endsIn</span><span class="p">:</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="p">)),</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nb">copy</span><span class="p">((</span><span class="o">*</span><span class="nx">other</span><span class="p">).</span><span class="nx">Conns</span><span class="p">,</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span><span class="p">)</span>
+<span class="w">    </span><span class="nb">copy</span><span class="p">((</span><span class="o">*</span><span class="nx">other</span><span class="p">).</span><span class="nx">endsIn</span><span class="p">,</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="p">)</span>
+
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">cc</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="nx">ComputeNewPath</span><span class="p">()</span><span class="w"> </span><span class="kt">float64</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">conns</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">conns</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">i1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rand</span><span class="p">.</span><span class="nx">Int</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">conns</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">i2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rand</span><span class="p">.</span><span class="nx">Int</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">conns</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">i1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">i2</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">i2</span><span class="o">++</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">i2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">conns</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">i2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">p1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">conns</span><span class="p">[</span><span class="nx">i1</span><span class="p">]</span>
+<span class="w">    </span><span class="nx">p2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">conns</span><span class="p">[</span><span class="nx">i2</span><span class="p">]</span>
+
+<span class="w">    </span><span class="c1">// swap edges</span>
+<span class="w">    </span><span class="nx">p1</span><span class="p">.</span><span class="nx">End</span><span class="p">,</span><span class="w"> </span><span class="nx">p2</span><span class="p">.</span><span class="nx">Start</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">p2</span><span class="p">.</span><span class="nx">Start</span><span class="p">,</span><span class="w"> </span><span class="nx">p1</span><span class="p">.</span><span class="nx">End</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">idx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">p1</span><span class="p">.</span><span class="nx">End</span><span class="p">;</span><span class="w"> </span><span class="nx">idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">p2</span><span class="p">.</span><span class="nx">Start</span><span class="p">;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">c</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">conns</span><span class="p">[</span><span class="nx">cc</span><span class="p">.</span><span class="nx">endsIn</span><span class="p">[</span><span class="nx">idx</span><span class="p">]]</span>
+<span class="w">        </span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span>
+<span class="w">        </span><span class="nx">idx</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">ComputeDistance</span><span class="p">()</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">d</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">InitConnectionsFromPoints</span><span class="p">(</span><span class="nx">points</span><span class="w"> </span><span class="p">[]</span><span class="nx">Point</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">c</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ConnsCollection</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Points</span><span class="p">:</span><span class="w"> </span><span class="nx">points</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">Conns</span><span class="p">:</span><span class="w">  </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Connection</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">),</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// crate a path where each point is travelled only once</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">Points</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">i</span>
+<span class="w">        </span><span class="nx">e</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">e</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">Points</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">e</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">c</span><span class="p">.</span><span class="nx">Conns</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">Conns</span><span class="p">,</span><span class="w"> </span><span class="nx">Connection</span><span class="p">{</span>
+<span class="w">            </span><span class="nx">Start</span><span class="p">:</span><span class="w"> </span><span class="nx">s</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">End</span><span class="p">:</span><span class="w">   </span><span class="nx">e</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">c</span><span class="p">.</span><span class="nx">BuildEndsInMap</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">c</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">TravellingSalesman</span><span class="p">(</span><span class="nx">in</span><span class="w"> </span><span class="o">&lt;-</span><span class="kd">chan</span><span class="w"> </span><span class="p">[]</span><span class="nx">Point</span><span class="p">,</span><span class="w"> </span><span class="nx">out</span><span class="w"> </span><span class="kd">chan</span><span class="o">&lt;-</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="c1">// read all points and only start the computation once I finished points</span>
+<span class="w">        </span><span class="nx">points</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">in</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">in</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">points</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">in</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">conns</span><span class="p">,</span><span class="w"> </span><span class="nx">conns2</span><span class="p">,</span><span class="w"> </span><span class="nx">resetPoint</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span>
+<span class="w">        </span><span class="nx">conns</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">InitConnectionsFromPoints</span><span class="p">(</span><span class="nx">points</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">conns</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">conns2</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">conns</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">resetPoint</span><span class="p">)</span>
+
+<span class="w">        </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conns</span><span class="p">.</span><span class="nx">ComputeDistance</span><span class="p">()</span>
+<span class="w">        </span><span class="nx">dReset</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span>
+<span class="w">        </span><span class="nx">MaxDriftFromGlobalMinimum</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">points</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">countSinceReset</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">MaxDriftFromGlobalMinimum</span>
+
+<span class="w">        </span><span class="nx">MaxIterations</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">100000</span>
+<span class="w">        </span><span class="nx">distanceEvolution</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="nx">MaxIterations</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">MaxIterations</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">            </span><span class="nx">temperature</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">MaxIterations</span><span class="o">-</span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">MaxIterations</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">temperature</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">math</span><span class="p">.</span><span class="nx">Pow</span><span class="p">(</span><span class="nx">temperature</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+
+<span class="w">            </span><span class="c1">// switch two nodes</span>
+<span class="w">            </span><span class="nx">d2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conns2</span><span class="p">.</span><span class="nx">ComputeNewPath</span><span class="p">()</span>
+
+<span class="w">            </span><span class="c1">// found a better move</span>
+<span class="w">            </span><span class="c1">// or the temperature is high enough to accept other moves</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">d2</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">d2</span><span class="o">-</span><span class="nx">d</span><span class="p">)</span><span class="o">*</span><span class="nx">temperature</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="nx">d2</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="p">(</span><span class="nx">MaxIterations</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="mi">50</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Accepted bad move: iter: %v, temp: %v, distance: %v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">temperature</span><span class="p">,</span><span class="w"> </span><span class="nx">d2</span><span class="o">-</span><span class="nx">d</span><span class="p">)</span>
+<span class="w">                </span><span class="p">}</span>
+
+<span class="w">                </span><span class="nx">conns2</span><span class="p">.</span><span class="nx">BuildEndsInMap</span><span class="p">()</span>
+<span class="w">                </span><span class="nx">conns2</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">conns</span><span class="p">)</span>
+<span class="w">                </span><span class="nx">d</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">d2</span>
+
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">dReset</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="nx">dReset</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">d</span>
+<span class="w">                    </span><span class="nx">countSinceReset</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">MaxDriftFromGlobalMinimum</span>
+<span class="w">                    </span><span class="nx">conns2</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">resetPoint</span><span class="p">)</span>
+<span class="w">                </span><span class="p">}</span>
+
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">countSinceReset</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">d</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">dReset</span>
+<span class="w">                </span><span class="nx">countSinceReset</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">MaxDriftFromGlobalMinimum</span>
+<span class="w">                </span><span class="nx">resetPoint</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">conns</span><span class="p">)</span>
+<span class="w">                </span><span class="nx">resetPoint</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">conns2</span><span class="p">)</span>
+<span class="w">                </span><span class="c1">//fmt.Println(&quot;Reset&quot;)</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">conns</span><span class="p">.</span><span class="nx">DuplicateConnectionsTo</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">conns2</span><span class="p">)</span><span class="w"> </span><span class="c1">// re-init conns2</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="nx">countSinceReset</span><span class="o">--</span>
+
+<span class="w">            </span><span class="c1">// save for analysis</span>
+<span class="w">            </span><span class="nx">distanceEvolution</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">d</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">plt</span><span class="p">.</span><span class="nx">Reset</span><span class="p">()</span>
+<span class="w">        </span><span class="nx">plt</span><span class="p">.</span><span class="nx">LinePlot</span><span class="p">(</span><span class="nx">distanceEvolution</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Distance Evolution&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="nx">dReset</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">out</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">resetPoint</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">out</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">conns</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">wnd</span><span class="p">,</span><span class="w"> </span><span class="nx">cv</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdlcanvas</span><span class="p">.</span><span class="nx">CreateWindow</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span><span class="w"> </span><span class="mi">720</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Travelling Salesman&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">wnd</span><span class="p">.</span><span class="nx">Destroy</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">points</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Point</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">connections</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Connection</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">distance</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="w">    </span><span class="nx">submitPoints</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="p">[]</span><span class="nx">Point</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">receiveConnections</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="o">*</span><span class="nx">ConnsCollection</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="nx">TravellingSalesman</span><span class="p">(</span><span class="nx">submitPoints</span><span class="p">,</span><span class="w"> </span><span class="nx">receiveConnections</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">wnd</span><span class="p">.</span><span class="nx">MouseDown</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">btn</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// on mouse down add new points</span>
+<span class="w">        </span><span class="nx">points</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">points</span><span class="p">,</span><span class="w"> </span><span class="nx">Point</span><span class="p">{</span>
+<span class="w">            </span><span class="nx">X</span><span class="p">:</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">Y</span><span class="p">:</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">),</span>
+<span class="w">        </span><span class="p">})</span>
+
+<span class="w">        </span><span class="c1">// send the points to be computed</span>
+<span class="w">        </span><span class="nx">submitPoints</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">points</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">wnd</span><span class="p">.</span><span class="nx">KeyDown</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">scancode</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">rn</span><span class="w"> </span><span class="kt">rune</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;Escape&quot;</span><span class="p">:</span>
+<span class="w">            </span><span class="nx">points</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Point</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">connections</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="nx">Connection</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">distance</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;KeyP&quot;</span><span class="p">:</span>
+<span class="w">            </span><span class="nx">plt</span><span class="p">.</span><span class="nx">Execute</span><span class="p">()</span><span class="w"> </span><span class="c1">// show plot only when key is pressed</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">wnd</span><span class="p">.</span><span class="nx">MainLoop</span><span class="p">(</span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="k">select</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">cc</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">receiveConnections</span><span class="p">:</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">dd</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">ComputeDistance</span><span class="p">();</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">distance</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">dd</span>
+<span class="w">                </span><span class="nx">connections</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">cc</span><span class="p">.</span><span class="nx">Conns</span>
+<span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;New paths with distance %f\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">distance</span><span class="p">)</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">default</span><span class="p">:</span>
+
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// background</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="nx">h</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">cv</span><span class="p">.</span><span class="nx">Width</span><span class="p">()),</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">cv</span><span class="p">.</span><span class="nx">Height</span><span class="p">())</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">SetFillStyle</span><span class="p">(</span><span class="s">&quot;#000&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">FillRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="nx">h</span><span class="p">)</span>
+
+<span class="w">        </span><span class="c1">// circles</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">SetStrokeStyle</span><span class="p">(</span><span class="s">&quot;#FFF&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">SetLineWidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">SetFillStyle</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">BeginPath</span><span class="p">()</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">MoveTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span><span class="p">].</span><span class="nx">X</span><span class="p">,</span><span class="w"> </span><span class="nx">points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">Start</span><span class="p">].</span><span class="nx">Y</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">LineTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="p">].</span><span class="nx">X</span><span class="p">,</span><span class="w"> </span><span class="nx">points</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">End</span><span class="p">].</span><span class="nx">Y</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">Stroke</span><span class="p">()</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">points</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">BeginPath</span><span class="p">()</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">Arc</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">X</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">Y</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nx">math</span><span class="p">.</span><span class="nx">Pi</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">ClosePath</span><span class="p">()</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
+<span class="w">            </span><span class="nx">cv</span><span class="p">.</span><span class="nx">Stroke</span><span class="p">()</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">SetFont</span><span class="p">(</span><span class="s">&quot;Righteous-Regular.ttf&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">cv</span><span class="p">.</span><span class="nx">FillText</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;Total distance: %f&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">distance</span><span class="p">),</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span>
+
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="easy-charting-from-go">Easy Charting From Go</h3>
+<p>Since I couldn't find any charting library that met my needs, to be easy to use from a desktop application, I've decided to build my own. It relies on the excellent matplotlib library from python. The solution is simple: it generates a python script containing all the values I need to plot and, then, it launches that script in a separate process with its own window. For this we are using golang text templates to generate the script. I will extend the library for future use with other types of charts. Below you can see the code:</p>
+<p>The template:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="p">{{</span><span class="nb">range</span> <span class="o">.</span><span class="p">}}</span> <span class="p">{{</span><span class="k">if</span> <span class="n">eq</span> <span class="o">.</span><span class="n">Type</span> <span class="s2">&quot;line&quot;</span><span class="p">}}</span>
+
+<span class="n">values</span><span class="o">=</span><span class="p">{{</span><span class="n">index</span> <span class="o">.</span><span class="n">Values</span> <span class="mi">0</span> <span class="o">|</span> <span class="n">CompressByMean</span> <span class="o">.</span><span class="n">Count</span> <span class="o">|</span> <span class="n">ToPythonArray</span><span class="p">}}</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+<span class="p">{{</span><span class="n">end</span><span class="p">}}</span> <span class="p">{{</span><span class="n">end</span><span class="p">}}</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p>The code for generating the template:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">plt</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;io/ioutil&quot;</span>
+<span class="w">    </span><span class="s">&quot;log&quot;</span>
+<span class="w">    </span><span class="s">&quot;os&quot;</span>
+<span class="w">    </span><span class="s">&quot;os/exec&quot;</span>
+<span class="w">    </span><span class="s">&quot;strings&quot;</span>
+<span class="w">    </span><span class="s">&quot;text/template&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Plot</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Type</span><span class="w">   </span><span class="kt">string</span>
+<span class="w">    </span><span class="nx">Values</span><span class="w"> </span><span class="p">[][]</span><span class="kt">float64</span>
+<span class="w">    </span><span class="nx">Name</span><span class="w">   </span><span class="kt">string</span>
+<span class="w">    </span><span class="nx">Count</span><span class="w">  </span><span class="kt">int</span>
+<span class="p">}</span>
+
+<span class="kd">var</span><span class="w"> </span><span class="nx">plots</span><span class="w"> </span><span class="p">[]</span><span class="nx">Plot</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">tmpl</span><span class="w"> </span><span class="o">*</span><span class="nx">template</span><span class="p">.</span><span class="nx">Template</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nb">min</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">b</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">compressByMean</span><span class="p">(</span><span class="nx">count</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">arr</span><span class="w"> </span><span class="p">[]</span><span class="kt">float64</span><span class="p">)</span><span class="w"> </span><span class="p">[]</span><span class="kt">float64</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">ret</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="nx">count</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">intvLen</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">arr</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">count</span>
+<span class="w">    </span><span class="nx">cnt</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">intvLen</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">count</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="nx">upperLimit</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">intvLen</span>
+<span class="w">        </span><span class="nx">lowerLimit</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">intvLen</span>
+
+<span class="w">        </span><span class="nx">ret</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">arr</span><span class="p">[</span><span class="nx">lowerLimit</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">cnt</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">lowerLimit</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">upperLimit</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">ret</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">arr</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">cnt</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// last one is the last value - a hack for the simulated annealing problem</span>
+<span class="w">    </span><span class="nx">ret</span><span class="p">[</span><span class="nx">count</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">arr</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">arr</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ret</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">toPythonArray</span><span class="p">(</span><span class="nx">arr</span><span class="w"> </span><span class="p">[]</span><span class="kt">float64</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">sb</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Builder</span><span class="p">{}</span>
+<span class="w">    </span><span class="nx">sb</span><span class="p">.</span><span class="nx">WriteString</span><span class="p">(</span><span class="s">&quot;[&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">arr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">sb</span><span class="p">.</span><span class="nx">WriteString</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;%f&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">))</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">arr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">sb</span><span class="p">.</span><span class="nx">WriteString</span><span class="p">(</span><span class="s">&quot;, &quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">sb</span><span class="p">.</span><span class="nx">WriteString</span><span class="p">(</span><span class="s">&quot;]&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">sb</span><span class="p">.</span><span class="nx">String</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Getwd</span><span class="p">())</span>
+
+<span class="w">    </span><span class="nx">fn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">template</span><span class="p">.</span><span class="nx">FuncMap</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;CompressByMean&quot;</span><span class="p">:</span><span class="w"> </span><span class="nx">compressByMean</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;ToPythonArray&quot;</span><span class="p">:</span><span class="w">  </span><span class="nx">toPythonArray</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">tmpl</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">template</span><span class="p">.</span><span class="nx">Must</span><span class="p">(</span><span class="nx">template</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;chart_template.gopy&quot;</span><span class="p">).</span><span class="nx">Funcs</span><span class="p">(</span><span class="nx">fn</span><span class="p">).</span><span class="nx">ParseFiles</span><span class="p">(</span><span class="s">&quot;chart_template.gopy&quot;</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">LinePlot</span><span class="p">(</span><span class="nx">arr</span><span class="w"> </span><span class="p">[]</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">count</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Plot</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Type</span><span class="p">:</span><span class="w">   </span><span class="s">&quot;line&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">Values</span><span class="p">:</span><span class="w"> </span><span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Name</span><span class="p">:</span><span class="w">   </span><span class="nx">name</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">Count</span><span class="p">:</span><span class="w">  </span><span class="nx">count</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">v</span><span class="p">.</span><span class="nx">Values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">arr</span>
+<span class="w">    </span><span class="nx">plots</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">plots</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Reset</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// clear the plots</span>
+<span class="w">    </span><span class="nx">plots</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Execute</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">fileName</span><span class="w"> </span><span class="kt">string</span>
+
+<span class="w">    </span><span class="kd">func</span><span class="p">(</span><span class="nx">fn</span><span class="w"> </span><span class="o">*</span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ioutil</span><span class="p">.</span><span class="nx">TempFile</span><span class="p">(</span><span class="s">&quot;./plots&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;plt*.py&quot;</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">defer</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+<span class="w">        </span><span class="o">*</span><span class="nx">fn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Name</span><span class="p">()</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tmpl</span><span class="p">.</span><span class="nx">Execute</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">plots</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">Reset</span><span class="p">()</span>
+
+<span class="w">    </span><span class="p">}(</span><span class="o">&amp;</span><span class="nx">fileName</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">fileName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">out</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">exec</span><span class="p">.</span><span class="nx">Command</span><span class="p">(</span><span class="s">&quot;python&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">fileName</span><span class="p">).</span><span class="nx">Output</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">out</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">out</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}(</span><span class="nx">fileName</span><span class="p">)</span>
+
+<span class="p">}</span>
+</code></pre></div>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2021/01/23/golang-first-websockets.html">First Steps In Go - WebSockets</a></span><span><a href="../../../../programming/2021/08/14/timeseries-analysis.html">Timeseries Analysis in Python</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

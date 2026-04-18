@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First Steps In Go - Web Services | From The Trenches - The Code</title>
+  <meta name="description" content="These are my first steps in Go, this time learning how to build web services. The post touches handling requests, json serialization, middleware, logging, database access and concurrency. Websockets and templates will be covered in a future post.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">First Steps In Go - Web Services</h1>
+    <p class="post-meta">
+      <time datetime="2021-01-12" itemprop="datePublished">Jan 12, 2021</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>These are my first steps in Go, this time learning how to build web services. The post touches handling requests, json serialization, middleware, logging, database access and concurrency. Websockets and templates will be covered in a future post.</p>
+<h3 id="listening-to-incoming-requests">Listening to Incoming Requests</h3>
+<p>For building HTTP services, golang comes with all batteries included. There's no need to install any additional package, everything is already available in the standard library. The APIs are straight forward and the code is short and fast. </p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;log&quot;</span>
+<span class="w">    </span><span class="s">&quot;net/http&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">customEndpoint</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nx">Write</span><span class="p">([]</span><span class="nx">bytes</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Served.&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// a /custom endpoint</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/custom&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">customEndpoint</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// listen on localhost, port :8080</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="handling-json">Handling JSON</h3>
+<p>If we want to export a field from a structure to JSON, its name has to start with a capital letter, making it a public symbol. Otherwise it will be considered as private and it will not appear in the output string.</p>
+<p>We use annotations, which are accessible at runtime through reflection, to specify how the field will be serialized. There is no space between <code>json</code>, <code>:</code> and the name. If we skip the annotation, the structure will be serialized with its fields as JSON fields.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">&quot;encoding/json&quot;</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Product</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ProductID</span><span class="w">      </span><span class="kt">int</span><span class="w">    </span><span class="s">`json:&quot;productId&quot;`</span>
+<span class="w">    </span><span class="nx">Manufacturer</span><span class="w">   </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;manufacturer&quot;`</span>
+<span class="w">    </span><span class="nx">PricePerUnit</span><span class="w">   </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;pricePerUnit&quot;`</span>
+<span class="w">    </span><span class="nx">UnitsAvailable</span><span class="w"> </span><span class="kt">int</span><span class="w">    </span><span class="s">`json:&quot;unitsAvailable&quot;`</span>
+<span class="w">    </span><span class="nx">ProductName</span><span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;productName&quot;`</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>To serialize JSON we do the following:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">bytes</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Product</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ProductID</span><span class="p">:</span><span class="w">      </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">Manufacturer</span><span class="p">:</span><span class="w">   </span><span class="s">&quot;Apple&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">PricePerUnit</span><span class="p">:</span><span class="w">   </span><span class="s">&quot;2500EUR&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">UnitsAvailable</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ProductName</span><span class="p">:</span><span class="w">    </span><span class="s">&quot;MacBook Pro&quot;</span><span class="p">,</span>
+<span class="p">});</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Successfully serialized to JSON&quot;</span><span class="p">)</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Failed to serialize object&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>To deserialize, the following:</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">product</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Product</span><span class="p">{}</span>
+<span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">serializedJSONString</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">product</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Could not unmarshal&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="handling-of-http-verbs">Handling of HTTP Verbs</h3>
+<p>A simple WebService, handling the GET method, returning a list of products from an in-memory structure.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;encoding/json&quot;</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;log&quot;</span>
+<span class="w">    </span><span class="s">&quot;math/rand&quot;</span>
+<span class="w">    </span><span class="s">&quot;net/http&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// Product type</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">Product</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ProductID</span><span class="w">      </span><span class="kt">int</span><span class="w">    </span><span class="s">`json:&quot;productId&quot;`</span>
+<span class="w">    </span><span class="nx">Manufacturer</span><span class="w">   </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;manufacturer&quot;`</span>
+<span class="w">    </span><span class="nx">PricePerUnit</span><span class="w">   </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;pricePerUnit&quot;`</span>
+<span class="w">    </span><span class="nx">UnitsAvailable</span><span class="w"> </span><span class="kt">int</span><span class="w">    </span><span class="s">`json:&quot;unitsAvailable&quot;`</span>
+<span class="w">    </span><span class="nx">ProductName</span><span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="s">`json:&quot;productName&quot;`</span>
+<span class="p">}</span>
+
+<span class="c1">// some products stored in memory to play a bit</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">products</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">Product</span>
+
+<span class="c1">// endpoint handler</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">productsHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Method</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// handling the GET verb</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">jsonStr</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="nx">products</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;application/json&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">w</span><span class="p">.</span><span class="nx">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">jsonStr</span><span class="p">))</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// everything else, not impemented</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotImplemented</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// init a few products in memory</span>
+<span class="w">    </span><span class="nx">products</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">Product</span><span class="p">{}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">products</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">products</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">Product</span><span class="p">{</span>
+<span class="w">            </span><span class="nx">ProductID</span><span class="p">:</span><span class="w">      </span><span class="nx">i</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">Manufacturer</span><span class="p">:</span><span class="w">   </span><span class="s">&quot;Apple&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">PricePerUnit</span><span class="p">:</span><span class="w">   </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;%vEUR&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">rand</span><span class="p">.</span><span class="nx">Int</span><span class="p">()</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="o">+</span><span class="mi">500</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">UnitsAvailable</span><span class="p">:</span><span class="w"> </span><span class="nx">rand</span><span class="p">.</span><span class="nx">Int</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">ProductName</span><span class="p">:</span><span class="w">    </span><span class="s">&quot;MacBook Pro&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// handler</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/products&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">productsHandler</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>And the output:</p>
+<p><img alt="Basic Service Running" src="../../../../assets/gows1.png" /></p>
+<p>To create a new product, we update the switch block from above with the following:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">case</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPost</span><span class="p">:</span>
+<span class="w">    </span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="nx">io</span><span class="p">.</span><span class="nx">LimitedReader</span><span class="p">{</span><span class="w"> </span><span class="c1">// ensure we don&#39;t get DoS</span>
+<span class="w">            </span><span class="nx">R</span><span class="p">:</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">N</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">})</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">product</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Product</span><span class="p">{}</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">product</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">product</span><span class="p">.</span><span class="nx">ProductID</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;ProductID should be 0 - if you know the ID, use PUT&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// give them an increment</span>
+<span class="w">    </span><span class="c1">// for now assume products are in incremental order, sorted</span>
+<span class="w">    </span><span class="c1">// ensure safe to this data structure</span>
+<span class="w">    </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">Lock</span><span class="p">()</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">Unlock</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">products</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">product</span><span class="p">.</span><span class="nx">ProductID</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">products</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">products</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="nx">ProductID</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">products</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">products</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">product</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Location&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;/products/%v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">product</span><span class="p">.</span><span class="nx">ProductID</span><span class="p">))</span>
+<span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusCreated</span><span class="p">)</span>
+</code></pre></div>
+
+<p>To test the service we just do</p>
+<div class="codehilite"><pre><span></span><code>$curl -D - -X POST -H &quot;Content-Type: application/json&quot; -d &#39;{&quot;productId&quot; : 0, &quot;manufacturer&quot;: &quot;Microsoft&quot;, &quot;productName&quot;: &quot;MS Surface&quot;}&#39; localhost:8080/products
+</code></pre></div>
+
+<p>And we get the expected response back</p>
+<div class="codehilite"><pre><span></span><code><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Date</span><span class="o">:</span> <span class="l">Sat, 16 Jan 2021 09:09:20 GMT</span>
+<span class="na">Content-Length</span><span class="o">:</span> <span class="l">0</span>
+</code></pre></div>
+
+<p>What we are going to do now is to implement <code>GET</code> for a specific product ID and <code>PUT</code> for updating a specific ID. </p>
+<p>To do this, we need a new handler which we add to the main function. This will match the trailing <code>/</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// handler for GET id and PUT id</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/products/&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">productHandler</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The URLs that will go to this handler take the form <code>http://localhost:8080/products/id</code>. We are also going to structure a bit better the handler, so the error handling is factored out of the main function.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">productHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">retCode</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="nx">pathSegments</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/products/&quot;</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">pathSegments</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">productID</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">pathSegments</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">pathSegments</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">product</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">findProductByID</span><span class="p">(</span><span class="nx">productID</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">product</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotFound</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Method</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">:</span>
+
+<span class="w">            </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">RLock</span><span class="p">()</span>
+<span class="w">            </span><span class="k">defer</span><span class="w"> </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">RUnlock</span><span class="p">()</span>
+
+<span class="w">            </span><span class="nx">jsonStr</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="nx">product</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;application/json&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="nx">w</span><span class="p">.</span><span class="nx">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">jsonStr</span><span class="p">))</span>
+
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span>
+
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPut</span><span class="p">:</span>
+
+<span class="w">            </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">Lock</span><span class="p">()</span>
+<span class="w">            </span><span class="k">defer</span><span class="w"> </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">Unlock</span><span class="p">()</span>
+
+<span class="w">            </span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span>
+<span class="w">                </span><span class="o">&amp;</span><span class="nx">io</span><span class="p">.</span><span class="nx">LimitedReader</span><span class="p">{</span>
+<span class="w">                    </span><span class="nx">R</span><span class="p">:</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">N</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">})</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">product</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="c1">// ensure ID stays the same</span>
+<span class="w">            </span><span class="nx">product</span><span class="p">.</span><span class="nx">ProductID</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">productID</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusAccepted</span>
+<span class="w">        </span><span class="k">default</span><span class="p">:</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusMethodNotAllowed</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="p">}(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Method</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">retCode</span><span class="p">)</span>
+
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Since we store the products in an array in memory, the find function is as simple as it gets.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">mtx</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">findProductByID</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="nx">Product</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">RLock</span><span class="p">()</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">mtx</span><span class="p">.</span><span class="nx">RUnlock</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">products</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">ProductID</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">p</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>We can test our code easily from the command line invoking</p>
+<div class="codehilite"><pre><span></span><code>$curl -D - -X GET http://localhost:8080/products/2
+</code></pre></div>
+
+<p>and</p>
+<div class="codehilite"><pre><span></span><code>$curl -D - -X PUT -H &quot;Content-Type: application/json&quot; -d &#39;{&quot;productId&quot;: 0, &quot;manufacturer&quot;: &quot;Microsoft&quot;, &quot;productName&quot;: &quot;MS Surface&quot;}&#39; localhost:8080/products/2
+</code></pre></div>
+
+<h3 id="adding-middlewares-cors-example">Adding Middlewares - CORS Example</h3>
+<p>The http package allows for easy addition of middleware. Such middleware can do things like authentication, caching (memoizing), logging or session management. For this example, we will modify our code to add a CORS middleware.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">corsMiddleware</span><span class="p">(</span><span class="nx">handler</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">Handler</span><span class="p">)</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">Handler</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandlerFunc</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="c1">// before the handler</span>
+<span class="w">        </span><span class="c1">// add the cors middleware headers</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Access-Control-Allow-Origin&quot;</span><span class="p">,</span><span class="s">&quot;*&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Access-Control-Allow-Methods&quot;</span><span class="p">,</span><span class="s">&quot;POST, GET, OPTIONS, PUT, DELETE&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Access-Control-Allow-Headers&quot;</span><span class="p">,</span><span class="s">&quot;Accept, Content-Type, Content-Length&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;application/json&quot;</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// the pre-flight request, make sure it is handled</span>
+<span class="w">            </span><span class="k">return</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// the actual handler</span>
+<span class="w">        </span><span class="nx">handler</span><span class="p">.</span><span class="nx">ServeHTTP</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">)</span>
+
+<span class="w">        </span><span class="c1">// after handler</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// handler for GET all and POST</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">Handle</span><span class="p">(</span><span class="s">&quot;/products&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">corsMiddleware</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">HandlerFunc</span><span class="p">(</span><span class="nx">productsHandler</span><span class="p">)))</span>
+<span class="w">    </span><span class="c1">// handler for GET id and PUT</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">Handle</span><span class="p">(</span><span class="s">&quot;/products/&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">corsMiddleware</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">HandlerFunc</span><span class="p">(</span><span class="nx">productHandler</span><span class="p">)))</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The full code, refactored with persitence in an in-memory map can be found <a href="https://github.com/alexandrugris/learngolang1/tree/persistence_in_memory_map">here</a></p>
+<h3 id="database-access">Database Access</h3>
+<p>First thing, we are going to install Postgres. Assuming docker is installed and running, we do</p>
+<div class="codehilite"><pre><span></span><code>$docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+</code></pre></div>
+
+<p>Now I am running the Postgres server portmapped on 5432, with usename <code>posgres</code> having the password <code>mysecretpassword</code></p>
+<p>To connect to the server we do </p>
+<div class="codehilite"><pre><span></span><code>$psql -p 5432 -h localhost -U postgres
+</code></pre></div>
+
+<p>In the screenshot below, I have also created a database called <code>products</code> and connected to it using the <code>\c</code> command</p>
+<p><img alt="Postgres running" src="../../../../assets/gows2.png" /></p>
+<p>The next thing to do is to get the Postgres Go driver.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">$</span><span class="k">go</span><span class="w"> </span><span class="k">get</span><span class="w"> </span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">pq</span>
+</code></pre></div>
+
+<p>At the time of this writing, the recommended database driver for go is <a href="https://github.com/jackc/pgx">pgx</a>. Its authors recommend to use its own API instead of the standard go SQL package due to higher performance in most Postgres-specific scenarios. For the purpose of this demo we will use the standard SQL package though, as it is portable across databases.</p>
+<p>In a production scenario we'd also be using an external connection pooler, the recommended solution being <a href="https://www.pgbouncer.org/">pgbouncer</a>. This is because for each new connection to the database server pgsql launches a new Postgres database backend, a new system process, with its launching system heavy and memory intensive. </p>
+<p>Let's dive into the code.</p>
+<p>First step is to blank import the driver into our <code>main.go</code> file. That is because drivers need to register themselves with the SQL package in their <code>init function</code>(https://golang.org/doc/effective_go.html#init)</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="s">&quot;github.com/lib/pq&quot;</span>
+</code></pre></div>
+
+<p>The next step is to declare a database connection pool and open it. The names are exported hence capitalized.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">database</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;database/sql&quot;</span>
+<span class="w">    </span><span class="s">&quot;log&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// DbConn is our database connection pool</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">DbConn</span><span class="w"> </span><span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">DB</span>
+
+<span class="c1">// Connect opens the connection to the database</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">Connect</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span>
+<span class="w">    </span><span class="nx">DbConn</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">sql</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;postgres&quot;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="s">&quot;user=pqgotest dbname=products sslmode=verify-full password=mysecretpassword&quot;</span>
+<span class="w">    </span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>We are going to create the Products table and seed our database, but only if a <code>--dbinit</code> flag is sent to our executable. We add to our main function the following:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;--dbinit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">database</span><span class="p">.</span><span class="nx">Init</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>To create our database, we are going to play a bit with reflection and automatically discover the fields from our <code>Product</code> type. This discovery by reflection is something that all ORMs do. Since we are not going to build our own ORM here, this is the only place where we will play with reflection.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">Init</span><span class="p">()</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">DbConn</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Database not opened&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">query</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&quot;CREATE TABLE IF NOT EXISTS Products (&quot;</span>
+
+<span class="w">    </span><span class="nx">t</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">reflect</span><span class="p">.</span><span class="nx">TypeOf</span><span class="p">(</span><span class="nx">product</span><span class="p">.</span><span class="nx">Product</span><span class="p">{})</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">NumField</span><span class="p">();</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">f</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">Field</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">query</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+
+<span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="nx">Name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;string&quot;</span><span class="p">:</span>
+<span class="w">            </span><span class="nx">query</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot;varchar (100)&quot;</span>
+<span class="w">        </span><span class="k">default</span><span class="p">:</span>
+<span class="w">            </span><span class="nx">query</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="nx">Name</span><span class="p">()</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">NumField</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">query</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot;, &quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">query</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot;);&quot;</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="s">&quot;DELETE FROM Products&quot;</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="s">&quot;ALTER TABLE Products ADD PRIMARY KEY (ProductID)&quot;</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span>
+<span class="w">        </span><span class="s">`CREATE SEQUENCE IF NOT EXISTS pk_product </span>
+<span class="s">        CACHE 100 OWNED BY Product.ProductID`</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The next step is to implement the full <code>product.Map</code> interface and switch from an in-memory map to database calls. A better name would have been <code>product.Repository</code> but we will not refactor the code now. The full code can be found <a href="https://github.com/alexandrugris/learngolang1/blob/with_database/product/product.data.go">here</a> and we are only going to exemplify in this blogpost how to create a new product.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><span class="nx">mapInternal</span><span class="p">)</span><span class="w"> </span><span class="nx">CreateNew</span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Product</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">stmt</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">database</span><span class="p">.</span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">Prepare</span><span class="p">(</span><span class="s">`INSERT INTO </span>
+<span class="s">        Products(Manufacturer, PricePerUnit, UnitsAvailable, ProductName, ProductID) </span>
+<span class="s">        VALUES ($1, $2, $3, $4, nextval(&#39;pk_product&#39;)) RETURNING ProductID`</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">stmt</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">sqlRow</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">stmt</span><span class="p">.</span><span class="nx">QueryRow</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">Manufacturer</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">PricePerUnit</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">UnitsAvailable</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">ProductName</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sqlRow</span><span class="p">.</span><span class="nx">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">.</span><span class="nx">ProductID</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The full source code for this implementation can be found <a href="https://github.com/alexandrugris/learngolang1/tree/with_database">here</a>.</p>
+<h3 id="contexts">Contexts</h3>
+<p>If we want to setup a timeout for a query, golang provides the <code>Context</code> mechanism. Each database function has a <code>Context</code> method. The call to <code>cancel()</code> when the operation is completed successfully allows to end the context and release all associated resources.</p>
+<p>An example below:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><span class="nx">mapInternal</span><span class="p">)</span><span class="w"> </span><span class="nx">GetAll</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">Product</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// this will allow the queries to timeout</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">cancel</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">WithTimeout</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">Background</span><span class="p">(),</span><span class="w"> </span><span class="mi">15</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">cancel</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">results</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">database</span><span class="p">.</span><span class="nx">DbConn</span><span class="p">.</span><span class="nx">QueryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">`</span>
+<span class="s">    SELECT </span>
+<span class="s">        ProductID, </span>
+<span class="s">        Manufacturer, </span>
+<span class="s">        PricePerUnit, </span>
+<span class="s">        UnitsAvailable, </span>
+<span class="s">        ProductName </span>
+<span class="s">    FROM Products</span>
+<span class="s">    `</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">ret</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="o">*</span><span class="nx">Product</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Product</span><span class="p">{}</span>
+
+<span class="w">        </span><span class="nx">results</span><span class="p">.</span><span class="nx">Scan</span><span class="p">(</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">.</span><span class="nx">ProductID</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">.</span><span class="nx">Manufacturer</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">.</span><span class="nx">PricePerUnit</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">.</span><span class="nx">UnitsAvailable</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">.</span><span class="nx">ProductName</span><span class="p">)</span>
+
+<span class="w">        </span><span class="nx">ret</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">ret</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ret</span>
+<span class="p">}</span>
+</code></pre></div>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2021/01/09/golang-first-steps.html">First Steps In Go</a></span><span><a href="../../../../programming/2021/01/23/golang-first-websockets.html">First Steps In Go - WebSockets</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

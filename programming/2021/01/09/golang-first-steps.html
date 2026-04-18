@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First Steps In Go | From The Trenches - The Code</title>
+  <meta name="description" content="My first steps in Go, largely based on the Golang tutorial and Internet side searches.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">First Steps In Go</h1>
+    <p class="post-meta">
+      <time datetime="2021-01-09" itemprop="datePublished">Jan 9, 2021</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>My first steps in Go, largely based on the Golang tutorial and Internet side searches. </p>
+<h3 id="hello-world">Hello World</h3>
+<p>Building a very basic hello world project once the go tools are installed is straight forward:</p>
+<ul>
+<li>Create a folder named "helloworld"</li>
+<li><code>cd ./helloworld</code></li>
+<li>Create a file called <code>main.go</code></li>
+<li>Add the following code into the file</li>
+<li>Save and at the command prompt type <code>go build</code>. An executable file called <code>helloworld</code> will be compiled into the folder.</li>
+</ul>
+<p>```go<br />
+package main</p>
+<p>import (<br />
+    "fmt"<br />
+)</p>
+<p>func main() {<br />
+    fmt.Println("Hello World")<br />
+}<br />
+ ```</p>
+<p>A good editor for <code>go</code> is Visual Studio Code. </p>
+<h3 id="language-basics">Language Basics</h3>
+<p>The most basic unit of organizing code in go is the function. Below is an example of a function with several parameters, one of each being a callback (function pointer). </p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// function receiving function as a parameter</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">arrayOpScalar</span><span class="p">(</span><span class="nx">array</span><span class="w"> </span><span class="p">[]</span><span class="kt">float32</span><span class="p">,</span><span class="w"> </span><span class="nx">constant</span><span class="w"> </span><span class="kt">float32</span><span class="p">,</span><span class="w"> </span><span class="nx">operation</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="kt">float32</span><span class="p">,</span><span class="w"> </span><span class="kt">float32</span><span class="p">)</span><span class="w"> </span><span class="kt">float32</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">array</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">array</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">operation</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span><span class="w"> </span><span class="nx">constant</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>A function can be passed as a parameter, assigned to a variable or returned from another function.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// use the arrayOpScalar function defined above to </span>
+<span class="c1">// create another function to double the values in an array</span>
+<span class="nx">doubleFn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">array</span><span class="w"> </span><span class="p">[]</span><span class="kt">float32</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">arrayOpScalar</span><span class="p">(</span><span class="nx">array</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="kt">float32</span><span class="p">)</span><span class="w"> </span><span class="kt">float32</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="nx">doubleFn</span><span class="p">(</span><span class="nx">p</span><span class="p">)</span>
+</code></pre></div>
+
+<p>But before we do that, let's look a bit at arrays and slices. Allocating an array goes like this</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">primes</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="kt">int</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">}</span>
+</code></pre></div>
+
+<p>The length is part of the array so it cannot be resized. Slices are views onto arrays, so when a value is modified on the slice it will automatically propagate to the backing array.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="p">[]</span><span class="kt">int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">primes</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+</code></pre></div>
+
+<p>The internal structure of a slice is as follows: </p>
+<div class="codehilite"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">slice</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">array</span><span class="w"> </span><span class="o">*</span><span class="nx">T</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">len</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">cap</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Length and capacity can be accessed through <code>len()</code> and <code>cap()</code>. Therefore, in golang you can do very cool stuff such as converting from a struct to its underlying byte representation. Such operations are useful when, for instance, memory mapping files to arrays of a specified stucture without additional serialization / deseralization. <a href="https://stackoverflow.com/questions/16330490/in-go-how-can-i-convert-a-struct-to-a-byte-array">Here for an extended thread</a></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Struct</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">p1</span><span class="w"> </span><span class="kt">int32</span>
+<span class="w">  </span><span class="nx">p2</span><span class="w"> </span><span class="kt">int32</span>
+<span class="w">  </span><span class="nx">p3</span><span class="w"> </span><span class="kt">uint16</span>
+<span class="w">  </span><span class="nx">p3</span><span class="w"> </span><span class="kt">uint16</span>
+<span class="p">}</span>
+
+<span class="c1">// read in a compile-time constant the size of the struct</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">sz</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">int</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nx">SizeOf</span><span class="p">(</span><span class="nx">Struct</span><span class="p">{}))</span>
+
+<span class="c1">// initialize convert the pointer to the struct to an array of bytes </span>
+<span class="c1">// of the same size as the struct and take a slice to it.</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">asByteSlice</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nx">sz</span><span class="p">]</span><span class="kt">byte</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">struct_value</span><span class="p">)))[:]</span>
+</code></pre></div>
+
+<p>Slices can contain other slices.</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">mat3x3</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[][]</span><span class="kt">float32</span><span class="p">{</span>
+<span class="w">    </span><span class="p">[]</span><span class="kt">float32</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">[]</span><span class="kt">float32</span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">[]</span><span class="kt">float32</span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="c1">// elements can be accessed</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">board</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">// dynamic allocation of an array of 10 floats</span>
+<span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">float32</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1">// dynamically growing the array by appending</span>
+<span class="c1">// 10 elements with spread operator</span>
+<span class="nx">p</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">p</span><span class="p">,</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">float32</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1">// looping over indexes in p</span>
+<span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">float32</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Let's look also at static initialization.</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">slice</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// annonymous struct of two integers</span>
+<span class="w">    </span><span class="nx">i1</span><span class="w"> </span><span class="kt">int</span>
+<span class="w">    </span><span class="nx">i2</span><span class="w"> </span><span class="kt">int</span>
+<span class="p">}{</span><span class="w"> </span><span class="c1">// statically initialized</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="c1">// comma at the end is mandatory</span>
+<span class="p">}</span>
+
+<span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">slice</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;%v : %v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">.</span><span class="nx">i1</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">.</span><span class="nx">i2</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="custom-types">Custom Types</h3>
+<p>In <code>go</code>, encapsulation is defined at the package level. Everything in a package is public. Exported symbols start with capital letter, everything starting with lowercase is private outside of the package. Let's define a custom type.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Vertex</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">X</span><span class="w"> </span><span class="kt">float64</span>
+<span class="w">    </span><span class="nx">Y</span><span class="w"> </span><span class="kt">float64</span>
+<span class="w">    </span><span class="nx">Z</span><span class="w"> </span><span class="kt">float64</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Initializing a variable of such a type goes like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Vertex</span><span class="p">{</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">}</span>
+</code></pre></div>
+
+<p>or </p>
+<div class="codehilite"><pre><span></span><code><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Vertex</span><span class="w"> </span><span class="p">{</span>
+<span class="nx">X</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span>
+<span class="nx">Y</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span>
+<span class="nx">Z</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>We can return a pointer of such a struct. By default the compiler will favor stack allocation, but it does perform escape analysis and, in case the lifetime of an object cannot be determined at compile time it will switch to allocating it on the heap.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">returnPointerToVertex</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">Vertex</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">Vertex</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Now let's add some methods to the type. </p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// Length computes the vector norm</span>
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">v</span><span class="w"> </span><span class="nx">Vertex</span><span class="p">)</span><span class="w"> </span><span class="nx">Length</span><span class="p">()</span><span class="w"> </span><span class="kt">float64</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">X</span><span class="o">*</span><span class="nx">v</span><span class="p">.</span><span class="nx">X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">Y</span><span class="o">*</span><span class="nx">v</span><span class="p">.</span><span class="nx">Y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">Z</span><span class="o">*</span><span class="nx">v</span><span class="p">.</span><span class="nx">Z</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Methods with pointer receivers can modify the value to which the receiver points (as scale does here). ince methods often need to modify their receiver, pointer receivers are more common than value receivers. There are two reasons to use a pointer receiver:<br />
+- The first is so that the method can modify the value that its receiver points to.<br />
+- The second is to avoid copying the value on each method call</p>
+<p>In general, all methods on a given type should have either value or pointer receivers, but not a mixture of both.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// Scale scales the vector by a float</span>
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">v</span><span class="w"> </span><span class="o">*</span><span class="nx">Vertex</span><span class="p">)</span><span class="w"> </span><span class="nx">Scale</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="kt">float64</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// unlike C++ where invoking a method on a nullptr usually results in a crash</span>
+<span class="w">  </span><span class="c1">// in golang this is perfectly acceptable</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Received nill pointer&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">v</span><span class="p">.</span><span class="nx">X</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="nx">s</span>
+<span class="w">    </span><span class="nx">v</span><span class="p">.</span><span class="nx">Y</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="nx">s</span>
+<span class="w">    </span><span class="nx">v</span><span class="p">.</span><span class="nx">Z</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="nx">s</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Speaking of types, golang does not allow inheritance, but it does have the interface type. </p>
+<div class="codehilite"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Scaler</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">Scale</span><span class="p">(</span><span class="kt">float64</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Vector automatically implements this interface by simply implementing the respective methods. Now we can do</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Vertex</span><span class="p">{</span><span class="nx">X</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nx">Y</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="nx">Z</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="p">}</span>
+
+<span class="kd">var</span><span class="w"> </span><span class="nx">scaler</span><span class="w"> </span><span class="nx">Scaler</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">v</span>
+<span class="nx">scaler</span><span class="p">.</span><span class="nx">Scale</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Beside interfaces that have functions, go offers the empty interface as a method to hold a variable of any type. Any object can be assigned to the empty interface, including the scalar types. Here is an example:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// empty interface</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">intf</span><span class="w"> </span><span class="kd">interface</span><span class="p">{}</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span>
+
+<span class="c1">// querying the empty interface for the underlying type</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">s</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">intf</span><span class="p">.(</span><span class="kt">string</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// i := intf(float32) would panic</span>
+<span class="c1">// need to test of OK</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">intf</span><span class="p">.(</span><span class="kt">float32</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// a better way is to test with a type switch</span>
+<span class="c1">// interesting is that v is the value converted to the type, not the type</span>
+<span class="k">switch</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">intf</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="kt">string</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;It&#39;s a string!&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="kt">int</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;It&#39;s an int!&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="kt">float32</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;It&#39;s a float!&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>When it comes to interfaces, golang offers a very elegant solution to encapsulation and type aggregation. It reminds me of power of <code>IUnknown::QueryInterface()</code> from <code>COM</code>, but embedded in the language itself. It relies on type assertions and embedded types.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="cm">/*Beautiful method for embedding types and exposing interfaces in Golang. */</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;unsafe&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Writer</span><span class="w"> </span><span class="kd">interface</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Write</span><span class="p">(</span><span class="kt">string</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Reader</span><span class="w"> </span><span class="kd">interface</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Read</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">ReaderWriter</span><span class="w"> </span><span class="kd">struct</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Reader</span>
+<span class="w">    </span><span class="nx">Writer</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">rwImplType</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">str</span><span class="w"> </span><span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">rw</span><span class="w"> </span><span class="o">*</span><span class="nx">rwImplType</span><span class="p">)</span><span class="w"> </span><span class="nx">Read</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// same underlying pointer</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">(</span><span class="nx">rw</span><span class="p">))</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">rw</span><span class="p">.</span><span class="nx">str</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">rw</span><span class="o">*</span><span class="w"> </span><span class="nx">rwImplType</span><span class="p">)</span><span class="w"> </span><span class="nx">Write</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="kt">string</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// same underlying pointer</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">(</span><span class="nx">rw</span><span class="p">))</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;%v: %v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">rw</span><span class="p">.</span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="nx">msg</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// Instatiante a concrete implementation</span>
+<span class="w">    </span><span class="nx">rwImpl</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rwImplType</span><span class="p">{</span><span class="nx">str</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// expose it in an aggregate public interface which</span>
+<span class="w">    </span><span class="c1">// implements several interfaces</span>
+<span class="w">    </span><span class="nx">rwIntf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ReaderWriter</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Reader</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">rwImpl</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">Writer</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">rwImpl</span><span class="p">,</span><span class="w"> </span><span class="c1">// can be another implementation</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">anon</span><span class="w"> </span><span class="kd">interface</span><span class="p">{}</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">rwIntf</span>
+
+<span class="w">    </span><span class="c1">// QueryInterface()</span>
+<span class="w">    </span><span class="nx">r</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">anon</span><span class="p">.(</span><span class="nx">Reader</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">w</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">anon</span><span class="p">.(</span><span class="nx">Writer</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// works like a charm :)</span>
+<span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Read</span><span class="p">())</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Go playground link <a href="https://play.golang.org/p/lBDFao9Yo4G">here</a></p>
+<p>Speaking of the <code>switch</code> construct, it is quite flexible:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// switch</span>
+<span class="c1">// with declaration and condition</span>
+<span class="k">switch</span><span class="w"> </span><span class="nx">os</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">runtime</span><span class="p">.</span><span class="nx">GOOS</span><span class="p">;</span><span class="w"> </span><span class="nx">os</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;linux&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="k">fallthrough</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;windows&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;darwin&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Running on %v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">os</span><span class="p">)</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// with no condition</span>
+<span class="k">switch</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Weekday</span><span class="p">().</span><span class="nx">String</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Thursday&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Today is Thursday&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Today is not Thursday&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="maps">Maps</h3>
+<p>Maps can be initialized as literals or created dinamically with <code>make</code></p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// dynamic instantiation</span>
+<span class="nx">m</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">Vertex</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="nx">m</span><span class="p">[</span><span class="s">&quot;Iasi&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Vertex</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}</span>
+
+<span class="c1">// check for existence of an element</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">exists</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">m</span><span class="p">[</span><span class="s">&quot;Cluj&quot;</span><span class="p">];</span><span class="w"> </span><span class="p">!</span><span class="nx">exists</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Cluj does not exist in the map&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">m</span><span class="p">[</span><span class="s">&quot;Iasi&quot;</span><span class="p">].</span><span class="nx">Length</span><span class="p">())</span>
+
+<span class="c1">// literal instantiation</span>
+<span class="nx">m1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">Vertex</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;Iasi&quot;</span><span class="p">:</span><span class="w">      </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="c1">// no need to specify Vertex</span>
+<span class="w">        </span><span class="s">&quot;Bucharest&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1">// map can be increased</span>
+<span class="nx">m1</span><span class="p">[</span><span class="s">&quot;Cluj&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Vertex</span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}</span>
+
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">m1</span><span class="p">)</span>
+
+<span class="c1">// remove the element from the map</span>
+<span class="nb">delete</span><span class="p">(</span><span class="nx">m1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cluj&quot;</span><span class="p">)</span>
+
+<span class="c1">// or also literal instantiation but with no elements</span>
+<span class="nx">counts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">int</span><span class="p">{}</span>
+</code></pre></div>
+
+<h3 id="sample-programs">Sample Programs</h3>
+<p>Fibonnaci - function returning a function</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
+
+<span class="c1">// fibonacci is a function that returns</span>
+<span class="c1">// a function that returns an int.</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">fibonacci</span><span class="p">()</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// declaration - initialization</span>
+<span class="w">    </span><span class="nx">first</span><span class="p">,</span><span class="w"> </span><span class="nx">second</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ret</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">first</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">second</span>
+<span class="w">        </span><span class="nx">first</span><span class="p">,</span><span class="w"> </span><span class="nx">second</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">second</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">ret</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">f</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fibonacci</span><span class="p">()</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">f</span><span class="p">())</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Error management and the Error interface:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;math&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">ErrNegativeSqrt</span><span class="w"> </span><span class="kt">float64</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">v</span><span class="w"> </span><span class="nx">ErrNegativeSqrt</span><span class="p">)</span><span class="w"> </span><span class="nx">Error</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;Negative sqrt %v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">v</span><span class="p">))</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">x</span><span class="w"> </span><span class="kt">float64</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">float64</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nx">ErrNegativeSqrt</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">z</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="w">    </span><span class="nx">delta</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">z</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">math</span><span class="p">.</span><span class="nx">Abs</span><span class="p">(</span><span class="nx">delta</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">{</span><span class="w"> </span>
+<span class="w">        </span><span class="nx">z</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="nx">delta</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">z</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">delta</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">z</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">z</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">v</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span><span class="w">  </span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w">    </span>
+<span class="w">    </span><span class="p">}</span><span class="w">   </span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Reader implementation. An in-memory stream obtained from a string can be created with <code>r := strings.NewReader("Hello, Reader!")</code></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;io&quot;</span>
+<span class="w">    </span><span class="s">&quot;os&quot;</span>
+<span class="w">    </span><span class="s">&quot;strings&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">rot13Reader</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">r</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">Reader</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="nx">rot13Reader</span><span class="p">)</span><span class="w"> </span><span class="nx">Read</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">){</span>
+
+<span class="w">  </span><span class="c1">// returns the number of elements read </span>
+<span class="w">  </span><span class="c1">// and an error if an error occured</span>
+<span class="w">  </span><span class="c1">// the error can be io.EOF which signifies the end of the stream</span>
+<span class="w">    </span><span class="nx">n</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">r</span><span class="p">.</span><span class="nx">Read</span><span class="p">(</span><span class="nx">b</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">n</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">{</span>
+<span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">&#39;Z&#39;</span><span class="p">:</span><span class="w"> </span>
+<span class="w">            </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">26</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="sc">&#39;A&#39;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">&#39;z&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">26</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="sc">&#39;a&#39;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">n</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">NewReader</span><span class="p">(</span><span class="s">&quot;Lbh penpxrq gur pbqr!&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">r</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rot13Reader</span><span class="p">{</span><span class="nx">s</span><span class="p">}</span>
+<span class="w">    </span><span class="nx">io</span><span class="p">.</span><span class="nx">Copy</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Stdout</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">r</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="concurrency">Concurrency</h3>
+<p>Concurrency in go is achieved through goroutines. Goroutines are language constructs which maps M virtual threads to N CPU threads. The runtime has its own scheduler. The preferred way of of sharing state is through channels, although shared memory is also possible thanks to the <code>sync</code> standard package. Let's look at two programs below.</p>
+<p>The first program compares two BSTs.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;golang.org/x/tour/tree&quot;</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// Walk DFSes the tree t sending all values</span>
+<span class="c1">// to the channel ch.</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">Walk_</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">tree</span><span class="p">.</span><span class="nx">Tree</span><span class="p">,</span><span class="w"> </span><span class="nx">ch</span><span class="w"> </span><span class="kd">chan</span><span class="w"> </span><span class="kt">int</span><span class="p">){</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">Left</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Walk_</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">Left</span><span class="p">,</span><span class="w"> </span><span class="nx">ch</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// send the current value to the channel</span>
+<span class="w">    </span><span class="nx">ch</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">Value</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">Right</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Walk_</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">Right</span><span class="p">,</span><span class="w"> </span><span class="nx">ch</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Walk</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">tree</span><span class="p">.</span><span class="nx">Tree</span><span class="p">,</span><span class="w"> </span><span class="nx">ch</span><span class="w"> </span><span class="kd">chan</span><span class="w"> </span><span class="kt">int</span><span class="p">){</span>
+<span class="w">  </span><span class="nx">Walk_</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">ch</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// close the channel to signal the end of the tree</span>
+<span class="w">    </span><span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span><span class="w"> </span>
+<span class="p">}</span>
+
+<span class="c1">// Same determines whether the trees</span>
+<span class="c1">// t1 and t2 contain the same values.</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Same</span><span class="p">(</span><span class="nx">t1</span><span class="p">,</span><span class="w"> </span><span class="nx">t2</span><span class="w"> </span><span class="o">*</span><span class="nx">tree</span><span class="p">.</span><span class="nx">Tree</span><span class="p">)</span><span class="w"> </span><span class="kt">bool</span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// make two channels</span>
+<span class="w">    </span><span class="nx">c1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">c2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// launch the two walks in parallel</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="nx">Walk</span><span class="p">(</span><span class="nx">t1</span><span class="p">,</span><span class="w"> </span><span class="nx">c1</span><span class="p">)</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="nx">Walk</span><span class="p">(</span><span class="nx">t2</span><span class="p">,</span><span class="w"> </span><span class="nx">c2</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// Read one value at a time from each channel</span>
+<span class="w">  </span><span class="c1">// and compare them</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">ok1</span><span class="p">,</span><span class="w"> </span><span class="nx">ok2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w"> </span><span class="nx">ok1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">ok2</span><span class="p">;</span><span class="w">  </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">v1</span><span class="p">,</span><span class="w"> </span><span class="nx">v2</span><span class="w"> </span><span class="kt">int</span>
+
+<span class="w">    </span><span class="c1">// when one channel is closed, its OK value is set to false</span>
+<span class="w">        </span><span class="nx">v1</span><span class="p">,</span><span class="w"> </span><span class="nx">ok1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">c1</span>
+<span class="w">        </span><span class="nx">v2</span><span class="p">,</span><span class="w"> </span><span class="nx">ok2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">c2</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">ok1</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">ok2</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">v1</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">v2</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">Same</span><span class="p">(</span><span class="nx">tree</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nx">tree</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Same tree&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Not the same tree&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><em>Notes:</em></p>
+<ul>
+<li>A channel cannot be closed twice</li>
+<li>A write from a closed channel results in a panic</li>
+<li>You can check on read if the channel is closed</li>
+<li>Channel operations are blocking. A channel can have a buffer, in which condition the operation becomes blocking only when the buffer is full</li>
+<li>A channel can be read with a <code>range</code> construct. The range finishes when the sender closes the channel </li>
+</ul>
+<p>The second program, also part of the golang tour, introduces <code>sync.WaitGroups</code> to allow waiting for goroutines to finish as well as sending return channels through input channels for safe reply. To allow for concurrent access, the <code>Cache</code> is implemented as a process (actor) which is accessible only through its input and output channels. </p>
+<p>We are going to send a pair to our cache service, <code>&lt;string - key, return channel&gt;</code>. The return channel solves a concurrency issue: assuming that we have more concurrent readers waiting, we want to ensure we return the result to the reader that sent the message. Since in our case we use a non-buffered write channel, all writes are blocked until a new read is performed and, since the cache is a single threaded, it will not make a new read until the result is communicated, we could have used a single return channel for all the cache requests. However, if we make the write channel buffered, thus allowing for multiple writes, the returns will be mixed.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;sync&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// the wait group is needed to allow all goroutines </span>
+<span class="c1">// to signal when they finish execution</span>
+<span class="c1">// and the main goroutine to wait for them</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">wg</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Fetcher</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">body</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">urls</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="c1">// message including the return channel</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">CacheMsg</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">str</span><span class="w"> </span><span class="kt">string</span>
+<span class="w">    </span><span class="nx">out</span><span class="w"> </span><span class="kd">chan</span><span class="w"> </span><span class="kt">bool</span>
+<span class="p">}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">Cache</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">in</span><span class="w"> </span><span class="kd">chan</span><span class="w"> </span><span class="nx">CacheMsg</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Cache</span><span class="p">)</span><span class="w"> </span><span class="nx">Init</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">p</span><span class="p">.</span><span class="nx">in</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="nx">CacheMsg</span><span class="p">)</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">cache</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Cache</span><span class="p">)</span><span class="w"> </span><span class="nx">Test</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// create a new return channel for each service request</span>
+<span class="w">    </span><span class="nx">msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">CacheMsg</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">str</span><span class="p">:</span><span class="w"> </span><span class="nx">s</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">out</span><span class="p">:</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="kt">bool</span><span class="p">),</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">p</span><span class="p">.</span><span class="nx">in</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">msg</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nx">msg</span><span class="p">.</span><span class="nx">out</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Cache</span><span class="p">)</span><span class="w"> </span><span class="nx">cache</span><span class="p">(){</span>
+
+<span class="w">  </span><span class="c1">// our cache map</span>
+<span class="w">    </span><span class="nx">cache</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// read messages with range until the channel is closed</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">in</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">exists</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cache</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">str</span><span class="p">];</span><span class="w"> </span><span class="nx">exists</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">msg</span><span class="p">.</span><span class="nx">out</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">cache</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">str</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">            </span><span class="nx">msg</span><span class="p">.</span><span class="nx">out</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">Crawl</span><span class="p">(</span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">depth</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">fetcher</span><span class="w"> </span><span class="nx">Fetcher</span><span class="p">,</span><span class="w"> </span><span class="nx">cache</span><span class="w"> </span><span class="o">*</span><span class="nx">Cache</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// ensure we call wg.Done() when the method exits</span>
+<span class="w">  </span><span class="k">defer</span><span class="w"> </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">depth</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// the url is already in the cache</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nx">Test</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="nx">urls</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fetcher</span><span class="p">.</span><span class="nx">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;found: %s %q\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">body</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// add N new goroutines to the WaitGroup</span>
+<span class="w">    </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">urls</span><span class="p">))</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">u</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">urls</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// launch crawl goroutines in parallel</span>
+<span class="w">        </span><span class="k">go</span><span class="w"> </span><span class="nx">Crawl</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span><span class="w"> </span><span class="nx">depth</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nx">fetcher</span><span class="p">,</span><span class="w"> </span><span class="nx">cache</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">cache</span><span class="w"> </span><span class="nx">Cache</span>
+<span class="w">    </span><span class="nx">cache</span><span class="p">.</span><span class="nx">Init</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="nx">Crawl</span><span class="p">(</span><span class="s">&quot;https://golang.org/&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nx">fetcher</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">cache</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">// wait for all goroutines to finish</span>
+<span class="w">    </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="c1">// fakeFetcher is Fetcher that returns canned results.</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">fakeFetcher</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="o">*</span><span class="nx">fakeResult</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">fakeResult</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">body</span><span class="w"> </span><span class="kt">string</span>
+<span class="w">    </span><span class="nx">urls</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="nx">fakeFetcher</span><span class="p">)</span><span class="w"> </span><span class="nx">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">res</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">f</span><span class="p">[</span><span class="nx">url</span><span class="p">];</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">urls</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;not found: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// fetcher is a populated fakeFetcher.</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fetcher</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">fakeFetcher</span><span class="p">{</span>
+<span class="w">    </span><span class="s">&quot;https://golang.org/&quot;</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;The Go Programming Language&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/pkg/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/cmd/&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="s">&quot;https://golang.org/pkg/&quot;</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;Packages&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/cmd/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/pkg/fmt/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/pkg/os/&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="s">&quot;https://golang.org/pkg/fmt/&quot;</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;Package fmt&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/pkg/&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="s">&quot;https://golang.org/pkg/os/&quot;</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;Package os&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;https://golang.org/pkg/&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The implementation above is more generic as it can be used as a pattern for other kinds of services. In our case, a faster solution would have been to use shared memory protected through a <code>sync.Mutex</code>, <code>sync.RWMutex</code> or through a <code>sync.Map</code>, a concurrent map. </p>
+<p>One thing to note - altough all IO operations in go are blocking the current goroutine, the are implemented as asyncio behind the scenes, in a similar manner to which the <code>cache.Test()</code> method above is blocking.</p>
+<h3 id="timers-and-select">Timers and select</h3>
+<p>Select allows to listen to multiple channels and block until one of them has data available. Timers in golang are implemented as channels. Signaling to a goroutine to finish its job can be done also though a channel.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;fmt&quot;</span>
+<span class="w">    </span><span class="s">&quot;sync&quot;</span>
+<span class="w">    </span><span class="s">&quot;time&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">seconds</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">NewTicker</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">minutes</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">NewTicker</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">done</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">wg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">{}</span>
+
+<span class="w">    </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">select</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">done</span><span class="p">:</span>
+<span class="w">                </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="c1">// exit the routine</span>
+<span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">seconds</span><span class="p">.</span><span class="nx">C</span><span class="p">:</span>
+<span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Tick&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">minutes</span><span class="p">.</span><span class="nx">C</span><span class="p">:</span>
+<span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Tock&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}()</span><span class="w"> </span><span class="c1">// immediately invoked goroutine</span>
+
+<span class="w">    </span><span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">done</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="w">    </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Done.&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="conclusion">Conclusion</h3>
+<p>Go is a very beautiful and performant language. It is low level enough to feel like you have power you have in C and it compiles to native code for super fast startup times, performance and interoperability. It is elegant as it does not have unnecessary constructs yet, though its constructs, it encourages at the language level clean code and excellent concurrency. </p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2020/10/24/programming-problems-cpp.html">Programming Problems In C++</a></span><span><a href="../../../../programming/2021/01/12/golang-first-web-services.html">First Steps In Go - Web Services</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

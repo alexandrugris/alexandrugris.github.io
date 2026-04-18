@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hazelcast Intro | From The Trenches - The Code</title>
+  <meta name="description" content="A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Hazelcast Intro</h1>
+    <p class="post-meta">
+      <time datetime="2017-08-11" itemprop="datePublished">Aug 11, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>A short introduction to Hazelcast: what it is, what scenarios is can be used for, how to run a test environment.</p>
+<h2 id="what-is-hazelcast">What is Hazelcast</h2>
+<p>Hazelcast is:<br />
+- A distributed memory cache<br />
+- A clustering solution<br />
+- A no sql key/value datastore<br />
+- An in memory messaging system</p>
+<p>Hazelcast is an in-memory data grid, which allows to scale our applications dynamically, by simply adding new nodes to the cluster. On top of that, it has the ability to run embedded in our Java applications. There are two editions: the open source and the enterprise. The enterprise adds new security features, WAN replication (between clusters, possibily located in different datacentres) and Tomcat session clustering.</p>
+<h2 id="first-application">First application</h2>
+<p>Create a simple java console application, with Hazelcast library added to it:</p>
+<p><img alt="Config" src="../../../../../assets/hazelcast_1.png" /></p>
+<p>The server and the client share a very similar code, making applications symmetrical to write:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">ro.alexandrugris.javaplay</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">com.hazelcast.core.Hazelcast</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">com.hazelcast.core.HazelcastInstance</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.io.IOException</span><span class="p">;</span>
+
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">HazelcastServerApp</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">HazelcastInstance</span><span class="w"> </span><span class="nf">createStorageNode</span><span class="p">(){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">Hazelcast</span><span class="p">.</span><span class="na">newHazelcastInstance</span><span class="p">();</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">waitForKey</span><span class="p">(){</span>
+<span class="w">        </span><span class="k">try</span><span class="p">{</span><span class="w">  </span><span class="n">System</span><span class="p">.</span><span class="na">in</span><span class="p">.</span><span class="na">read</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="k">catch</span><span class="p">(</span><span class="n">IOException</span><span class="w"> </span><span class="n">exx</span><span class="p">){}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="n">HazelcastInstance</span><span class="w"> </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">try</span><span class="p">{</span>
+<span class="w">            </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">createStorageNode</span><span class="p">();</span>
+<span class="w">            </span><span class="n">waitForKey</span><span class="p">();</span>
+
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">hi</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="n">hi</span><span class="p">.</span><span class="na">shutdown</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>For the client, the only difference is the <code>createStorageNode()</code> method, which still returns a <code>HazelcastInstance</code>, but has a different content:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">HazelcastInstance</span><span class="w"> </span><span class="nf">createStorageNode</span><span class="p">(){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">HazelcastClient</span><span class="p">.</span><span class="na">newHazelcastClient</span><span class="p">();</span>
+<span class="w">    </span><span class="p">};</span>
+</code></pre></div>
+
+<p>If we spanwn several instances of the server we notice that each of them joins the cluster automatically:</p>
+<div class="codehilite"><pre><span></span><code>Members [3] {
+    Member [192.168.1.6]:5701
+    Member [192.168.1.6]:5702
+    Member [192.168.1.6]:5703 this
+}
+</code></pre></div>
+
+<p>If we kill one instance, the cluster will try a little bit to reconnect to it and then simply rebalance across the remaining nodes:</p>
+<div class="codehilite"><pre><span></span><code>Members [2] {
+    Member [192.168.1.6]:5701
+    Member [192.168.1.6]:5702 this
+}
+</code></pre></div>
+
+<p>The client will also automatically connect to the cluster but will not register itself as a member.</p>
+<h2 id="the-distributed-map">The Distributed Map</h2>
+<p>Data in Hazelcast is split in partititions and each partition is assigned to a node. By default, there are 271 partitions. Thus, there are more partitions on each node. Each node stores primary data and backup data.</p>
+<p>The <code>IMap</code> interface inherits directly from <code>java.util.Map</code>. However, it is optimized for batch updates and thus, for performance reasons, it is preferred to put elements in a local <code>HashMap</code> and then use the <code>IMap::putAll</code> method to push all updates in a single operation. Therefore, while we can blindly use Hazelcast instead of a map anywhere in our application, the abstration leaks and it is better to be aware of the performance consequences. Each individual call is a Hazelcast transaction and requires a remote request / response. The <code>putAll</code> is also an atomic operation, but it includes all the elements of the map in a single transaction.</p>
+<p>The following are synonims within the Hazelcast world: 1 Hazelcast instance == 1 storage node == 1 cluster member. If the Hazelcast servers are shutdown properly, they will rebalance the cluster to the extent of available memory. However, if they are killed, data is lost if all replicas are affected.</p>
+<h3 id="types-stored-in-the-distributed-map-must-implement-serializable">Types stored in the distributed map must implement <code>Serializable</code></h3>
+<div class="codehilite"><pre><span></span><code><span class="c1">// must implement the Serializable inferface</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AddressBookEntry</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Serializable</span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// https://stackoverflow.com/questions/285793/what-is-a-serialversionuid-and-why-should-i-use-it</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">serialVersionUID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8162873687563536545L</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">MAP_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;AddressBook_Map&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// fields</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">emailAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">streetAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">AddressBookEntry</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">emailAddress</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">streetAddress</span><span class="p">){</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">emailAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">emailAddress</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">streetAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">streetAddress</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="adding-items-to-hazelcast-and-basic-querying">Adding items to Hazelcast and basic querying</h3>
+<p>In the snippet below I add a batch of data to Hazelcast and then perform two basic queries:<br />
+- Get the keys of the elements<br />
+- Get a list of elements based on a criteria different from the primary key</p>
+<p>We can add additional indexing on the fields that do not make up primary keys so that queries will run faster. For each <code>put</code> though, additional overhead will incur. Indexing on non-keys is not mandatory for queries, but can speed up processing for frequent operations.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="c1">// IMap implements the java.util.Map inferface</span>
+<span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="n">addressBook</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">addTestData</span><span class="p">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="n">addressBook</span><span class="p">){</span>
+
+<span class="w">        </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span>
+<span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="p">(</span><span class="s">&quot;AG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a@a.ro&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Otopeni&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="p">(</span><span class="s">&quot;OM&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o@o.ro&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Otopeni&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="p">(</span><span class="s">&quot;GL&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;g@g.ro&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Otopeni&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="p">(</span><span class="s">&quot;GA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a@a.ro&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Otopeni&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">).</span><span class="na">stream</span><span class="p">().</span><span class="na">collect</span><span class="p">(</span><span class="n">Collectors</span><span class="p">.</span><span class="na">toMap</span><span class="p">(</span><span class="n">AddressBookEntry</span><span class="p">::</span><span class="n">getKey</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">));</span>
+
+<span class="w">        </span><span class="c1">// adding a map in one shot is more efficient, </span>
+<span class="w">        </span><span class="c1">// as each &#39;put&#39; call is treated as a separate transaction</span>
+<span class="w">        </span><span class="n">addressBook</span><span class="p">.</span><span class="na">putAll</span><span class="p">(</span><span class="n">map</span><span class="p">);</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">HazelcastInstance</span><span class="w"> </span><span class="n">hi</span><span class="p">,</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">bClient</span><span class="p">){</span>
+<span class="w">        </span><span class="k">assert</span><span class="p">(</span><span class="n">hi</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// get the map and make operations on it</span>
+<span class="w">        </span><span class="n">addressBook</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hi</span><span class="p">.</span><span class="na">getMap</span><span class="p">(</span><span class="n">AddressBookEntry</span><span class="p">.</span><span class="na">MAP_NAME</span><span class="p">);</span>
+
+<span class="w">        </span><span class="cm">/*</span>
+
+<span class="cm">        // because later we will do a query based on the email address, </span>
+<span class="cm">        // let&#39;s add an index to it (this step is not mandatory)</span>
+<span class="cm">        // &quot;true&quot; below means it allows range queries by</span>
+<span class="cm">        // using a tree instead of a hashmap for the index</span>
+
+<span class="cm">        addressBook.addIndex(&quot;emailAddress&quot;, true);</span>
+
+<span class="cm">        */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">addressBook</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span><span class="w"> </span>
+<span class="w">            </span><span class="n">addTestData</span><span class="p">(</span><span class="n">addressBook</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// TEST 1: output the keys</span>
+<span class="w">        </span><span class="n">addressBook</span><span class="p">.</span><span class="na">keySet</span><span class="p">().</span><span class="na">stream</span><span class="p">().</span><span class="na">forEach</span><span class="p">(</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">k</span><span class="p">));</span>
+
+<span class="w">        </span><span class="c1">// TEST 2: use predicates to query the data on something else beside the primary key</span>
+<span class="w">        </span><span class="c1">// emailAddress is a field in our class</span>
+<span class="w">        </span><span class="n">addressBook</span><span class="p">.</span><span class="na">values</span><span class="p">(</span><span class="n">Predicates</span><span class="p">.</span><span class="na">or</span><span class="p">(</span>
+<span class="w">                    </span><span class="c1">// emailAddress is a field (or getter) in AddressBookEntry</span>
+<span class="w">                    </span><span class="n">Predicates</span><span class="p">.</span><span class="na">equal</span><span class="p">(</span><span class="s">&quot;emailAddress&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a@a.ro&quot;</span><span class="p">),</span><span class="w"> </span>
+<span class="w">                    </span><span class="n">Predicates</span><span class="p">.</span><span class="na">equal</span><span class="p">(</span><span class="s">&quot;emailAddress&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o@o.ro&quot;</span><span class="p">))</span><span class="w"> </span>
+<span class="w">            </span><span class="p">).</span><span class="na">stream</span><span class="p">().</span><span class="na">forEach</span><span class="p">(</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="na">emailAddress</span><span class="p">));</span>
+
+
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="adding-persistant-storage-capabilities">Adding persistant storage capabilities</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="c1">// persistence to a database</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">MapConfig</span><span class="w"> </span><span class="nf">getMapConfig</span><span class="p">(){</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MapConfig</span><span class="p">()</span>
+<span class="w">                </span><span class="p">.</span><span class="na">setMapStoreConfig</span><span class="p">(</span>
+<span class="w">                        </span><span class="k">new</span><span class="w"> </span><span class="n">MapStoreConfig</span><span class="p">()</span>
+<span class="w">                                </span><span class="c1">// set the class which will implement the MapStore&lt;K, V&gt; interface</span>
+<span class="w">                                </span><span class="p">.</span><span class="na">setImplementation</span><span class="p">(</span><span class="n">AddressBookMapStore</span><span class="p">.</span><span class="na">mapStore</span><span class="p">)</span>
+
+<span class="w">                                </span><span class="c1">// write with a delay of 5 seconds, so the entries are batched</span>
+<span class="w">                                </span><span class="p">.</span><span class="na">setWriteDelaySeconds</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span>
+<span class="w">                </span><span class="p">)</span>
+
+<span class="w">                </span><span class="c1">// which map this configuration is for (name of the map)</span>
+<span class="w">                </span><span class="p">.</span><span class="na">setName</span><span class="p">(</span><span class="n">MAP_NAME</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<p>The function above is called through the following snippet, ran only on the storage nodes:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">bClient</span><span class="p">)</span><span class="w"> </span><span class="c1">// configure the map to use persistence if on the server</span>
+<span class="w">    </span><span class="n">hazelcastInstance</span><span class="p">.</span><span class="na">getConfig</span><span class="p">().</span><span class="na">addMapConfig</span><span class="p">(</span><span class="n">AddressBookEntry</span><span class="p">.</span><span class="na">getMapConfig</span><span class="p">());</span>
+</code></pre></div>
+
+<p>The <code>AddressBookMapStore</code> is a straight forward implementation of the <code>MapStore&lt;K, V&gt;</code> interface:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="c1">// implementation of persistence</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AddressBookMapStore</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">MapStore</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AddressBookMapStore</span><span class="w"> </span><span class="n">mapStore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AddressBookMapStore</span><span class="p">();</span>
+<span class="w">        </span><span class="kd">private</span><span class="w"> </span><span class="nf">AddressBookMapStore</span><span class="p">(){}</span>
+
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="w"> </span><span class="n">addressBookEntry</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">storeAll</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">deleteAll</span><span class="p">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">collection</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AddressBookEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">loadAll</span><span class="p">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">collection</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nd">@Override</span>
+<span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">Iterable</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">loadAllKeys</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// TODO: persist here</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="indexing">Indexing</h3>
+<p>If we want to add indexing on a different field except the primary key, a better way than described above in the basic querying section is to modify the MapConfig as follows:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">MapConfig</span><span class="w"> </span><span class="nf">getMapConfig</span><span class="p">(){</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MapConfig</span><span class="p">()</span>
+
+<span class="w">                </span><span class="cm">/* // Persistence to an external service (database)</span>
+<span class="cm">                .setMapStoreConfig(</span>
+<span class="cm">                        new MapStoreConfig()</span>
+<span class="cm">                                .setImplementation(AddressBookMapStore.mapStore)</span>
+<span class="cm">                                .setWriteDelaySeconds(3) </span>
+<span class="cm">                )</span>
+<span class="cm">                */</span>
+
+<span class="w">                </span><span class="c1">// Indexing:</span>
+<span class="w">                </span><span class="p">.</span><span class="na">addMapIndexConfig</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">MapIndexConfig</span><span class="p">()</span>
+<span class="w">                        </span><span class="p">.</span><span class="na">setOrdered</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">.</span><span class="na">setAttribute</span><span class="p">(</span><span class="s">&quot;emailAddress&quot;</span><span class="p">))</span>
+
+<span class="w">                </span><span class="p">.</span><span class="na">setName</span><span class="p">(</span><span class="n">MAP_NAME</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<p>Link to docs <a href="http://docs.hazelcast.org/docs/3.3-EA2/manual/html-single/hazelcast-documentation.html#indexing">here</a>.</p>
+<h3 id="concurrency-with-locks">Concurrency with locks</h3>
+<p>Works, but it is not the fastest:<br />
+- Creates synchronization points<br />
+- Forces two serialization operations over the network: <code>map.get(key)</code> and <code>map.put(key)</code>, even when we aim to update only a small part of the data.<br />
+- A better way is to use entry processors (next chapter)</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w">  </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">updateWithLock</span><span class="p">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">Function</span><span class="o">&lt;</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">func</span><span class="p">){</span>
+
+<span class="w">        </span><span class="k">try</span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">map</span><span class="p">.</span><span class="na">tryLock</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">TimeUnit</span><span class="p">.</span><span class="na">SECONDS</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="n">map</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">func</span><span class="p">.</span><span class="na">apply</span><span class="p">(</span><span class="n">map</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">k</span><span class="p">)));</span>
+
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">catch</span><span class="p">(</span><span class="n">InterruptedException</span><span class="w"> </span><span class="n">ex</span><span class="p">){</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">ex</span><span class="p">.</span><span class="na">toString</span><span class="p">());</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RuntimeException</span><span class="p">(</span><span class="n">ex</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">map</span><span class="p">.</span><span class="na">unlock</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span><span class="w">    </span>
+</code></pre></div>
+
+<h3 id="entry-processors">Entry processors</h3>
+<p>Data is updated directly in the storage node. Especially for small updates, it reduces the amount of serialized data that is transmitted across the network. Entry processors are thread safe because are executed in Hazelcast in a serial manner per key, thus avoiding synchronization in client code. Hazelcast achieves this by keeping a list of entry processors per key on the storage node and executing them one after the other.</p>
+<p>A great link to an <a href="https://wimdeblauwe.wordpress.com/2015/09/29/entryprocessors-and-entrybackupprocessors-with-hazelcast/">article explaining the <code>EntryProcessor</code> and <code>BackupEntryProcessor</code></a></p>
+<p><code>AbstractEntryProcessor</code> updates both the master key and the backup key. If we just want to read a key with no locking or update only on the master copy,<br />
+we can implement <code>EntryProcessor</code> directly (no need to read the backup) or simply pass <code>false</code> to the constructror of <code>AbstractEntryProcessor</code>.</p>
+<p>The method <code>EntryProcessor::process</code> returns an <code>Object</code> to the caller. This can be the anything, thus <code>EntryProcessors</code> can be used to read data without need to modify it.</p>
+<p>The method <code>Map.Entry::setValue</code> must be called for the updated value to be persisted in Hazelcast.</p>
+<p>Below is the code:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">interface</span> <span class="nc">SerializedConsumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">Consumer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">Serializable</span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">updateWithEntryProcessor</span><span class="p">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">SerializedConsumer</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">func</span><span class="p">){</span>
+
+<span class="w">        </span><span class="n">EntryProcessor</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AbstractEntryProcessor</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// true: applyOnBackup</span>
+<span class="w">            </span><span class="nd">@Override</span>
+<span class="w">            </span><span class="c1">// because we have the same EntryProcessor and BackupEntryProcessor functions, </span>
+<span class="w">            </span><span class="c1">// this method will be invoked on each replica</span>
+<span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="n">Object</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">Map</span><span class="p">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">entry</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">                </span><span class="n">V</span><span class="w"> </span><span class="n">addrBookEntry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">();</span><span class="w"> </span><span class="c1">// does a local (on-node) serialization</span>
+
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">addrBookEntry</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
+<span class="w">                    </span><span class="n">func</span><span class="p">.</span><span class="na">accept</span><span class="p">(</span><span class="n">addrBookEntry</span><span class="p">);</span>
+<span class="w">                    </span><span class="n">entry</span><span class="p">.</span><span class="na">setValue</span><span class="p">(</span><span class="n">addrBookEntry</span><span class="p">);</span><span class="w"> </span><span class="c1">// must set, or the value will not be stored!</span>
+
+<span class="w">                    </span><span class="c1">// success, but can be anything -&gt; </span>
+<span class="w">                    </span><span class="c1">//this value will be serialized and returned to the client</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w"> </span>
+<span class="w">                </span><span class="p">}</span>
+
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">};</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">boolean</span><span class="p">)</span><span class="n">map</span><span class="p">.</span><span class="na">executeOnKey</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">ep</span><span class="p">);</span><span class="w"> </span><span class="c1">// can be used with several keys</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<p>Invoked as:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">updateWithEntryProcessor</span><span class="p">(</span><span class="n">addressBook</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;OM&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="na">emailAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;om@om.ro&quot;</span><span class="p">)){</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Could not modify with EntryProcessor&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>As said before, the invocation happens on the client, while the breakpoint set in <code>EntryProcessor::process</code> is hit on the storage node:</p>
+<p><em>Client Node</em></p>
+<p><img alt="Config" src="../../../../../assets/hazelcast_2.png" /></p>
+<p><em>Storage Node</em></p>
+<p><img alt="Config" src="../../../../../assets/hazelcast_3.png" /></p>
+<p>I am using here the <code>IMap::executeOnKey</code> method to run the <code>EntryProcessor</code> on a specific key. However, there are other useful methods to run <code>EP's</code>:<br />
+- <code>IMap::executeOnEntries</code> which has an optional <code>Predicate</code> parameter to select the desired keys<br />
+- <code>IMap::executeOnKeys</code> to run the predicate against a specific set of keys</p>
+<p>An important point on accessing data from other structures in Hazelcast: <a href="https://stackoverflow.com/questions/30898557/accessing-imap-from-entryprocessor">https://stackoverflow.com/questions/30898557/accessing-imap-from-entryprocessor</a></p>
+<h3 id="aggregators">Aggregators</h3>
+<p>Aggregators are applied over the whole map and are run on the storage node. There are two functions needed for aggregation:<br />
+- Getting the aggregated-by value from the <code>Map.Entry</code> -&gt; must extend the <code>Supplier&lt;Key, Value, Result&gt;</code> class<br />
+- Summarizing by that value and returning a single result -&gt; must extend the <code>Aggregation&lt;Key, SupplierResult, AggregationResult&gt;</code> class</p>
+<p>Here is an example usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">SupplierFunc</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">Serializable</span><span class="p">{</span>
+<span class="w">        </span><span class="n">R</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">K</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="n">R</span><span class="w"> </span><span class="nf">processAllEntriesWithAggregators</span><span class="p">(</span><span class="n">IMap</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">,</span>
+<span class="w">                                                               </span><span class="n">SupplierFunc</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="n">func</span><span class="p">,</span>
+<span class="w">                                                               </span><span class="n">Aggregation</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="n">aggregation</span><span class="p">){</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">map</span><span class="p">.</span><span class="na">aggregate</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Supplier</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nd">@Override</span>
+<span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="n">R</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Map</span><span class="p">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">entry</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">func</span><span class="p">.</span><span class="na">apply</span><span class="p">(</span><span class="n">entry</span><span class="p">.</span><span class="na">getKey</span><span class="p">(),</span><span class="w"> </span><span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">());</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span><span class="w"> </span><span class="n">aggregation</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<p>being called as:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// a basic aggregator which counts all letters from the email address (dummy, just for tests)</span>
+<span class="kt">long</span><span class="w"> </span><span class="n">countOfAllLettersInEmailAddresses</span><span class="w"> </span><span class="o">=</span>
+
+<span class="w">    </span><span class="n">processAllEntriesWithAggregators</span><span class="p">(</span>
+<span class="w">        </span><span class="n">addressBook</span><span class="p">,</span><span class="w"> </span>
+<span class="w">        </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="na">emailAddress</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">v</span><span class="p">.</span><span class="na">emailAddress</span><span class="p">.</span><span class="na">length</span><span class="p">(),</span><span class="w"> </span>
+<span class="w">        </span><span class="n">Aggregations</span><span class="p">.</span><span class="na">longSum</span><span class="p">());</span>
+
+<span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;All email addresses added letters amount to: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">countOfAllLettersInEmailAddresses</span><span class="p">);</span>
+</code></pre></div>
+
+<p>We used here:<br />
+- A supplier in the form of a lambda expression - must implement a <code>Serializable</code> functional interface<br />
+- A provided aggregator: <code>Aggregations.longSum()</code></p>
+<p>If in the supplier we want to exclude an item (like is the case above for where <code>emailAddress == null</code>), we simply return <code>null</code> from the <code>Supplier::apply</code> function.</p>
+<h3 id="data-affinity">Data Affinity</h3>
+<p>Hazelcast always puts two identical keys in the same partition. To make sure an operation (join) occurs on the same partition, one needs to implement, beside <code>Serializable</code>, the <code>PartitionAware&lt;&gt;</code> interface with the method <code>getPartitionKey</code>, on the mapped data.</p>
+<p>This is not enough, however. We also need to create an <code>EntryProcessor</code> and, additionally, implement  the <code>HazelcastInstanceAware</code> interface. This interface will set the Hazelcast instance when the entry processor is run so that we can query the instance for other local maps.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">JoinLikeEntryProcessor</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span>
+<span class="w">        </span><span class="n">Serializable</span><span class="p">,</span><span class="w"> </span>
+<span class="w">        </span><span class="n">EntryProcessor</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Customer</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">HazelcastInstanceAware</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">            </span><span class="kd">private</span><span class="w"> </span><span class="kd">transient</span><span class="w"> </span><span class="n">HazelcastInstace</span><span class="w"> </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w"> </span><span class="c1">// not serialized</span>
+
+<span class="w">            </span><span class="nd">@Override</span>
+<span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="n">Object</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">Map</span><span class="p">.</span><span class="na">Entry</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">processedEntry</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">                </span><span class="c1">// [...]</span>
+<span class="w">                </span><span class="n">IMap</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hi</span><span class="p">.</span><span class="na">getMap</span><span class="p">(</span><span class="s">&quot;&lt;map of related data&gt;&quot;</span><span class="p">);</span><span class="w"> </span>
+<span class="w">                </span><span class="c1">// get only the related keys stored locally on the node</span>
+<span class="w">                </span><span class="n">Set</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">.</span><span class="na">localKeyset</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">SqlPredicate</span><span class="p">(</span><span class="s">&quot;join_key =&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">processedEntry</span><span class="p">.</span><span class="na">key</span><span class="p">));</span><span class="w"> </span>
+<span class="w">                </span><span class="c1">// [...]</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="nd">@Override</span>
+<span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setHazelcastInstance</span><span class="p">(</span><span class="n">HazelcastInstance</span><span class="w"> </span><span class="n">_hi</span><span class="p">){</span>
+<span class="w">                </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_hi</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span>
+</code></pre></div>
+
+<h3 id="notes-on-other-data-structures">Notes On Other Data Structures</h3>
+<p><em>Set</em> and <em>List</em>: data must fit on a single machine, with replicas on other machines. Therefore, one cannot store unlimited amount of data in a single set. Iterating through a set by using an iterator will bring all data to the local machine, no batching, thus must be used with care.</p>
+<p><em>Queues</em>: allow persistence.</p>
+<p><em>Topics</em>: publish / subscribe pattern, do not allow persistence.</p>
+<p><em>MultiMap</em>: similar to map, but stores a collection inside the value. By default, the values are backed by sets and do not allow identical elements to be stored. Can be changed through config to other data structure. MultiMaps do not support persistence.</p>
+<p><em>Locks</em>: Hazelcast implementation of distributed synchronization primitives.</p>
+<h3 id="events-and-listeners">Events and Listeners</h3>
+<p><em>EntryListeners</em>: </p>
+<p>Work on maps and multimaps by permiting notifications for when an element has been added or removed from the map. Example usage: a new customer is added to our map. In our entry listener we acknowledge the change and then publish his email to queue of emails to be sent out to new cusomters. This pattern is very useful for distributed applications where you want to separate logic of adding a customer, for instance, to various potential actions that should be triggered by such an event. They permit access to the <code>oldValue</code> of the key.</p>
+<p>If we start several clients which register the entry listener, all will be invoked for all data that is added to that map. If we want to listen only to the local data, we have <code>LocalEntryListeners</code>.</p>
+<p><em>Continuous queries</em>:</p>
+<p>Setup just like EntryListeners, but with a filtering predicate. </p>
+<p><em>ItemListeners</em>:</p>
+<p>Used for queues, lists and sets.</p>
+<p><em>Partition lost listeners</em>:</p>
+<p>Used for alerting for when a data partition is lost.</p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../distributed/systems/2017/06/11/kafka-patterns.html">Apache Kafka</a></span><span><a href="../../../../../statistics/2017/10/29/odds-adjustment-risk.html">Risk-based Odds Adjustment Using Bayesian Inference</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

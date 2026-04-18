@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C++ Play - my own short guide to C++11/14 | From The Trenches - The Code</title>
+  <meta name="description" content="C++ has evolved dramatically in the past years. It is virtually a new language, a huge improvement over the C++ I used to practice in the 2000s. Much more expressive templates, richer libraries, more emphasis on compile-time safety and performance improvements. Far from the C with classes in the…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">C++ Play - my own short guide to C++11/14</h1>
+    <p class="post-meta">
+      <time datetime="2017-01-28" itemprop="datePublished">Jan 28, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>C++ has evolved dramatically in the past years. It is virtually a new language, a huge improvement over the C++ I used to practice in the 2000s.<br />
+Much more expressive templates, richer libraries, more emphasis on compile-time safety and performance improvements. Far from the C with classes in the early 2000s and far from the convoluted template constructs which appeared later to<br />
+improve compile-time issue detection and type safety. To refresh my memory and also get up to speed with the new trends, I have spent a couple of hours digging through the docs, doing some tutorials. Here are my notes.</p>
+<h2 id="improvements-to-classes-inline-initializers-for-class-members">Improvements to classes - inline initializers for class members:</h2>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Test</span><span class="p">{</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// new in C++</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="w"> </span><span class="n">test_str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h2 id="smart-pointers-in-the-standard-library">Smart pointers in the standard library</h2>
+<p>In the 2000s you really had three choices for memory management in the C++ world:<br />
+- Manual (new / delete) with clear rules for owership in the "style-guide" of the project.<br />
+- The Boost library's <code>shared_ptr</code> and <code>weak_ptr</code> for shared ownership or <code>std::auto_ptr</code>, the only smart pointer from the STD library, now deprecated.<br />
+- Custom-built smart pointers, autolists or any other custom constructs.</p>
+<p>Now smart pointers are included in the standard library and they are the preferred way of writing C++ code.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">memory</span><span class="o">&gt;</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Test</span><span class="w"> </span><span class="p">{</span>
+<span class="c1">// ...</span>
+<span class="k">public</span><span class="p">:</span>
+<span class="w">    </span><span class="n">Test</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_shared_ptr</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// the recommended way to initialize a smart pointer because the ref-counter is</span>
+<span class="w">    </span><span class="c1">// allocated in the same call with the memory for Test</span>
+<span class="w">    </span><span class="c1">// =&gt; less memory fragmentation and better locality</span>
+<span class="w">    </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pTest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">weak_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pwTest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pTest</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Another smart pointer construct is the <code>unique_ptr&lt; &gt;</code>, which replaces the now deprecated <code>auto_ptr</code> .<br />
+I think it is worth considering using it whenever possible instead of <code>boost::shared_ptr&lt;&gt;</code> and <code>boost::weak_ptr&lt;&gt;</code>.<br />
+I think it sends a stronger signal about ownership intent when used in new code.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="n">source_unique_ptr</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// t is received by value. In this case, this function</span>
+<span class="c1">// can only be called using std::move  on the pointer</span>
+<span class="k">void</span><span class="w"> </span><span class="nf">test_sink</span><span class="p">(</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">t</span><span class="o">-&gt;</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_func_ref_unique_ptr</span><span class="p">(</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">();</span><span class="w"> </span><span class="c1">// destructor will be called here</span>
+<span class="w">                             </span><span class="c1">// for the object sent by parameter</span>
+<span class="w">    </span><span class="n">t</span><span class="o">-&gt;</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_smart_pointers</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">auto</span><span class="w"> </span><span class="n">pt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">source_unique_ptr</span><span class="p">();</span>
+<span class="w">    </span><span class="n">test_func_ref_unique_ptr</span><span class="p">(</span><span class="n">pt</span><span class="p">);</span>
+<span class="w">    </span><span class="n">test_sink</span><span class="p">(</span><span class="n">move</span><span class="p">(</span><span class="n">pt</span><span class="p">));</span><span class="w"> </span><span class="c1">// pt is now empty!</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><em>Note:</em> <code>unique_ptr&lt;&gt;</code> cannot be sent by value - it will result in a compilation error. <br />
+If the receiving function accepts the <code>unique_ptr&lt;&gt;</code> by value as parameter,<br />
+it can only be passed using the <code>std::move</code> function, which will nullify the pointer in the calling function. <br />
+This is called the <em>sink pattern</em> and it is exemplified in the <code>test_sync</code> function above. <br />
+The copy constructor for <code>unique_ptr&lt;&gt;</code> is explicitly deleted (later on this).</p>
+<h2 id="improvements-to-collections">Improvements to collections</h2>
+<p>C++11 brings us unordered associative containers, a fixed size array class and a singly-linked list (std::forwad_list): <a href="http://www.cplusplus.com/reference/stl/">http://www.cplusplus.com/reference/stl/</a>.</p>
+<p>Because of the new language features (move semantics, std::initializer_list and variadic templates), collections have become much more useful and expressive <br />
+For instance, now you can actually consider storing a full instance in a collection instead of just a pointer,<br />
+without worrying about endless copies and reallocations. This improves data locality and cache friendliness (provided that you have the appropriate move operations in place). <br />
+For instance, old pattern in which we push pointers to <code>std::vector&lt;FullType*&gt;</code> is now similar in iteration speed with <code>std::lists&lt;FullType&gt;::emplace_back</code>. See below.</p>
+<p>Here are some small examples:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">void</span><span class="w"> </span><span class="nf">test_collections</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">v_Test</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// uses move semantics to fully change the ownership of the pointer to the collection.</span>
+<span class="w">    </span><span class="c1">// provided that we had a full type with move constructor / move assignment,</span>
+<span class="w">    </span><span class="c1">// on vector reallocation only the move operations would have been called.</span>
+<span class="w">    </span><span class="n">v_Test</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">());</span><span class="w"> </span>
+
+<span class="w">    </span><span class="c1">// initializer list for vector and list</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v_Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">    </span><span class="n">list</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="n">tst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Test</span><span class="p">()</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="c1">// new member function, based on variadic templates argument. </span>
+<span class="w">    </span><span class="c1">// No copy constructor, no move. </span>
+<span class="w">    </span><span class="c1">// Just construct the object at the end of the collection, invoking the right parameters</span>
+<span class="w">    </span><span class="c1">// Better locality as the two pointers to back and forward from the list are stored next to the </span>
+<span class="w">    </span><span class="c1">// allocated memory for the Test object in this case.</span>
+<span class="w">    </span><span class="n">tst</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test test test&quot;</span><span class="p">);</span><span class="w"> </span>
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_collections_priority_queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// deque does not do copies on increase; a little bit slower random access though</span>
+<span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">Test</span><span class="p">,</span><span class="w"> </span><span class="n">deque</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">tst</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">    </span><span class="n">tst</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">tst</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">tst</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Popping out elements...&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">tst</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">Test</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tst</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">str</span><span class="p">.</span><span class="n">c_str</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">tst</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="lambdas">Lambdas</h3>
+<p>I think it is pretty obvious why lambdas were introduced. Before lamdas, you were bind either to pointer to functions or to functor objects, <br />
+which were implemended "far" from the point of interest. This made the std-algorithms harder to use, due to code verbosity and scrolling back and forth in the source code. <br />
+All in all, lambdas are mostly syntactic sugar, but a very useful one.</p>
+<p><em>Returning a lambda from a function and storing a lambda in a variable</em></p>
+<div class="codehilite"><pre><span></span><code><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">getPIFunction</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">PI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.1415</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// because PI is declared as static, it does not need to be captured explicitly;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">PI</span><span class="p">;</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="c1">//....</span>
+
+<span class="n">auto</span><span class="w"> </span><span class="n">PI_func</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getPIFunction</span><span class="p">();</span>
+<span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">typeid</span><span class="p">(</span><span class="n">PI_func</span><span class="p">).</span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">PI_func</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">// output: class std::function&lt;double __cdecl(void)&gt;: 3.1415</span>
+</code></pre></div>
+
+<p><em>Using lambdas in std::algorithms - passing them as arguments</em></p>
+<div class="codehilite"><pre><span></span><code><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">};</span>
+
+<span class="n">for_each</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">arr</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cubes</span><span class="p">;</span>
+
+<span class="c1">// back_inserter - very useful function</span>
+<span class="n">transform</span><span class="p">(</span><span class="n">arr</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">arr</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">back_inserter</span><span class="p">(</span><span class="n">cubes</span><span class="p">),</span><span class="w"> </span><span class="p">[](</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="n">for_each</span><span class="p">(</span><span class="n">cubes</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">cubes</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="p">[](</span><span class="kt">int</span><span class="w">  </span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p><em>Improvements to lambdas starting with C++14</em></p>
+<p>These include type deduction for lambda parameters - no need to send them explicitly, <code>auto</code> is enough and also <br />
+initialization for capture parameters - useful when, for instance, you want to <code>move</code> an object when captured to lambda instead of just simply copy it by value, or apply any type of other transformation.</p>
+<p>The code below uses another cool feature from C++ 11, the variadic templates. The template <code>invoke</code> simply invokes the functor it receives with the list of parameters it receives, <br />
+all in a typesafe matter. This pattern can be applied when you want a template to store a function and then invoke it later, with different parameters. </p>
+<p>Same for lambdas, the programmer might simply not care what the p1 and p2 types are - they are deduced by the compiler given the way the function is invoked - in this case p1 is an <code>int</code> and p2 is a <code>const char*</code>. <br />
+Note though, this check is performed at compile time, so it is not at all a form of dynamic invocation.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">Fn</span><span class="p">,</span><span class="w"> </span><span class="n">typename</span><span class="p">...</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="n">invoke</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Fn</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="o">&amp;</span><span class="p">...</span><span class="w"> </span><span class="k">params</span><span class="p">){</span>
+<span class="w">    </span><span class="n">fn</span><span class="p">(</span><span class="k">params</span><span class="p">...);</span>
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_lambdas_cxx14</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="n">auto</span><span class="w"> </span><span class="n">ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// auto parameters for lambda, initialization for capture parameters (c++14)</span>
+<span class="w">    </span><span class="n">invoke</span><span class="p">(</span><span class="w"> </span><span class="p">[</span><span class="n">ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">move</span><span class="p">(</span><span class="n">ptr</span><span class="p">)]</span><span class="w"> </span><span class="p">(</span><span class="n">auto</span><span class="w"> </span><span class="n">p1</span><span class="p">,</span><span class="w"> </span><span class="n">auto</span><span class="w"> </span><span class="n">p2</span><span class="p">){</span><span class="w"> </span>
+
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">.</span><span class="n">c_str</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p2</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// should be null because it was moved in the lambda initialization</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Value of ptr:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w">  </span><span class="n">ptr</span><span class="p">.</span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span>
+
+<span class="p">}</span>
+</code></pre></div>
+
+<p>A little bit of extra explanation. </p>
+<div class="codehilite"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="na">[x = x + 1]</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}();</span>
+<span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+</code></pre></div>
+
+<p>This code prints <code>2</code> followed by <code>1</code>. The reason is that <code>x</code> in the lambda is a different variable than <code>x</code> in the outer function. <br />
+The code above is identical to the following (also running code, although <code>__x</code> is not specifically declared anywhere)</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="na">[__x = x + 1]</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">__x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}();</span>
+<span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+</code></pre></div>
+
+<p><em>Lambdas can also be recursive</em></p>
+<p>But in this case, they need to be explicily captured like in the code below. Please note the capture by reference. <br />
+If an attempt is made to send the lambda by value the code compiles but you get a runtime error - the lambda has been declared but not defined yet.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">void</span><span class="w"> </span><span class="nf">test_recursive_lambdas</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// a redundant implementation but serves the purpose :)</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fibonacci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="n">fibonacci</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">{</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">    </span><span class="c1">// range for; prefered to use int&amp; in order to reference elements in v</span>
+<span class="w">    </span><span class="c1">// range for is a new C++ 11 construct</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">number</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fibonacci</span><span class="p">(</span><span class="n">number</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><em><code>this</code> can also be captured, like in the snipped below:</em></p>
+<div class="codehilite"><pre><span></span><code><span class="k">void</span><span class="w"> </span><span class="n">CaptureThis</span><span class="p">::</span><span class="n">CaptureThis</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// &quot;this&quot; must be in the capture list for the following to work</span>
+<span class="w">    </span><span class="n">PrintSmth</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="kt">string</span><span class="o">&amp;</span><span class="w"> </span><span class="k">out</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+
+<span class="w">    </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">x</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// works</span>
+<span class="w">    </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">y</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// works</span>
+
+<span class="w">    </span><span class="n">x</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// works</span>
+<span class="w">    </span><span class="n">y</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// works</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">out</span><span class="p">.</span><span class="n">c_str</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><em>Changing values and mutable lambdas</em></p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">for_each</span><span class="p">(</span><span class="n">numbers</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="p">[</span><span class="n">prev</span><span class="p">](</span><span class="kt">int</span><span class="o">&amp;</span><span class="w"> </span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="n">mutable</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+<span class="w">        </span><span class="c1">// value is sent by reference, so I can modify it in place</span>
+<span class="w">        </span><span class="c1">// I send prev by value =&gt; prev does not modify in the upper scope BUT!</span>
+<span class="w">        </span><span class="c1">// because I define the function as mutable, </span>
+<span class="w">        </span><span class="c1">// I can modify it in the scope of the lambda (in the generated class)</span>
+<span class="w">        </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prev</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">value</span><span class="p">;</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="n">for_each</span><span class="p">(</span><span class="n">numbers</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="p">[](</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">});</span>
+</code></pre></div>
+
+<p>The output of this program is:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1</span>
+<span class="mf">3</span>
+<span class="mf">6</span>
+<span class="mf">10</span>
+<span class="mf">15</span>
+<span class="mf">21</span>
+<span class="mf">28</span>
+<span class="mf">36</span>
+<span class="mf">45</span>
+<span class="mf">55</span>
+</code></pre></div>
+
+<p>Because the lambda was postfixed with the <code>mutable</code> keyword, it allows me to modify the captured values. <br />
+However, since the capture was not done by reference, it is not modified in the outer scope. If we were to write in pseudo-c++,<br />
+the generated lambdas are similar with the following classes:</p>
+<p>By-value capture without the <code>mutable</code> postfix:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="n">Lambda</span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Type</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">operator</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="o">//</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="n">cannot</span><span class="w"> </span><span class="n">change</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>By-value with the <code>mutable</code> postfix:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="n">Lambda</span>{
+    <span class="n">Type</span> <span class="nb">t</span>;
+    <span class="n">operator</span> () {
+        // <span class="nb">t</span> <span class="nb">can</span> <span class="n">change</span>
+    }
+}
+</code></pre></div>
+
+<p>In the example above, since we declared the input parameter for the lambda as a reference (<code>int&amp;</code>), it gives me direct write access to the <code>vector</code> content.</p>
+<h3 id="decltype-and-declval">Decltype and Declval</h3>
+<p>Two usage scenarios:</p>
+<ol>
+<li>We need a way to compute at compile-time the return type of a template function.</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="c1">// starting with c++14 compiler can autodeduce return type</span>
+<span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">T1</span><span class="p">,</span><span class="w"> </span><span class="n">typename</span><span class="w"> </span><span class="n">T2</span><span class="p">,</span><span class="w"> </span><span class="n">typename</span><span class="w"> </span><span class="n">T3</span><span class="p">,</span><span class="w"> </span><span class="n">typename</span><span class="w"> </span><span class="n">T4</span><span class="o">&gt;</span><span class="w"> </span>
+<span class="n">auto</span><span class="w"> </span><span class="nf">multiply</span><span class="p">(</span><span class="n">T1</span><span class="w"> </span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">T2</span><span class="w"> </span><span class="n">t2</span><span class="p">,</span><span class="w"> </span><span class="n">T3</span><span class="w"> </span><span class="n">t3</span><span class="p">,</span><span class="w"> </span><span class="n">T4</span><span class="w"> </span><span class="n">t4</span><span class="p">)</span><span class="w">  </span><span class="cm">/*-&gt; decltype (t1 * t2 * t3 * t4) */</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+
+<span class="w">    </span><span class="n">auto</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t4</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">typeid</span><span class="p">(</span><span class="n">ret</span><span class="p">).</span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//...</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="kt">double</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.4</span><span class="p">;</span>
+<span class="kt">float</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.1f</span><span class="p">;</span>
+<span class="kt">long</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+
+<span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">multiply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+</code></pre></div>
+
+<ol start="2">
+<li>We have a private constructor, but we still need the type of the class:</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="n">A</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+<span class="k">public</span><span class="p">:</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span><span class="w"> </span><span class="n">create</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">A</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">//...</span>
+
+<span class="c1">// declval can only be used where it will not be evaluated, </span>
+<span class="c1">//but only checked for type - like in decltype</span>
+<span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">typeid</span><span class="p">(</span><span class="n">decltype</span><span class="p">(</span><span class="n">declval</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span><span class="p">())).</span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span>
+</code></pre></div>
+
+<h3 id="variadic-templates-templates-with-a-variable-number-of-arguments">Variadic templates (templates with a variable number of arguments)</h3>
+<p>I think this is one of the coolest features of C++11, as it allows very clean usage of libaries. In an example above, we saw the <code>emplace_back</code> method of std::collections <br />
+which permits the caller to send the constructor parameters directly to the method, and the method inside does the allocation of the object. Here is a more complex example, <br />
+which shows how to:</p>
+<ul>
+<li>Create a template function with a variable number of parameters</li>
+<li>Call another function for each parameter </li>
+<li>Recursively extract each parameter and use it in a strongly typed manner</li>
+<li>Use the library in a very natural way.</li>
+</ul>
+<p>Let's assume we want to write a library class which outputs CSV to a stream. We want to use it in a straight forward manner, like in the snippet below:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Stream</span><span class="o">&gt;</span><span class="w"> </span><span class="n">auto</span><span class="w"> </span><span class="n">createCSVPrinter</span><span class="p">(</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CSVPrinter</span><span class="o">&lt;</span><span class="n">Stream</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">CSVPrinter</span><span class="o">&lt;</span><span class="n">Stream</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">void</span><span class="w"> </span><span class="nf">test_variadic_templates</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// let&#39;s simply use a template function to deduce the type of cout</span>
+<span class="w">    </span><span class="n">auto</span><span class="w"> </span><span class="n">csvPrinter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">createCSVPrinter</span><span class="p">(</span><span class="n">cout</span><span class="p">);</span><span class="w"> </span>
+
+<span class="w">    </span><span class="c1">// we are outputting a row or parameters of different types</span>
+<span class="w">    </span><span class="n">csvPrinter</span><span class="p">.</span><span class="n">print_row</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">32.5f</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">csvPrinter</span><span class="p">.</span><span class="n">print_row</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">32.5f</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">csvPrinter</span><span class="p">.</span><span class="n">print_row</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">32.5f</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">csvPrinter</span><span class="p">.</span><span class="n">print_row</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">32.5f</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The <code>CSVPrinter</code> class is clearly a template of type <code>Stream</code> which includes a method, <code>print_row</code> which receives a variable number of parameters of different types.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">Stream</span><span class="o">&gt;</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">CSVPrinter</span><span class="w"> </span><span class="p">{</span>
+
+<span class="k">private</span><span class="p">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">row_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Stream</span><span class="o">*</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullptr</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// called for each parameter</span>
+<span class="w">    </span><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="o">&amp;</span><span class="w"> </span><span class="n">validate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+<span class="w">        </span><span class="c1">//cout &lt;&lt; typeid(T).name() &lt;&lt; endl;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">FirstColumn</span><span class="p">,</span><span class="w"> </span><span class="n">typename</span><span class="p">...</span><span class="w"> </span><span class="n">Columns</span><span class="o">&gt;</span><span class="w">  </span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">FirstColumn</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Columns</span><span class="o">&amp;</span><span class="p">...</span><span class="w"> </span><span class="n">reminder_columns</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">stream</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="n">print_row_internal</span><span class="p">(</span><span class="n">reminder_columns</span><span class="p">...);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="w"> </span><span class="n">LastColumn</span><span class="o">&gt;</span><span class="w"> </span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">print_row_internal</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">LastColumn</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">stream</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="n">CSVPrinter</span><span class="p">(</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">_stream</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">stream</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_stream</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">    </span><span class="n">CSVPrinter</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">CSVPrinter</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">row_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other</span><span class="o">-&gt;</span><span class="n">row_count</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other</span><span class="o">-&gt;</span><span class="n">stream</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">~</span><span class="n">CSVPrinter</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span><span class="p">...</span><span class="w"> </span><span class="n">Columns</span><span class="o">&gt;</span><span class="w"> </span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">print_row</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Columns</span><span class="o">&amp;</span><span class="p">...</span><span class="w"> </span><span class="n">cols</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">        </span>
+<span class="w">        </span><span class="n">row_count</span><span class="o">++</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// function validate is called for each parameter in cols</span>
+<span class="w">        </span><span class="n">print_row_internal</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">cols</span><span class="p">)...);</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>Let's look at the <code>print_row</code> function:</p>
+<ol>
+<li>It calls <code>print_row_internal</code> with <code>validate(cols)...</code>. This syntax allows calling the <code>validate</code> function for each <code>col</code> prior to calling <code>print_row_internal</code>.</li>
+<li><code>print_row_internal</code> has two specializations. One for a single parameter, which closes the recursive loop, and one with one specialized (extracted) parameter and the rest of the <code>colls</code> as bulk. <br />
+This recursive definition allows processing each parameter in a type-safe manner, one by one.</li>
+</ol>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../jekyll/update/2017/01/26/welcome-to-jekyll.html">Welcome to Jekyll!</a></span><span><a href="../../../../../native/coding/2017/01/29/C++-Play---Cont.html">C++ Play - my own short guide to C++11/14 (Part 2)</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

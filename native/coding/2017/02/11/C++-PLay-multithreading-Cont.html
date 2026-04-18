@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C++ Play - Multithreading Part 2 | From The Trenches - The Code</title>
+  <meta name="description" content="In this post I touch a little bit synchronization primitives and write two different implementations for a reader-writer lock. The code comes from an earlier project, started before std::shared_lock was introduced to the standard.  Beside the standard library, RW locks are part of Windows SDK as…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">C++ Play - Multithreading Part 2</h1>
+    <p class="post-meta">
+      <time datetime="2017-02-11" itemprop="datePublished">Feb 11, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>In this post I touch a little bit synchronization primitives and write two different implementations for a reader-writer lock. The code comes from an earlier project, started before <code>std::shared_lock</code> was introduced to the standard. <br />
+Beside the standard library, RW locks are part of Windows SDK as <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa904937(v=vs.85).aspx">Slim Reader/Writer (SRW) Locks</a> and on Linux, with <a href="https://linux.die.net/man/3/pthread_rwlock_rdlock">pthreads</a>.<br />
+There is no need (and not recommended) to implement them manually, as I do in the code below. But since this is a tech blog and and it is meant to play around with technology, here are two possible implementations.</p>
+<h3 id="rw-lock-with-cas">RW-Lock with CAS</h3>
+<p>CAS stands for compare-and-swap. These are primitives which translate directly to single assembly instructions and are meant for atomic operations on integral data types. Being implemented directly in hardware, <br />
+they are the building blocks for constructing all synchronzation primitives, as well as non-locking algorithms and data structures. A non-locking algorithm is an algorithm which guarantees safe multithreaded operations without need to make a kernel call. <br />
+For short operations they should be faster, but speed comes also at a price: they cannot be used in single CPU systems because they basically spin the CPU in a tight loop and, for battery-powered devices, they tend to heat and drain the battery.</p>
+<p>In the standard library, CAS is present through <a href="http://en.cppreference.com/w/cpp/atomic/atomic"><code>std::atomic</code></a>. </p>
+<h3 id="first-the-usage-and-some-foundations">First, the usage and some foundations</h3>
+<p>I would like to be able to use <code>std::unique_lock</code> with my library as it might make my code usable with already existing templates which receive the lock as a template parameter. <br />
+In my code I played with various types of mutexes to test performance, so <code>MutexType</code> below is a template parameter. I am going to use the following constructs:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">MutexType</span><span class="w"> </span><span class="n">mtx</span><span class="p">;</span>
+
+<span class="c1">// write lock</span>
+<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">write_mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+</code></pre></div>
+
+<p>and </p>
+<div class="codehilite"><pre><span></span><code><span class="n">MutexType</span><span class="w"> </span><span class="n">mtx</span><span class="p">;</span>
+
+<span class="c1">// read lock</span>
+<span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">MutexType</span><span class="p">::</span><span class="n">read_mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lck</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+</code></pre></div>
+
+<p>In order to build my mutex I need two base classes: <code>read_mutex</code> and <code>write_mutex</code> from which to derive and static cast later.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">read_lockable</span><span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="n">typedef</span><span class="w"> </span><span class="n">read_lockable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">read_mutex</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// these methods are called by unique_lock</span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">lock_read</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">unlock_read</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">write_lockable</span><span class="p">{</span>
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="n">typedef</span><span class="w"> </span><span class="n">write_lockable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">write_mutex</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">lock_write</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">unlock_write</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h3 id="first-implementation-pure-cas-non-blocking">First implementation - pure CAS, non-blocking:</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">rw_spinlock</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">read_lockable</span><span class="o">&lt;</span><span class="n">rw_spinlock</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">                    </span><span class="k">public</span><span class="w"> </span><span class="n">write_lockable</span><span class="o">&lt;</span><span class="n">rw_spinlock</span><span class="o">&gt;</span><span class="p">{</span><span class="w">    </span>
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="n">rw_spinlock</span><span class="p">()</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">reads</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">writes</span><span class="p">(</span><span class="mi">0</span><span class="p">){}</span>
+
+<span class="w">    </span><span class="o">~</span><span class="n">rw_spinlock</span><span class="p">(){</span>
+<span class="err">#</span><span class="n">ifdef</span><span class="w"> </span><span class="n">_DEBUG</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">reads</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">writes</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)){</span><span class="w"> </span>
+<span class="w">            </span><span class="n">__debugbreak</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="cp">#endif</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="k">private</span><span class="p">:</span>
+
+<span class="w">    </span><span class="c1">// this is completely from me. I don&#39;t know if it makes sense</span>
+<span class="w">    </span><span class="c1">// it basically tries to spin for a number of cycles in tight loop before it</span>
+<span class="w">    </span><span class="c1">// attempts to call into the kernel for the next thread to be scheduled</span>
+<span class="w">    </span><span class="c1">// TODO: IF production code, add performance counters and play around with variables</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">SPIN_COUNT_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15000</span><span class="p">;</span>
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">spin</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">spn</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">--</span><span class="n">spn</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">std</span><span class="p">::</span><span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
+<span class="w">            </span><span class="n">spn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock_read</span><span class="p">(){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">spn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SPIN_COUNT_MAX</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// wait for writesto finish </span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">writes</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)){</span>
+<span class="w">            </span><span class="n">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">reads</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="n">writes</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock_write</span><span class="p">(){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">spn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SPIN_COUNT_MAX</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// acquire the writes lock first</span>
+<span class="w">        </span><span class="c1">// so that no new reads or writes can enter the loop</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">writes</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)){</span>
+<span class="w">            </span><span class="n">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// wait for finishing the reads</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">rd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">reads</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">rd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)){</span>
+<span class="w">            </span><span class="n">spin</span><span class="p">(</span><span class="n">spn</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock_read</span><span class="p">(){</span><span class="w"> </span>
+<span class="w">        </span><span class="n">reads</span><span class="o">--</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock_write</span><span class="p">(){</span><span class="w"> </span>
+<span class="err">#</span><span class="n">ifdef</span><span class="w"> </span><span class="n">_DEBUG</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">reads</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">writes</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)){</span>
+<span class="w">            </span><span class="n">__debugbreak</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="cp">#endif</span>
+<span class="w">        </span><span class="n">writes</span><span class="o">--</span><span class="p">;</span><span class="w">       </span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="k">private</span><span class="p">:</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reads</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">writes</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h3 id="second-implementation-cas-only-on-read-block-with-mutex-the-writes">Second implementation - CAS only on read, block with mutex the writes:</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">rw_mutex</span><span class="w"> </span><span class="p">:</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">read_lockable</span><span class="o">&lt;</span><span class="n">rw_mutex</span><span class="o">&lt;</span><span class="n">count_locks</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">write_lockable</span><span class="o">&lt;</span><span class="n">rw_mutex</span><span class="o">&lt;</span><span class="n">count_locks</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+<span class="w">   </span><span class="p">{</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="n">rw_mutex</span><span class="p">(){}</span>
+
+<span class="k">private</span><span class="p">:</span><span class="w">    </span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">mutex</span><span class="w"> </span><span class="n">mtx</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">condition_variable</span><span class="w"> </span><span class="n">unlock_reads</span><span class="p">;</span>
+
+<span class="k">public</span><span class="p">:</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock_read</span><span class="p">(){</span><span class="w">       </span>
+<span class="w">        </span><span class="n">std</span><span class="p">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="p">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lk</span><span class="p">(</span><span class="n">mtx</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">writes</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">wr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">unlock_reads</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">);</span><span class="w">  </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">reads</span><span class="o">++</span><span class="p">;</span><span class="w">        </span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">lock_write</span><span class="p">(){</span>
+
+<span class="w">        </span><span class="n">mtx</span><span class="p">.</span><span class="k">lock</span><span class="p">();</span>
+<span class="w">        </span><span class="n">writes</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// stop accepting the reads</span>
+
+<span class="w">        </span><span class="c1">// wait for all reads to finish</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">rd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">reads</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">rd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">std</span><span class="p">::</span><span class="n">this_thread</span><span class="p">::</span><span class="k">yield</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock_read</span><span class="p">(){</span>
+<span class="w">        </span><span class="n">reads</span><span class="o">--</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">void</span><span class="w"> </span><span class="nf">unlock_write</span><span class="p">(){</span><span class="w">        </span>
+<span class="w">        </span><span class="n">writes</span><span class="o">--</span><span class="p">;</span>
+<span class="w">        </span><span class="n">mtx</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span><span class="w"> </span>
+
+<span class="w">        </span><span class="n">unlock_reads</span><span class="p">.</span><span class="n">notify_all</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="k">private</span><span class="p">:</span><span class="w">        </span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">writes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="p">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reads</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h3 id="cas-operations-used">CAS operations used:</h3>
+<ol>
+<li>Atomic increment and decrement <code>std::atomic&lt;int&gt;::operator++()</code> and <code>std::atomic&lt;int&gt;::operator--()</code></li>
+<li>Compare exchange weak. From the <a href="http://en.cppreference.com/w/cpp/atomic/atomic/compare_exchange">documentation</a>:</li>
+</ol>
+<blockquote>
+<p>Atomically compares the object representation of <em>this with the object representation of expected, as if by std::memcmp, and if those are bitwise-equal, replaces the former with desired (performs read-modify-write operation). <br />
+Otherwise, loads the actual value stored in </em>this into expected &gt;&gt;(performs load operation). Copying is performed as if by std::memcpy. <br />
+The memory models for the read-modify-write and load operations are success and failure respectively. In the (2) and (4) versions order is used for both read-modify-write and load operations, <br />
+except that std::memory_order_acquire and std::memory_order_relaxed are used for the load operation if order == std::memory_order_acq_rel, or order == std::memory_order_release respectively. </p>
+</blockquote>
+<p>and</p>
+<blockquote>
+<p>The weak forms (1-2) of the functions are allowed to fail spuriously, that is, act as if *this != expected even if they are equal. <br />
+When a compare-and-exchange is in a loop, the weak version will yield better performance on some platforms. <br />
+When a weak compare-and-exchange would require a loop and a strong one would not, the strong one is preferable <br />
+unless the object representation of T may include padding bits, trap bits, or offers multiple object representations for the same value (e.g. floating-point NaN). <br />
+In those cases, weak compare-and-exchange typically works because it quickly converges on some stable object representation. </p>
+</blockquote>
+<h3 id="a-note-on-performance">A note on performance:</h3>
+<p>The code above comes from playing around building a configurable in-process multithreaded cache. I measured performance of various locking primitives and I've noticed that actually the fastest code runs on <code>std::mutex</code> directly. <br />
+My tests had randomly distributed equally numbered reads and writes, so the reader-writer optimization did not make much of a difference. <code>std::mutex</code> is implemented on top of the OS mutex which is alread highly optimized. It also uses <br />
+CAS primitives internally to spin a little before the actual kernel call, but in their case the number come from a wide variety of tests.<br />
+Therefore, my recommendation is not to try to build custom-made synchronization primitives to improve performance. They are fun, however, as programming practice. </p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../native/coding/2017/02/04/C++-Play-multithreading.html">C++ Play - Multithreading</a></span><span><a href="../../../../../web/development/2017/02/12/Docker-Containers.html">Docker And Containers</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

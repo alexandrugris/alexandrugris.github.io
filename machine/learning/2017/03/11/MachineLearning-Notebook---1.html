@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Machine Learning Notebook - Part 1 (Data Preprocessing) | From The Trenches - The Code</title>
+  <meta name="description" content="This is the first part of my Machine Learning notebook. As I am totally new to ML, the content follows the Udemy course &quot;Machine Learning A-Z™: Hands-On Python &amp;amp; R&quot;. As in the course, I'll be using Spyder and RStudio.">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">My Machine Learning Notebook - Part 1 (Data Preprocessing)</h1>
+    <p class="post-meta">
+      <time datetime="2017-03-11" itemprop="datePublished">Mar 11, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>This is the first part of my Machine Learning notebook. As I am totally new to ML, the content follows the Udemy course "Machine Learning A-Z™: Hands-On Python &amp; R". As in the course, I'll be using Spyder and RStudio.</p>
+<p>For this article, let's consider the following dataset:</p>
+<p><img alt="Dataset" src="../../../../../assets/ml_1_4.png" /></p>
+<p>The dataset has:<br />
+- First columns - independent variables (loaded into the variable X in python below)<br />
+- Last column - dependent variable (Purchased)<br />
+- Missing values - NaN</p>
+<p>Our machine learning algorithm has the following form: f(X) = y, where X is the set of values for independent variables and y is the dependent variable</p>
+<h3 id="importing-and-cleaning-up-data">Importing and cleaning up data</h3>
+<p>Steps:<br />
+- Importing data. Splitting data into dependent and independent variables<br />
+- Taking care of missing data - in this case, by replacing the missing data with average of the rest of the column.<br />
+- Encode categorical data - vocabulary: categorical data == data that represents categories, in our example Country, Yes / No.<br />
+- Feature scaling - this is important because many machine learning algorithms use Euclidian distance and it can happen that if the features are not within the same scale, one feature will dominate the other (especially that Euclidian distance is based on squares).</p>
+<p><strong><em>Python</em></strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="p">;</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;Data.csv&quot;</span><span class="p">);</span>
+
+<span class="c1"># extracts data from dataset - first index: rows, second index: columns</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">;</span>                
+
+<span class="c1"># replace missing data with average on column</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Imputer</span><span class="p">;</span>
+
+<span class="n">imputer</span> <span class="o">=</span> <span class="n">Imputer</span><span class="p">(</span><span class="n">missing_values</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span><span class="p">,</span> 
+                  <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> 
+                  <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span> <span class="c1"># press CTRL + i to inspect in spyder</span>
+
+<span class="c1"># row, column, but take only columns with idx 1, 2</span>
+<span class="c1"># X is or independent variable</span>
+<span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">imputer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]);</span> 
+</code></pre></div>
+
+<p><img alt="Spyder" src="../../../../../assets/ml_1_1.png" /></p>
+<p><strong><em>R</em></strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">read.csv</span><span class="p">(</span><span class="s">&#39;Data.csv&#39;</span><span class="p">)</span>
+
+<span class="n">dataset</span><span class="o">$</span><span class="n">Age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">ifelse</span><span class="p">(</span>
+<span class="w">                </span><span class="nf">is.na</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Age</span><span class="p">),</span><span class="w"> </span>
+<span class="w">                </span><span class="nf">ave</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Age</span><span class="p">,</span><span class="w"> </span><span class="n">FUN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="p">),</span>
+<span class="w">                </span><span class="n">dataset</span><span class="o">$</span><span class="n">Age</span><span class="p">)</span>
+
+<span class="n">dataset</span><span class="o">$</span><span class="n">Salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">ifelse</span><span class="p">(</span>
+<span class="w">                    </span><span class="nf">is.na</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Salary</span><span class="p">),</span>
+<span class="w">                    </span><span class="nf">ave</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Salary</span><span class="p">,</span><span class="w"> </span><span class="n">FUN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)),</span>
+<span class="w">                    </span><span class="n">dataset</span><span class="o">$</span><span class="n">Salary</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="RStudio" src="../../../../../assets/ml_1_2.png" /></p>
+<p><strong><em>Back to Python</em></strong></p>
+<h3 id="encoding-categorical-data-to-numbers-for-futher-processing">Encoding categorical data to numbers for futher processing</h3>
+<p>Two steps:</p>
+<ol>
+<li>Transform from label (string) to numbers</li>
+</ol>
+<div class="codehilite"><pre><span></span><code> <span class="c1"># encode categorical data to numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelEncoder</span>
+<span class="c1"># transforms categorical data from strings to numbers</span>
+<span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">LabelEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
+
+<ol start="2">
+<li>Then create dummy features with a column for each category, so that we don't insert an arbitrary feature order into the ML algorithms.</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="c1"># since we don&#39;t want in our model to have order between categories,</span>
+<span class="c1"># we need to create dummy variables, one column per each category</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotEncoder</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">categorical_features</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">();</span>
+</code></pre></div>
+
+<p>When we look at the data in the X variable we see:</p>
+<p><img alt="Dummy Features" src="../../../../../assets/ml_1_3.png" /></p>
+<p>For the dependent variable we don't need to make dummy features, thus we simply run:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">###### dependent variable</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">LabelEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="encoding-categorial-data-in-r">Encoding categorial data in R</h3>
+<p>It seems in R we don't need to create the dummy features, so it is straight forward:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">dataset</span><span class="o">$</span><span class="n">Country</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">factor</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Country</span><span class="p">,</span><span class="w"> </span>
+<span class="w">                         </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;France&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Spain&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Germany&#39;</span><span class="p">),</span>
+<span class="w">                         </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">))</span>
+
+<span class="n">dataset</span><span class="o">$</span><span class="n">Purchased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">factor</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Purchased</span><span class="p">,</span><span class="w"> </span>
+<span class="w">                           </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;Yes&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;No&#39;</span><span class="p">),</span>
+<span class="w">                           </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="splitting-the-dataset-into-training-set-and-test-set-python">Splitting the dataset into training set and test set (Python)</h3>
+<ul>
+<li><code>test_size</code> == percentage of the whole datset used for test data - good numbers range usually between 0.2 -&gt; 0.3</li>
+<li><code>random_state</code> == a random number; in this case I put 0 so that I have the same results everytime.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="c1">### spliting our data into training data and test data</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cross_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                                    <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+                                    <span class="n">random_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong><em>In R</em></strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nf">install.packages</span><span class="p">(</span><span class="s">&#39;caTools&#39;</span><span class="p">)</span>
+<span class="nf">library</span><span class="p">(</span><span class="n">caTools</span><span class="p">)</span>
+<span class="n">set.seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="n">split</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">sample.split</span><span class="p">(</span><span class="n">dataset</span><span class="o">$</span><span class="n">Purchased</span><span class="p">,</span><span class="w"> </span><span class="n">SplitRatio</span><span class="o">=</span><span class="m">0.8</span><span class="p">)</span>
+<span class="n">training_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">subset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span><span class="w"> </span><span class="n">split</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+<span class="n">test_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">subset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span><span class="w"> </span><span class="n">split</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We set the seed for the random split - 0, so it is deterministic (can be any number).<br />
+<code>sample.split</code> receives an array of dependent variable and the split ratio (in  this case we aim for 80% for training and 20% for testing) and outputs an array of TRUE / FALSE values - the actual split. According to documentation, if there are only a few labels (as is expected) than relative ratio of data in both subsets will be the same - this is the reason why split requires the dependent variable column.</p>
+<p>Then we use this array to obtain the corresponding subsets from our initial dataset.</p>
+<h3 id="feature-scaling">Feature Scaling</h3>
+<p>Purpose: no variable is dominated by the other</p>
+<p>Two types of feature scaling:</p>
+<ul>
+<li>Normalization: scaled(x) = (x - min(x)) / (max(x) - min(x))</li>
+<li>Standardization: scaled(x) = (x - mean(x)) / stddev(x) <a href="https://en.wikipedia.org/wiki/Standard_deviation">Standard Deviation</a></li>
+</ul>
+<p>We are going to use the <code>fit_transform</code> function for the training data and <code>transform</code> for the test data, because the StandardScaler (see below) is already fitted by the first call and we want to reuse the same scaling for the test data. According to docs:</p>
+<blockquote>
+<p>Definition : <code>fit_transform(X, y=None, **fit_params)</code>: <br />
+Fit to data, then transform it.<br />
+Fits transformer to X and y with optional parameters fit_params and returns a transformed version of X.</p>
+</blockquote>
+<div class="codehilite"><pre><span></span><code><span class="c1"># scaling features</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="n">std_scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">();</span>
+<span class="n">X_train_scaled</span> <span class="o">=</span> <span class="n">std_scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">);</span>
+<span class="n">X_test_scaled</span> <span class="o">=</span> <span class="n">std_scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">);</span>
+</code></pre></div>
+
+<p>Attention: in the code above, we also scaled the dummy variables. This can be useful or not, depending on the task at hand. If we don't want to scale the dummy features, we can simply:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">X_train_scaled_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>               
+<span class="n">X_train_scaled_2</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="n">std_scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:])</span>
+<span class="n">X_train_scaled_2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div>
+
+<p>In R, we only select the features we want to scale. Indices start from 1, we don't want to scale the country, so it goes like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">training_set</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="o">:</span><span class="m">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">scale</span><span class="p">(</span><span class="n">training_set</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="o">:</span><span class="m">3</span><span class="p">])</span>
+<span class="n">test_set</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="o">:</span><span class="m">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">scale</span><span class="p">(</span><span class="n">test_set</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="o">:</span><span class="m">3</span><span class="p">])</span>
+</code></pre></div>
+
+<p><img alt="ML Feature Scaling" src="../../../../../assets/ml_1_5.png" /></p>
+<h3 id="some-implementations">Some implementations:</h3>
+<p>In the snippets above, we use algorithms from various python libraries. Here are some implementations of these algorithms.</p>
+<p>A basic function to generate data with random NaNs</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_data</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="nb">min</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">gaps_percent</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>    
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">max</span> <span class="o">-</span> <span class="nb">min</span><span class="p">)</span> <span class="o">+</span> <span class="nb">min</span>
+    <span class="n">cnt_nan</span> <span class="o">=</span> <span class="nb">int</span> <span class="p">(</span><span class="n">gaps_percent</span> <span class="o">*</span> <span class="n">length</span><span class="p">)</span>
+
+    <span class="n">ilen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt_nan</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ilen</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="n">idx</span><span class="p">])):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">idx</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span> <span class="o">%</span> <span class="n">ilen</span><span class="p">)</span>     <span class="c1"># so we minimize clusters</span>
+        <span class="n">ret</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="n">arr</span> <span class="o">=</span> <span class="n">generate_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Cleaning up the data - the algorithm which replaces NaN with a value (either median or mean)</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fill_nan_with_value</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">mask</span> <span class="o">^</span> <span class="kc">True</span><span class="p">]);</span>
+    <span class="k">return</span> <span class="n">ret</span> 
+
+<span class="mf">0.5</span><span class="p">,</span> <span class="n">gaps_percent</span><span class="p">)</span>
+
+<span class="n">arr_filled</span> <span class="o">=</span> <span class="n">fill_nan_with_value</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Data scaling - Z-scoring and normalization:</p>
+<div class="codehilite"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Standardize features by removing the mean and scaling to unit variance</span>
+<span class="sd">For instance many elements used in the objective function of a learning algorithm </span>
+<span class="sd">(such as the RBF kernel of Support Vector Machines or the L1 and L2 regularizers </span>
+<span class="sd">of linear models) assume that all features are centered around 0 and have </span>
+<span class="sd">variance in the same order. If a feature has a variance that is orders of </span>
+<span class="sd">magnitude larger that others, it might dominate the objective function and </span>
+<span class="sd">make the estimator unable to learn from other features correctly as expected.</span>
+
+<span class="sd">- Also known as Z-Scoring</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">scale_std_dev</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">):</span>
+    <span class="n">mean_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">);</span>
+    <span class="n">stddev_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">mean_arr</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>  <span class="o">/</span> <span class="n">arr_filled</span><span class="o">.</span><span class="n">size</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">mean_arr</span><span class="p">)</span> <span class="o">/</span> <span class="n">stddev_arr</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">scale_normalize</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr_filled</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">))</span>
+
+<span class="n">array_scaled_std_dev</span> <span class="o">=</span> <span class="n">scale_std_dev</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span>
+<span class="n">array_scaled_normal</span> <span class="o">=</span> <span class="n">scale_normalize</span><span class="p">(</span><span class="n">arr_filled</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Generate linear data with noise and plot it</p>
+<div class="codehilite"><pre><span></span><code><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Format ax + b + error</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_noisy_linear_data</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">a_coef</span><span class="p">,</span> <span class="n">b_coef</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="n">a_coef</span> <span class="o">+</span> <span class="n">generate_data</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="o">-</span><span class="n">error</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">error</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_coef</span>
+
+<span class="n">line_with_noise</span> <span class="o">=</span> <span class="n">generate_noisy_linear_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="p">;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">line_with_noise</span><span class="p">,</span> <span class="s1">&#39;ro&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="Spyder" src="../../../../../assets/ml_1_6.png" /></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../native/coding/2017/03/09/C++-Play-GreenThreads.html">C++ Play - Green Threads in C++</a></span><span><a href="../../../../../machine/learning/2017/03/18/Statistics_1.html">Statistics, continued</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

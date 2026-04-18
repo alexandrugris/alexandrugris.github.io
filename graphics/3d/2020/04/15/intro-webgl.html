@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebGL Fun | From The Trenches - The Code</title>
+  <meta name="description" content="A post about computer graphics, for the web mostly, with JavaScript, WebGL, ThreeJS and shaders. A little bit of maths also.">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">WebGL Fun</h1>
+    <p class="post-meta">
+      <time datetime="2020-04-15" itemprop="datePublished">Apr 15, 2020</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>A post about computer graphics, for the web mostly, with JavaScript, WebGL, ThreeJS and shaders. A little bit of maths also. </p>
+<h3 id="threejs-introduction">ThreeJS Introduction</h3>
+<p><a href="https://threejs.org/">ThreeJS</a> is a minimalistic 3D game engine for the web, with a very simple to use and very nicely designed API. It comes in the form of a javascript library, accompanied by a set of util libraries, a scene editor running on the web and lots and lots of examples an tutorials. </p>
+<p>By the end of this blog post we will build this: </p>
+<p><img alt="Three JS Editor" src="../../../../../assets/webgl_2.png" /></p>
+<p>By default, ThreeJS already has built in materials for most of the effects one might want to add to a scene. I addition to what is already built in, there are lots of samples and pre-made effects in the form of libraries on github. Therefore, for most work, it be used entirely from JavaScript. While the API is clean and short and performs as expected, a little bit of maths and graphics background will still be needed sooner or later in the project.</p>
+<p><img alt="Three JS Editor" src="../../../../../assets/webgl_1.png" /></p>
+<h3 id="initialization-and-the-first-scene">Initialization and The First Scene</h3>
+<p>The simplest way to run ThreeJS is to cover the full browser window. It goes like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+  <span class="cm">&lt;!-- Run everything as a module --&gt;</span>
+  <span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;module&quot;</span><span class="p">&gt;</span>
+
+<span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="nx">main</span><span class="p">,</span><span class="w"> </span><span class="nx">resize</span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./js/complex_scene.js&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nb">window</span><span class="p">.</span><span class="nx">onload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">main</span><span class="p">;</span>
+<span class="w">    </span><span class="nb">window</span><span class="p">.</span><span class="nx">onresize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">resize</span><span class="p">;</span>
+
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+  <span class="cm">&lt;!-- Full screen, positioned top-left corner --&gt;</span>
+  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;webgl-container&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;position: absolute; top: 0; left:0 ; margin: 0&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>Then, in the JavaScript file:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// downloaded beforehand in the libs folder</span>
+<span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">THREE</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./libs/three.module.js&quot;</span><span class="w"> </span>
+
+<span class="c1">// create new renderer</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">renderer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">WebGLRenderer</span><span class="p">();</span>
+
+<span class="c1">// util for variable frame rate</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">clock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Clock</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</code></pre></div>
+
+<p>We are also going to make use of the following two functions, as vectors are kept by reference in the ThreeJS code and, in many cases, we need copies to do transforms only on resulting vector, not on the source.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">newVector</span><span class="p">(</span><span class="nx">v</span><span class="p">){</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">z</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">copyVector</span><span class="p">(</span><span class="nx">dest</span><span class="p">,</span><span class="w"> </span><span class="nx">src</span><span class="p">){</span>
+<span class="w">  </span><span class="nx">dest</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">src</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">dest</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">src</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">dest</span><span class="p">.</span><span class="nx">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">src</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Now we can proceed further to initialization</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">resize</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="p">,</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">camera</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">camera</span><span class="p">.</span><span class="nx">aspect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">camera</span><span class="p">.</span><span class="nx">updateProjectionMatrix</span><span class="p">();</span><span class="w"> </span><span class="c1">// DON&#39;T FORGET!</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// initialize the renderer</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="p">,</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">);</span>
+<span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;webgl-container&quot;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">renderer</span><span class="p">.</span><span class="nx">domElement</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// [LOAD SCENE HERE]</span>
+<span class="w">  </span><span class="c1">// for the first demo will we create scene programatically,</span>
+<span class="w">  </span><span class="c1">// for the second we load the scene as exported from the ThreeJS editor</span>
+
+<span class="w">  </span><span class="c1">// if objects are loaded from the network, initScene should be async / awaited</span>
+<span class="w">  </span><span class="nx">initScene</span><span class="p">();</span>
+<span class="w">  </span><span class="nx">renderScene</span><span class="p">();</span>
+
+<span class="p">}</span>
+
+<span class="k">export</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">main</span><span class="p">,</span><span class="w"> </span><span class="nx">resize</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<p>We are also going to use the following global variables:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// the scene object</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">scene</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Scene</span><span class="p">();</span>
+
+<span class="c1">// a light, must be added to the scene if we want to see something</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">light</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">AmbientLight</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+
+<span class="c1">// a camera</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">camera</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+</code></pre></div>
+
+<p>Initialize them, add them to the scene:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">initScene</span><span class="p">(){</span>
+
+<span class="w">  </span><span class="c1">// 1. create the renderer and add its element to the scene</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="p">,</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">);</span>
+<span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;webgl-container&quot;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">renderer</span><span class="p">.</span><span class="nx">domElement</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 2. create the camera, position it in the world and add it to the scene</span>
+<span class="w">  </span><span class="nx">camera</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">PerspectiveCamera</span><span class="p">(</span><span class="mf">35</span><span class="p">,</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="o">/</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1000</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">camera</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">camera</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 3. add the light to the scene</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">light</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 4. Create an object. An object an item of the class THREE.Mesh()</span>
+<span class="w">  </span><span class="c1">// It has two constituents: a geometry and a material</span>
+
+<span class="w">  </span><span class="c1">// The geometry is created from the library of predefined geometries. </span>
+<span class="w">  </span><span class="c1">// Check the docs for other prefedined geometries</span>
+
+<span class="w">  </span><span class="c1">// The material is a single color (red) material, rendered in wireframe</span>
+<span class="w">  </span><span class="c1">// wireframe property is set in the constructor.</span>
+<span class="w">  </span><span class="c1">// ThreeJS predefines many materials for everyday use.  </span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">box</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Mesh</span><span class="p">(</span>
+<span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">BoxGeometry</span><span class="p">(</span><span class="mf">20</span><span class="p">,</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span><span class="w"> </span><span class="mf">20</span><span class="p">),</span>
+<span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">MeshBasicMaterial</span><span class="p">(</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="mh">0xff0000</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">wireframe</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">      </span><span class="p">})</span>
+<span class="w">  </span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 5. Give a name to my 3D object so we can find it in the scene later</span>
+<span class="w">  </span><span class="nx">box</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;my-box&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// 6. A super useful helper for debugging, the AxesHelper, shows the orientation of my 3D object.</span>
+<span class="w">  </span><span class="c1">// This is added as a child to the box so it moves through the scene together with its parent.</span>
+<span class="w">  </span><span class="nx">box</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">AxesHelper</span><span class="p">(</span><span class="mf">30</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// 7. Add the box to the scene</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">box</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// the next two objects will be detailed later</span>
+<span class="w">  </span><span class="c1">// (a) how to create geometry programatically</span>
+<span class="w">  </span><span class="c1">// (b) how to modify geometry programatically</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">createTriangleGeometry</span><span class="p">(</span><span class="mf">20</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">));</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">AnimatedPlaneGeometry</span><span class="p">());</span>
+
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Beside the <code>THREE.MeshBasicMaterial</code> shown above, which is a flat renderer, not affected by lights, ThreeJS comes with a powerful material library. Some of the classes discussed below:</p>
+<ul>
+<li><code>LineMaterial</code> - allows drawing lines</li>
+<li><code>LineDashMaterial</code> - allows drawing dashed lines</li>
+<li><code>MeshLambertMaterial</code> - basic per-vertex lighting, no specular</li>
+<li><code>MeshPhongMaterial</code> - per-pixel lighting, specular. Offers interesting properties for setting the diffuse texture, environment map, emissive, displacement map, bump map, light map, normal map, both object space and tangent space, etc.</li>
+<li><code>MeshToonMaterial</code> - toon shading</li>
+<li><code>MeshStandardMaterial</code> - physically-based rendering material</li>
+<li><code>SpriteMaterial</code> - rendering sprites</li>
+<li><code>DepthMaterial</code> - for rendering the depth buffer</li>
+<li><code>ShaderMaterial</code> - for custom shaders written in GLSL. We will use this material later on.</li>
+</ul>
+<p>The wide slection of materials available means that a lot can be done with just JavaScript, without touching any advanced rendering techniques or limiting custom rendering code to very special sections of your scene. </p>
+<p>Redering the scene is super easy as well:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">render</span><span class="p">(){</span>
+
+<span class="w">  </span><span class="c1">// 1. optinally call an update method</span>
+<span class="w">  </span><span class="c1">// to update your scene based on the advance of time</span>
+<span class="w">  </span><span class="nx">update</span><span class="p">(</span><span class="nx">clock</span><span class="p">.</span><span class="nx">getDelta</span><span class="p">())</span>
+
+<span class="w">  </span><span class="c1">// 2. render the scene</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">scene</span><span class="p">,</span><span class="w"> </span><span class="nx">camera</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="nx">render</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="fun-with-vertices">Fun With Vertices</h3>
+<p>We mentioned two more objects in the scene initialization code above:</p>
+<ul>
+<li>Generating geometry</li>
+<li>Updating geometry</li>
+</ul>
+<p>Here it is how it goes:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">createTriangleGeometry</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span><span class="w"> </span><span class="nx">singleColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">){</span>
+
+<span class="w">  </span><span class="c1">// 1. Create a geometry object and push some vertices to it.</span>
+<span class="w">  </span><span class="c1">// In this case we create a triangle</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Geometry</span><span class="p">();</span>
+<span class="w">  </span><span class="nx">geom</span><span class="p">.</span><span class="nx">vertices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">(</span><span class="o">-</span><span class="nx">size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">));</span>
+<span class="w">  </span><span class="nx">geom</span><span class="p">.</span><span class="nx">vertices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">(</span><span class="nx">size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">));</span>
+<span class="w">  </span><span class="nx">geom</span><span class="p">.</span><span class="nx">vertices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">((</span><span class="mf">3.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">size</span><span class="w"> </span><span class="p">)),</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 2. Set the indexes for each triangle constituting the geometry</span>
+<span class="w">  </span><span class="c1">// In our case, we have a single face since we draw a single triangle</span>
+<span class="w">  </span><span class="c1">// ThreeJS uses indexed geometries.</span>
+<span class="w">  </span><span class="nx">geom</span><span class="p">.</span><span class="nx">faces</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Face3</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// 3. Set the material properties</span>
+<span class="w">  </span><span class="c1">// in the `else` case we setup vertex colors which will be sent to the shaders as</span>
+<span class="w">  </span><span class="c1">// vertex color parameters.</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">singleColor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">MeshBasicMaterial</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="mh">0x00ff00</span><span class="p">});</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">else</span><span class="p">{</span>
+<span class="w">     </span><span class="nx">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">MeshBasicMaterial</span><span class="p">({</span>
+<span class="w">      </span><span class="nx">side</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">DoubleSide</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">vertexColors</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">VertexColors</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="nx">geom</span><span class="p">.</span><span class="nx">faces</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">vertexColors</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Color</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">geom</span><span class="p">.</span><span class="nx">faces</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">vertexColors</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Color</span><span class="p">(</span><span class="mh">0x00ff00</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">geom</span><span class="p">.</span><span class="nx">faces</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">vertexColors</span><span class="p">[</span><span class="mf">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Color</span><span class="p">(</span><span class="mh">0x0000ff</span><span class="p">);</span>
+
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 4. Return the mesh that can be added to the Scene</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Mesh</span><span class="p">(</span><span class="nx">geom</span><span class="p">,</span><span class="w"> </span><span class="nx">mat</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// 5. Check out ExtrudeGeometry and ShapeGeometry and GeometryUtils </span>
+<span class="w">  </span><span class="c1">// for different means and utilities for generating geometry in code</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>And updating geometry on the fly:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">class</span><span class="w"> </span><span class="nx">AnimatedPlaneGeometry</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Mesh</span><span class="p">{</span>
+
+<span class="w">  </span><span class="kr">constructor</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// 1. initialize this geomerty as a plane</span>
+<span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">PlaneGeometry</span><span class="p">(</span><span class="mf">40</span><span class="p">,</span><span class="w"> </span><span class="mf">40</span><span class="p">,</span><span class="w"> </span><span class="mf">40</span><span class="p">,</span><span class="w"> </span><span class="mf">40</span><span class="p">),</span><span class="w"> </span>
+<span class="w">          </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">MeshBasicMaterial</span><span class="p">({</span><span class="nx">wireframe</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}))</span><span class="w"> </span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// 2. give it a name so it can be accessed from the scene</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;my-wave&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">){</span>
+
+<span class="w">    </span><span class="c1">// 3. update the geometry, this is a sinosoidal wave</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">geometry</span><span class="p">.</span><span class="nx">vertices</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">      </span><span class="k">this</span><span class="p">.</span><span class="nx">geometry</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">geometry</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// 4.: must call the following to update the geometry. </span>
+<span class="w">    </span><span class="c1">// otherwise the buffers will not be updated</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">geometry</span><span class="p">.</span><span class="nx">verticesNeedUpdate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>If all went well, with an update function like the following,</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">){</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">box</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s2">&quot;my-box&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">box</span><span class="p">.</span><span class="nx">rotation</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">wave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s2">&quot;my-wave&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">wave</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Something like the following scene should appear in the browser. The full code is in my github account, in the WebGL project. </p>
+<p><img alt="JS Scene" src="../../../../../assets/webgl_3.png" /></p>
+<p>The scene contains:<br />
+- The red wireframe cube rotating (<code>my-box</code>) with the <code>AxesHelper</code> added and rotating with its parent.<br />
+- The waving plane, updated geometry (<code>my-wave</code>).<br />
+- The colorful triangle created on the fly.</p>
+<h3 id="shaders-and-rendering-of-the-earth">Shaders and Rendering Of The Earth</h3>
+<p>Why the Earth? Because textures can be found free online, because rendering it requires some specific techniques, like skyboxes, normal mapping, lighting, atmosphere rendering and because the result is guaranteed to be beautiful. </p>
+<p>A very good rendering of the Earth can be obtained by using materials already provided by the engine or by the community. However, since this was a pet project, we are doing many things from scratch. Also, being a pet project written among other things, the code is not production ready. I have not tested it on other computer except for my laptop which is quite powerful. Also, I have not optimized the code. It's just the first thing that worked. </p>
+<h3 id="loading-the-scene">Loading the Scene</h3>
+<p>Unlike the previous example where we built the scene manually, here I created it in the ThreeJS editor and then exported it. The loading code goes like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">//1. initialize the renderer</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="p">,</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">);</span>
+<span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;webgl-container&quot;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">renderer</span><span class="p">.</span><span class="nx">domElement</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">//2. load the scene from editor exported objects</span>
+<span class="w">  </span><span class="nx">scene</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadObject</span><span class="p">(</span><span class="s2">&quot;./assets/earth_and_water.json&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">camera</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadObject</span><span class="p">(</span><span class="s2">&quot;./assets/camera.json&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">//3. fix the camera, the camera has also been loaded from JSON, but its parameters</span>
+<span class="w">  </span><span class="c1">// neeed to be adjusted to our viewport</span>
+<span class="w">  </span><span class="nx">camera</span><span class="p">.</span><span class="nx">aspect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">innerWidth</span><span class="o">/</span><span class="nb">window</span><span class="p">.</span><span class="nx">innerHeight</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">camera</span><span class="p">.</span><span class="nx">updateProjectionMatrix</span><span class="p">();</span>
+<span class="w">  </span><span class="nx">camera</span><span class="p">.</span><span class="nx">updateMatrixWorld</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">//4. load the FlyControls library (premade) so we can move through the scene</span>
+<span class="w">  </span><span class="nx">cameraControls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FlyControls</span><span class="p">(</span><span class="nx">camera</span><span class="p">,</span><span class="w"> </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">domElement</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cameraControls</span><span class="p">.</span><span class="nx">dragToLook</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">cameraControls</span><span class="p">.</span><span class="nx">movementSpeed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0</span><span class="p">;</span><span class="w"> </span><span class="c1">// scene-units per second</span>
+<span class="w">  </span><span class="nx">cameraControls</span><span class="p">.</span><span class="nx">rollSpeed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="c1">// radians per second</span>
+
+<span class="w">  </span><span class="c1">//5. the skybox requires separate treatment, will be coved later in the post</span>
+<span class="w">  </span><span class="c1">// her we remove it from the scene </span>
+<span class="w">  </span><span class="nx">skybox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s1">&#39;SkyBox&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="nx">skybox</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">//6. we are also fixing the atmosphere and make it a child of the earth so the move together</span>
+<span class="w">  </span><span class="nx">earth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s2">&quot;Earth&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">atmosphere</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s2">&quot;Atmosphere&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">scene</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="nx">atmosphere</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">earth</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">atmosphere</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">//7. setup the shaders</span>
+<span class="w">  </span><span class="nx">fixMaterials</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// 8. since we have a skybox rendered as a separate step</span>
+<span class="w">    </span><span class="c1">// we don&#39;t want to renderer to erase the scene for us between rendering</span>
+<span class="w">    </span><span class="c1">// also part of the rendering of the skybox</span>
+<span class="w">    </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">autoClear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">scene</span><span class="p">.</span><span class="nx">background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// 9. start the renderign loop</span>
+<span class="w">    </span><span class="nx">render</span><span class="p">()</span>
+<span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>For loading the scene and the textures we are going to use two functions:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">loadObject</span><span class="p">(</span><span class="nx">json</span><span class="p">){</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">objLoader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">ObjectLoader</span><span class="p">();</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Promise</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="nx">accept</span><span class="p">,</span><span class="w"> </span><span class="nx">reject</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">objLoader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">json</span><span class="p">,</span><span class="w"> </span><span class="nx">accept</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">,</span><span class="nx">reject</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="nx">texture</span><span class="p">){</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">imgLoader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">TextureLoader</span><span class="p">();</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Promise</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span><span class="w"> </span><span class="nx">reject</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">imgLoader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">texture</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">tex</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// here we are intercepting the texture loader</span>
+<span class="w">    </span><span class="c1">// we want the textures to be as beautifully rendered as possible at the cost of performance</span>
+<span class="w">    </span><span class="c1">// therefore, we use the highest anisotropy level the renderer provides</span>
+<span class="w">    </span><span class="c1">// for my device, it is 16</span>
+<span class="w">    </span><span class="c1">// this makes the textures look sharp when seen from the side</span>
+<span class="w">    </span><span class="c1">// https://en.wikipedia.org/wiki/Texture_filtering#Anisotropic_filtering</span>
+<span class="w">    </span><span class="nx">tex</span><span class="p">.</span><span class="nx">anisotropy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">capabilities</span><span class="p">.</span><span class="nx">getMaxAnisotropy</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">resolve</span><span class="p">(</span><span class="nx">tex</span><span class="p">);</span>
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nx">reject</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Setting up a shader is performed in the <code>fixMaterials</code> function. Its basic structure as as follows:</p>
+<ol>
+<li>Define the set of uniforms and bind them to JS variables. Uniforms are the variables that are set in code and submitted on each rendering pass to the shading programs. </li>
+<li>Create a <code>ShaderMaterial</code> </li>
+<li>Set the uniforms and then load the vertex shader and the pixel shaders. In our case, we store these in our DOM tree, in the html file. </li>
+</ol>
+<p>Let's perform these steps to render the sky dome. In our case it's a sphere, not box. </p>
+<h3 id="skydome-and-light">SkyDome And Light</h3>
+<ol>
+<li>Setting up the uniforms:</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">fixMaterials</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="c1">// first is the SkyBox</span>
+<span class="w">  </span><span class="nx">skyBoxUniforms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">diffuseTexture</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="s2">&quot;./assets/sky/sky_at_night.jpg&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="p">[...</span><span class="w"> </span><span class="nx">more</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">come</span><span class="w"> </span><span class="nx">here</span><span class="w"> </span><span class="p">...]</span>
+</code></pre></div>
+
+<ol start="2">
+<li>Create the <code>ShaderMaterial</code>:</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="nx">skybox</span><span class="p">.</span><span class="nx">material</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">ShaderMaterial</span><span class="p">({</span>
+
+<span class="w">    </span><span class="c1">// a) set the uniforms</span>
+<span class="w">    </span><span class="nx">uniforms</span><span class="o">:</span><span class="w"> </span><span class="nx">skyBoxUniforms</span><span class="p">,</span>
+
+<span class="w">    </span><span class="c1">// b) load the vertex and pixel shader from the HTML DOM</span>
+<span class="w">    </span><span class="nx">vertexShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;skyBoxVertexShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">fragmentShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;skyBoxFragmentShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+
+<span class="w">    </span><span class="c1">// c) set other parameters</span>
+<span class="w">    </span><span class="c1">// In our case, always show the skybox behind all other objects</span>
+<span class="w">    </span><span class="nx">depthTest</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">depthWrite</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+
+<span class="w">    </span><span class="c1">// d) we are always inside the box</span>
+<span class="w">    </span><span class="nx">side</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">BackSide</span><span class="p">,</span>
+
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>Rendering the skybox is a bit trick as the following are done:</p>
+<ul>
+<li>The skybox is always as at the same distance from the camera. We don't get closer to it, we don't get further from it. It moves with the camera.</li>
+<li>The skybox is behind any object in the scene, it cannot intersect any object. Thus we don't update the the Z-buffer and we don't read from it. We render the skybox as a separate step and we don't erase the background between rendering the skybox and rendering the rest of the scene.</li>
+</ul>
+<p>Here's how the rendering loop looks like:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">render</span><span class="p">(){</span>
+
+<span class="c1">// 1. update the scene, geometries, etc</span>
+<span class="w">  </span><span class="nx">update</span><span class="p">(</span><span class="nx">clock</span><span class="p">.</span><span class="nx">getDelta</span><span class="p">())</span>
+
+<span class="c1">// 2. clear the background</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+<span class="c1">// 3. render the skybox</span>
+<span class="w">  </span><span class="k">if</span><span class="p">(</span><span class="nx">skybox</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
+<span class="w">    </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">skybox</span><span class="p">,</span><span class="w"> </span><span class="nx">camera</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="c1">// 4. without clearing the background, render the rest of the scene</span>
+<span class="w">  </span><span class="nx">renderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">scene</span><span class="p">,</span><span class="w"> </span><span class="nx">camera</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="nx">render</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The shaders for the skybox are super straight forward, as we don't apply any lighting to it. </p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;x-shader/x-vertex&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;skyBoxVertexShader&quot;</span><span class="p">&gt;</span>
+
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">vec3</span><span class="w">          </span><span class="nx">lightDirection</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">vec3</span><span class="w">          </span><span class="nx">cameraDirection</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec2</span><span class="w">          </span><span class="nx">vUv</span><span class="p">;</span><span class="w"> </span><span class="c1">// pass the uv coordinates of each vertex to the frag shader</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="kr">float</span><span class="w">         </span><span class="nx">lightIntensity</span><span class="p">;</span>
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">vUv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">uv</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">gl_Position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">projectionMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">modelViewMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// artistic effect: dim when looking at the light source</span>
+<span class="w">      </span><span class="c1">// no special reason for the effect, just feel nicer</span>
+<span class="w">      </span><span class="c1">// it should be computed outside the shader</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dot</span><span class="p">(</span><span class="nx">normalize</span><span class="p">(</span><span class="nx">cameraDirection</span><span class="p">),</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">lightDirection</span><span class="p">));</span>
+<span class="w">      </span><span class="nx">lightIntensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">clamp</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;x-shader/x-fragment&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;skyBoxFragmentShader&quot;</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">diffuseTexture</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec2</span><span class="w"> </span><span class="nx">vUv</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="kr">float</span><span class="w"> </span><span class="nx">lightIntensity</span><span class="p">;</span>
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">diffuseTexture</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">lightIntensity</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>Now, the trickery has not yet finished. We have a sun that needs to stick to the skybox when the skybox rotates and moves through the scene, remember it is bound to the camera, and we want to make sure the light direction is preserved and it accurately comes from the sun. So we do these updates in the update method.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">){</span>
+
+<span class="w">  </span><span class="c1">// 1. Allow the camera to move</span>
+<span class="w">  </span><span class="k">if</span><span class="p">(</span><span class="nx">cameraControls</span><span class="p">){</span>
+<span class="w">    </span><span class="nx">cameraControls</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 2. ensure the sun and the light have the same direction and they stick to the skybox</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">sunLight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s1">&#39;sun_light&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">sunSprite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scene</span><span class="p">.</span><span class="nx">getObjectByName</span><span class="p">(</span><span class="s1">&#39;sun_sprite&#39;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">lightPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sunLight</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">normalize</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">lightPosU</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Uniform</span><span class="p">(</span><span class="nx">newVector</span><span class="p">(</span><span class="nx">lightPos</span><span class="p">));</span>
+
+<span class="w">  </span><span class="k">if</span><span class="p">(</span><span class="nx">skybox</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">      </span><span class="nx">copyVector</span><span class="p">(</span><span class="nx">skybox</span><span class="p">.</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">camera</span><span class="p">.</span><span class="nx">position</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">skybox</span><span class="p">.</span><span class="nx">rotation</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">0.005</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">skybox</span><span class="p">.</span><span class="nx">rotation</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="o">-</span><span class="mf">0.1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">;</span>
+
+<span class="w">      </span><span class="kd">let</span><span class="w"> </span><span class="nx">cameraDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">setFromMatrixColumn</span><span class="p">(</span><span class="nx">camera</span><span class="p">.</span><span class="nx">matrixWorld</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">).</span><span class="nx">normalize</span><span class="p">();</span>
+
+<span class="w">      </span><span class="nx">skyBoxUniforms</span><span class="p">.</span><span class="nx">lightDirection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lightPosU</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">skyBoxUniforms</span><span class="p">.</span><span class="nx">cameraDirection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Uniform</span><span class="p">(</span><span class="nx">cameraDir</span><span class="p">);</span>
+
+
+<span class="w">      </span><span class="nx">skybox</span><span class="p">.</span><span class="nx">updateMatrixWorld</span><span class="p">();</span>
+
+<span class="w">      </span><span class="c1">// keep the sun in the same place in the sky</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalPositionSkyboxSpace</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// the sun sprite</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">invWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Matrix4</span><span class="p">();</span>
+
+<span class="w">        </span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalPositionSkyboxSpace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newVector</span><span class="p">(</span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">position</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalPositionSkyboxSpace</span><span class="p">.</span><span class="nx">applyMatrix4</span><span class="p">(</span><span class="nx">invWorld</span><span class="p">.</span><span class="nx">getInverse</span><span class="p">(</span><span class="nx">skybox</span><span class="p">.</span><span class="nx">matrixWorld</span><span class="p">));</span>
+<span class="w">        </span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalSkyboxPosition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newVector</span><span class="p">(</span><span class="nx">skybox</span><span class="p">.</span><span class="nx">position</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">      </span><span class="c1">// make sure the light comes from the sun and not some random point</span>
+<span class="w">      </span><span class="kd">let</span><span class="w"> </span><span class="nx">newPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newVector</span><span class="p">(</span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalPositionSkyboxSpace</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">applyMatrix4</span><span class="p">(</span><span class="nx">skybox</span><span class="p">.</span><span class="nx">matrixWorld</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">copyVector</span><span class="p">(</span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">newPos</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">updateMatrixWorld</span><span class="p">();</span>
+
+<span class="w">      </span><span class="nx">lightPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">();</span>
+<span class="w">      </span><span class="kd">let</span><span class="w"> </span><span class="nx">skyboxMovement</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Vector3</span><span class="p">();</span>
+<span class="w">      </span><span class="nx">skyboxMovement</span><span class="p">.</span><span class="nx">subVectors</span><span class="p">(</span><span class="nx">skybox</span><span class="p">.</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">originalSkyboxPosition</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">lightPos</span><span class="p">.</span><span class="nx">subVectors</span><span class="p">(</span><span class="nx">sunSprite</span><span class="p">.</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">skyboxMovement</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">copyVector</span><span class="p">(</span><span class="nx">sunLight</span><span class="p">.</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">lightPos</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="rendering-the-earth">Rendering the Earth</h3>
+<p>Now, rendering of the Earth and its atmosphere can vastly be improved, especially perfomance-wise. But I am running out of vacation time and I really want to finish this project today so I stop at the current implementation. Some quick wins:</p>
+<ul>
+<li>Make lighting done in tangent space. It will reduce some matrix multiplications in the pixel shader.</li>
+<li>Make the atmosphere rendering per-pixel. Now the atmosphere thickness is computed per vertex and this gives some ugly artefacts.</li>
+<li>Tune the clouds and their shadows. While the shadow moves correctly with the camera, when they are brightly lit or when they are not fully lit there are some visual artefacts. </li>
+</ul>
+<p>But let's start with the Earth.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// 1. setup the uniforms, load the textures</span>
+<span class="nx">earthUniforms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">diffuseTexture</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="s2">&quot;./assets/earth/earth_diffuse.jpg&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+
+<span class="w">    </span><span class="nx">diffuseNight</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="s2">&quot;./assets/earth/earth_diffuse_night.jpg&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+
+<span class="w">    </span><span class="nx">normalMap</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="s2">&quot;./assets/earth/earth_normal_map.png&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+
+<span class="w">    </span><span class="nx">specularMap</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;./assets/earth/earth_specular_map.png&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+
+<span class="w">    </span><span class="nx">cloudsMap</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadTexture</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;./assets/earth/clouds1.jpg&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="p">}</span>
+
+<span class="c1">// 2. Cheat a bit and use a library function to compute the tangets</span>
+<span class="c1">// We will be using tangent-space normal mapping. The function was too easy to grab </span>
+<span class="c1">// not to use it.</span>
+
+<span class="nx">BufferGeometryUtils</span><span class="p">.</span><span class="nx">computeTangents</span><span class="p">(</span><span class="nx">earth</span><span class="p">.</span><span class="nx">geometry</span><span class="p">);</span>
+
+<span class="c1">// 3. setup the vertex shader and the fragment shader</span>
+<span class="nx">earth</span><span class="p">.</span><span class="nx">material</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">ShaderMaterial</span><span class="p">({</span>
+
+<span class="w">    </span><span class="nx">uniforms</span><span class="o">:</span><span class="w"> </span><span class="nx">earthUniforms</span><span class="p">,</span>
+
+<span class="w">    </span><span class="nx">vertexShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;earthVertexShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">fragmentShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;earthFragmentShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+
+<span class="w">    </span><span class="nx">side</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">FrontSide</span>
+
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>In the update function, we also update the position and we bind the updated light position to the shader:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">update</span><span class="p">(</span><span class="nx">dt</span><span class="p">){</span>
+
+<span class="w">  </span><span class="p">[....]</span>
+
+<span class="w">  </span><span class="k">if</span><span class="p">(</span><span class="nx">earth</span><span class="p">){</span>
+<span class="w">    </span><span class="nx">earthUniforms</span><span class="p">.</span><span class="nx">lightDirection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lightPosU</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">earth</span><span class="p">.</span><span class="nx">rotation</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mf">0.001</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">;</span><span class="w"> </span><span class="c1">// some rotation</span>
+<span class="w">    </span><span class="nx">earth</span><span class="p">.</span><span class="nx">rotation</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">dt</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>And the shaders, with comments:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">&lt;</span><span class="nx">script</span><span class="w"> </span><span class="nx">type</span><span class="o">=</span><span class="s2">&quot;x-shader/x-vertex&quot;</span><span class="w"> </span><span class="nx">id</span><span class="o">=</span><span class="s2">&quot;earthVertexShader&quot;</span><span class="o">&gt;</span>
+
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">lightDirection</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// send to fragment shader</span>
+<span class="w">    </span><span class="c1">// all in eye space</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec2</span><span class="w"> </span><span class="nx">vUv</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vEyeDirectionEyeSpace</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vLightDirection</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">mat3</span><span class="w"> </span><span class="nx">tbn</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// the tangent, sent per-vertex </span>
+<span class="w">    </span><span class="nx">attribute</span><span class="w"> </span><span class="nx">vec4</span><span class="w"> </span><span class="nx">tangent</span><span class="p">;</span>
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">(){</span>
+
+<span class="w">      </span><span class="c1">// 1. copy the texture coordinates</span>
+<span class="w">      </span><span class="nx">vUv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">uv</span><span class="p">;</span>
+
+<span class="w">      </span><span class="c1">// 2. update the position</span>
+<span class="w">      </span><span class="nx">gl_Position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">projectionMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">modelViewMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 3. compute the light direction from world to eye;</span>
+<span class="w">      </span><span class="c1">// should be computed outside of shader for performance</span>
+<span class="w">      </span><span class="nx">vLightDirection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mat3</span><span class="p">(</span><span class="nx">viewMatrix</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">lightDirection</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">      </span><span class="c1">// 4. compute the direction to the eye</span>
+<span class="w">      </span><span class="nx">vEyeDirectionEyeSpace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mat3</span><span class="p">(</span><span class="nx">viewMatrix</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">position</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cameraPosition</span><span class="p">).</span><span class="nx">xyz</span><span class="p">;</span>
+
+<span class="w">      </span><span class="c1">// 5. prepare the tangent-bitangent-normal matrix for normal mapping</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">tangent</span><span class="p">.</span><span class="nx">xyz</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">normal</span><span class="p">.</span><span class="nx">xyz</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">cross</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">n</span><span class="p">));</span>
+
+<span class="w">      </span><span class="c1">// everything in eye space</span>
+<span class="w">      </span><span class="nx">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">normalMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">t</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">normalMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">b</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">normalMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">n</span><span class="p">);</span>
+
+<span class="w">      </span><span class="nx">tbn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mat3</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">,</span><span class="w"> </span><span class="nx">n</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="o">&lt;</span><span class="err">/script&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">script</span><span class="w"> </span><span class="nx">type</span><span class="o">=</span><span class="s2">&quot;x-shader/x-fragment&quot;</span><span class="w"> </span><span class="nx">id</span><span class="o">=</span><span class="s2">&quot;earthFragmentShader&quot;</span><span class="o">&gt;</span>
+
+<span class="w">    </span><span class="c1">// all my textures</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">diffuseTexture</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">diffuseNight</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">specularMap</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">cloudsMap</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">sampler2D</span><span class="w"> </span><span class="nx">normalMap</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// inputs, interpolated per vertex</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec2</span><span class="w"> </span><span class="nx">vUv</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vEyeDirectionEyeSpace</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vLightDirection</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">mat3</span><span class="w"> </span><span class="nx">tbn</span><span class="p">;</span>
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">(){</span>
+
+
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">lightDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">vLightDirection</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 1. compute the normal based on the texture and bring it to eye space</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">normalMap</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">).</span><span class="nx">xyz</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">normal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">tbn</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">n</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 2. directional light</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">lightIntensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dot</span><span class="p">(</span><span class="nx">normal</span><span class="p">,</span><span class="w"> </span><span class="nx">lightDir</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 3. use the surface normal, stored in tbn[2], as a selector for the day-night texture</span>
+<span class="w">      </span><span class="c1">// we don&#39;t do lighting per se, we use a blend of day/night textures for it</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">selectImage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dot</span><span class="p">(</span><span class="nx">tbn</span><span class="p">[</span><span class="mf">2</span><span class="p">],</span><span class="w"> </span><span class="nx">lightDir</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">diffuseTexture</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">selectImage</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">diffuseNight</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="nx">selectImage</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 4. we light the pixels a bit, true, but we only use the remainer from the intensity-select,</span>
+<span class="w">      </span><span class="c1">// so we don&#39;t overlight </span>
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">10.0</span><span class="o">*</span><span class="p">(</span><span class="nx">lightIntensity</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">selectImage</span><span class="p">));</span>
+
+<span class="w">      </span><span class="c1">// 5.  specular</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">reflection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reflect</span><span class="p">(</span><span class="nx">lightDir</span><span class="p">,</span><span class="w"> </span><span class="nx">normal</span><span class="p">);</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">specPower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">specularMap</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">).</span><span class="nx">r</span><span class="p">;</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">spec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0</span><span class="p">;</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">gloss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">specularMap</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">).</span><span class="nx">a</span><span class="p">;</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">specular</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="nx">pow</span><span class="p">(</span><span class="nx">clamp</span><span class="p">(</span><span class="nx">dot</span><span class="p">(</span><span class="nx">reflection</span><span class="p">,</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">vEyeDirectionEyeSpace</span><span class="p">)),</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">),</span><span class="w"> </span><span class="nx">spec</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">gloss</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">specular</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="mf">0.26</span><span class="p">,</span><span class="w"> </span><span class="mf">0.96</span><span class="p">,</span><span class="w"> </span><span class="mf">0.99</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 6. cloud colors</span>
+<span class="w">      </span><span class="nx">vec4</span><span class="w"> </span><span class="nx">cloudsColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">cloudsMap</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// 7. fake cloud shadow based on how we are looking at the cloud, to give some impression of depth</span>
+<span class="w">      </span><span class="nx">vec4</span><span class="w"> </span><span class="nx">cloudsShadow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">texture2D</span><span class="p">(</span><span class="nx">cloudsMap</span><span class="p">,</span><span class="w"> </span><span class="nx">vec2</span><span class="p">(</span><span class="nx">vUv</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">normal</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.005</span><span class="p">,</span><span class="w"> </span><span class="nx">vUv</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">normal</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.005</span><span class="p">));</span>
+
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">cloudsColor</span><span class="p">.</span><span class="nx">r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">cloudsShadow</span><span class="p">.</span><span class="nx">r</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.1</span><span class="p">){</span>
+<span class="w">        </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="mf">0.75</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">cloudsShadow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="mf">0</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">vec4</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cloudsColor</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">cloudsColor</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">lightIntensity</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">}</span>
+
+<span class="o">&lt;</span><span class="err">/script&gt;</span>
+</code></pre></div>
+
+<p>And last, but not least, the atmosphere. This is the most beautiful part of the model imho.</p>
+<p>The first thing to note is that the atmosphere is using alpha blending. Nothing fancy, but without the earth beneath it won't be visible. The atmosphere itself is a sphere with no texture, rendered on top of the earth and rotating together with it. Here is the shader config:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="nx">atmosphereUniforms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nx">earthCenter</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Uniform</span><span class="p">(</span><span class="nx">earth</span><span class="p">.</span><span class="nx">position</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">earthRadius</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Uniform</span><span class="p">(</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">atmosphereRadius</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">Uniform</span><span class="p">(</span><span class="mf">10.4</span><span class="p">),</span>
+
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">atmosphere</span><span class="p">.</span><span class="nx">material</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">ShaderMaterial</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">uniforms</span><span class="o">:</span><span class="w"> </span><span class="nx">atmosphereUniforms</span><span class="p">,</span>
+
+<span class="w">    </span><span class="nx">vertexShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;atmosphereVertexShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">fragmentShader</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;atmosphereFragmentShader&quot;</span><span class="p">).</span><span class="nx">innerText</span><span class="p">,</span>
+
+<span class="w">    </span><span class="nx">blending</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">CustomBlending</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">blendEquation</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">AddEquation</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">blendSrc</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">SrcAlphaFactor</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">blendDst</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">OneMinusSrcAlphaFactor</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">side</span><span class="o">:</span><span class="w"> </span><span class="nx">THREE</span><span class="p">.</span><span class="nx">FrontSide</span><span class="p">,</span>
+
+<span class="w">    </span><span class="nx">transparent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>And the shaders:</p>
+<div class="codehilite"><pre><span></span><code> <span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;x-shader/x-vertex&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;atmosphereVertexShader&quot;</span><span class="p">&gt;</span>
+
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">earthCenter</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="kr">float</span><span class="w"> </span><span class="nx">earthRadius</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="kr">float</span><span class="w"> </span><span class="nx">atmosphereRadius</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">uniform</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">lightDirection</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="kr">float</span><span class="w"> </span><span class="nx">atmosphereThickness</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vLightDirection</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vNormalEyeSpace</span><span class="p">;</span>
+
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">(){</span>
+
+<span class="w">      </span><span class="c1">// 1. compute the position</span>
+<span class="w">      </span><span class="nx">gl_Position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">projectionMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">modelViewMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+
+
+<span class="w">      </span><span class="c1">// 2. compute the thinckness of the atmosphere</span>
+<span class="w">      </span><span class="c1">// for this, we intersect the vector (eye - current vertex) with the atmosphere and the earth</span>
+<span class="w">      </span><span class="c1">// and we compute how long this line is. In pixel shader we compute the light scattering based on this measure</span>
+<span class="w">      </span><span class="c1">// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection</span>
+
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">positionW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">modelMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)).</span><span class="nx">xyz</span><span class="p">;</span>
+
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vCameraEarth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cameraPosition</span><span class="p">.</span><span class="nx">xyz</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">earthCenter</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vCameraVertex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">cameraPosition</span><span class="p">.</span><span class="nx">xyz</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">positionW</span><span class="p">);</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">tca</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dot</span><span class="p">(</span><span class="nx">vCameraEarth</span><span class="p">,</span><span class="w">  </span><span class="nx">vCameraVertex</span><span class="p">);</span>
+
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">tca</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// not intesect, looking in opposite direction</span>
+<span class="w">        </span><span class="nx">atmosphereThickness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">dsq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dot</span><span class="p">(</span><span class="nx">vCameraEarth</span><span class="p">,</span><span class="w"> </span><span class="nx">vCameraEarth</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">tca</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">tca</span><span class="p">;</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">thc_sq_atmosphere</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">max</span><span class="p">(</span><span class="nx">atmosphereRadius</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">atmosphereRadius</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">dsq</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">thc_sq_earth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">max</span><span class="p">(</span><span class="nx">earthRadius</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">earthRadius</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">dsq</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">thc_atmosphere</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">thc_sq_atmosphere</span><span class="p">);</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">thc_earth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="nx">thc_sq_earth</span><span class="p">));</span>
+
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">thc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">thc_atmosphere</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">thc_earth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.12</span><span class="p">;</span><span class="w"> </span><span class="c1">// 0.01 - density factor</span>
+<span class="w">      </span><span class="nx">atmosphereThickness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">thc</span><span class="p">;</span>
+
+<span class="w">      </span><span class="c1">// 3. the normal light calculation</span>
+<span class="w">      </span><span class="nx">vLightDirection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mat3</span><span class="p">(</span><span class="nx">viewMatrix</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">lightDirection</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">vNormalEyeSpace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">normalMatrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">normal</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;x-shader/x-fragment&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;atmosphereFragmentShader&quot;</span><span class="p">&gt;</span>
+
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="kr">float</span><span class="w"> </span><span class="nx">atmosphereThickness</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vLightDirection</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">varying</span><span class="w"> </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">vNormalEyeSpace</span><span class="p">;</span>
+
+<span class="w">    </span><span class="ow">void</span><span class="w"> </span><span class="nx">main</span><span class="p">(){</span>
+
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">lightDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">vLightDirection</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">vec3</span><span class="w"> </span><span class="nx">normal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">normalize</span><span class="p">(</span><span class="nx">vNormalEyeSpace</span><span class="p">);</span>
+
+<span class="w">      </span><span class="c1">// computing the light intensity as it is scattered through the atmosphere</span>
+<span class="w">      </span><span class="c1">// based on actual lighting extended a bit</span>
+<span class="w">      </span><span class="c1">// and the thickess</span>
+<span class="w">      </span><span class="kr">float</span><span class="w"> </span><span class="nx">lightIntensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">max</span><span class="p">(</span><span class="nx">dot</span><span class="p">(</span><span class="nx">normal</span><span class="p">,</span><span class="w"> </span><span class="nx">lightDir</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">0.7</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">gl_FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">vec4</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="nx">vec3</span><span class="p">(</span><span class="mf">57.0</span><span class="p">,</span><span class="w"> </span><span class="mf">97.0</span><span class="p">,</span><span class="w"> </span><span class="mf">162.0</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">256.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">lightIntensity</span><span class="p">),</span><span class="w"> </span><span class="nx">atmosphereThickness</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>And that was my first play with WebGL and ThreeJS. I will soon publish the demo somewhere but might not work on my video cards.</p>
+<p><img alt="Earth" src="../../../../../assets/webgl_4.png" /></p>
+<p><img alt="Earth" src="../../../../../assets/webgl_5.png" /></p>
+<p><img alt="Earth" src="../../../../../assets/webgl_6.png" /></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../graphics/3d/2020/04/15/3d-from-scratch.html">3D From Scratch</a></span><span><a href="../../../../../programming/2020/10/24/programming-problems-cpp.html">Programming Problems In C++</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

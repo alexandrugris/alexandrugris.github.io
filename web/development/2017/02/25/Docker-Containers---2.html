@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docker And Containers Part 2 | From The Trenches - The Code</title>
+  <meta name="description" content="This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers  and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Docker And Containers Part 2</h1>
+    <p class="post-meta">
+      <time datetime="2017-02-25" itemprop="datePublished">Feb 25, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>This is the second part of my personal Docker cheatsheet. In this part I will enable host file access to containers <br />
+and continue with the more complex example of building and debugging Linux C++ applications in Visual Studio, using a Debian container in the background.</p>
+<p>Here is the first part: <a href="{% post_url 2017-02-12-Docker-Containers %}">Docker And Containers</a> </p>
+<h3 id="using-host-files-in-a-docker-containers">Using host files in a docker containers</h3>
+<p>First thing, we need to enable drives to be visible within the container. For this, we use the Settings dialog from Docker For Windows.</p>
+<p><img alt="Settings Dialog Mount FileSystem" src="../../../../../assets/docker_2_1.png" /></p>
+<p>Port 445 must be opened in the Windows Firewall.</p>
+<p><img alt="Firewall warning" src="../../../../../assets/docker_2_2.png" /></p>
+<blockquote>
+<p>To share the drive, allow connections between the Windows host machine and the virtual machine in Windows Firewall or your third party firewall software. You do not need to open port 445 on any other network. <br />
+By default, allow connections to 10.0.75.1 port 445 (the Windows host) from 10.0.75.2 (the virtual machine). </p>
+</blockquote>
+<p><em>Attention:</em> </p>
+<p>By default, the Docker network is considered in the Public Networks profile. <br />
+For my desktop PC at home, I have simply enabled firewall rules for the public networks (default is to block all inbound connections). This setting might be dangerous on a laptop.</p>
+<p><img alt="Network rules" src="../../../../../assets/docker_2_3.png" /></p>
+<p>Another option is to run <code>gpedit.msc</code> and change network profile for <em>Unidentifiable Networks</em>. :)</p>
+<p>Now that we have enabled access to host folders, let's run the following command:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run --rm -v d:\OneDrive\Pictures:/my_pictures alpine sh -c &quot;cd /my_pictures &amp;&amp; ls -l&quot;
+</code></pre></div>
+
+<p><img alt="Running a command on a volume in docker" src="../../../../../assets/docker_2_4.png" /></p>
+<p>Let's disect it:</p>
+<ol>
+<li><code>docker run --rm</code> tells docker to remove the image after the command is run. The image is not persisted. </li>
+<li><code>-v d:\OneDrive\Pictures:/my_pictures</code> tells docker to mount the <code>d:\OneDrive\Pictures</code> from the host to the <code>/my_pictures</code> folder in the container.</li>
+<li><code>alpine sh -c "cd /my_pictures &amp;&amp; ls -l"</code> from the <code>alpine</code> image run the <code>sh</code> command with the <code>-c "cd /my_pictures &amp;&amp; ls -l"</code> parameters. It means change directory to <code>/my_pictures</code> and then, if successful, run the <code>ls -l</code> command.</li>
+</ol>
+<p>For a list of parameters of the <code>docker run</code> command, here they are: <a href="https://docs.docker.com/engine/reference/commandline/run/">Docker Run</a>. Another parameter very useful is the <code>--env</code> to sent environment variables in the container.</p>
+<h3 id="example-no-1-delete-all-mongo-named-containers">Example no. 1: delete all "mongo"-named containers:</h3>
+<p>The following example uses a mixture of batch commands (running on the Windows host) and Linux commands running in the Docker container. <br />
+It is clearly not efficient at all as it is much simpler to simply use batch <code>for</code> and <code>if</code> in Windows, but it is just an example to show that it actually works. </p>
+<div class="codehilite"><pre><span></span><code>docker ps -a 
+<span class="k">    &gt; </span><span class="ge">d:\to_delete.txt </span>
+    &amp;&amp; docker run --rm -v d:\to_delete.txt:/my_data/to_delete.txt 
+    alpine sh -c &quot;grep mongo /my_data/to_delete.txt | awk &#39;{print $1}&#39;&quot; 
+<span class="k">    &gt; </span><span class="ge">d:\to_delete_2.txt </span>
+    &amp;&amp; for /F %I in (d:\to_delete_2.txt) DO docker rm %I
+</code></pre></div>
+
+<p>Explanation: the command uses two files <code>d:\to_delete.txt</code> and <code>d:\to_delete_2.txt</code> as IPC between Windows and the command ran in the Linux container.</p>
+<h3 id="example-no-2-developing-linux-applications-with-visual-c-for-linux-and-docker"><a name="vclinuxdocker"></a> Example no. 2: developing Linux applications with Visual C++ for Linux and Docker</h3>
+<p>Visual C++ for Linux is great and  works right outside the box when connected to a Virtual Box VM (in the picture below the VM is running a Debian). </p>
+<p><img alt="VM VC for Linux" src="../../../../../assets/vsdebian.jpg" /></p>
+<p>However, creating full VMs, starting them and moving them around is complex and tedious. Here is a ligher alternative - use a Docker container for running and debugging the app.</p>
+<ul>
+<li>Run a Debian Linux distribution. Map ports. Create a local user and install g++, gdb and openssh-server. Drop into the bash console. Attention to the flag <code>--security-opt seccomp=unconfined</code> - gdb will not be able to connect to the executable otherwise.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it --env &quot;USERNAME=agris&quot; --rm --name debian_gcc_debug -p 2222:22 --security-opt seccomp=unconfined 
+    debian bash -c &quot;echo sshd: ALL &gt;&gt; /etc/hosts.allow 
+        &amp;&amp; apt-get update 
+        &amp;&amp; apt-get install -y openssh-server g++ gdb gdbserver 
+        &amp;&amp; mkdir /home/$USERNAME &amp;&amp; useradd -d /home/$USERNAME $USERNAME 
+        &amp;&amp; passwd $USERNAME 
+        &amp;&amp; /etc/init.d/ssh restart 
+        &amp;&amp; chown -hR $USERNAME /home/$USERNAME &amp;&amp; bash&quot;
+</code></pre></div>
+
+<p><img alt="Running the command above" src="../../../../../assets/docker_2_8.png" /></p>
+<ul>
+<li>
+<p>Type Linux password when prompted.</p>
+</li>
+<li>
+<p>Create a Visual C++ for Linux project. Set connection to localhost on port 2222 (forwarded 22, the default sshd port, from the container)</p>
+</li>
+</ul>
+<p><img alt="Visual Studio Project Config" src="../../../../../assets/docker_2_5.png" /></p>
+<ul>
+<li>Set the debugger type to gdb. </li>
+</ul>
+<p><img alt="Visual Studio Project Config" src="../../../../../assets/docker_2_6.png" /></p>
+<ul>
+<li>
+<p>Clean / Rebuild the project.</p>
+</li>
+<li>
+<p>Happy debugging. :)</p>
+</li>
+</ul>
+<p><img alt="Visual Studio Project Config" src="../../../../../assets/docker_2_7.png" /></p>
+<p>The container is run with the <code>--rm</code> flag above. You may want to remove it and save the image, not to have to install everything everytime the command is run. </p>
+<h3 id="creating-an-image-to-host-all-the-tools-needed-for-building-and-debugging-with-vc-for-linux">Creating an image to host all the tools needed for building and debugging with VC++ for Linux</h3>
+<ul>
+<li>Create the docker file (Dockerfile):</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>FROM debian:latest
+
+ARG USERNAME=agris
+ARG PASSWD=1234
+
+ENV USERNAME $USERNAME
+ENV PASSWD $PASSWD
+
+RUN echo sshd: ALL &gt;&gt; /etc/hosts.allow
+
+RUN apt-get update
+
+RUN apt-get install -y apt-utils
+
+RUN apt-get install -y openssh-server openssl g++ gdb gdbserver
+
+RUN mkdir /home/$USERNAME \
+        &amp;&amp; useradd -d /home/$USERNAME $USERNAME -s /bin/bash -p `openssl passwd -1 -salt iuuA8932 $PASSWD` \
+        &amp;&amp; /etc/init.d/ssh restart \
+        &amp;&amp; chown -hR $USERNAME /home/$USERNAME
+
+CMD /etc/init.d/ssh start &amp;&amp; bash
+</code></pre></div>
+
+<ul>
+<li>Build the image with the <code>gcc_debug_debian:latest</code> tag:</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker build -t gcc_debug_debian:latest .
+</code></pre></div>
+
+<ul>
+<li>Clean up a little bit</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="nv">c</span>:<span class="o">&gt;</span><span class="k">for</span><span class="w"> </span><span class="o">/</span><span class="nv">f</span><span class="w"> </span><span class="s2">&quot;tokens=1, 3&quot;</span><span class="w"> </span><span class="o">%</span><span class="nv">I</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="ss">(</span><span class="s1">&#39;docker images&#39;</span><span class="ss">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="s2">&quot;%I&quot;</span><span class="o">==</span><span class="s2">&quot;&lt;none&gt;&quot;</span><span class="w"> </span><span class="ss">(</span><span class="nv">docker</span><span class="w"> </span><span class="nv">rmi</span><span class="w"> </span><span class="o">-</span><span class="nv">f</span><span class="w"> </span><span class="o">%</span><span class="nv">J</span><span class="ss">)</span>
+</code></pre></div>
+
+<ul>
+<li>Run the container and map the port 22 to 2222 on the host:</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it --rm -p 2222:22 --security-opt seccomp=unconfined gcc_debug_debian
+</code></pre></div>
+
+<ul>
+<li>Try SSH by running ssh command in another container to test the SSH connection (192.168.1.6 is the local IP of my computer):</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it --rm gcc_debug_debian /usr/bin/ssh -l agris -p 2222 192.168.1.6
+</code></pre></div>
+
+<ul>
+<li>Clean / Rebuild and then Start Remote Debugging in Visual C++. If the build step works but debugging fails, please make sure you have not forgotten the <code>--security-opt seccomp=unconfined</code> flag.</li>
+</ul>
+<p>This is it for running and debugging C++ applications in a Linux docker container. Happy Hacking! :)</p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">C++ Play - Multithreading (Queues)</a></span><span><a href="../../../../../web/development/2017/03/05/Docker-Containers---3.html">Docker And Containers Part 3</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

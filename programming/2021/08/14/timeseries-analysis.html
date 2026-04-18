@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timeseries Analysis in Python | From The Trenches - The Code</title>
+  <meta name="description" content="This post is about statistical models for timeseries analysis in Python. We will cover the ARIMA model to a certain depth.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Timeseries Analysis in Python</h1>
+    <p class="post-meta">
+      <time datetime="2021-08-14" itemprop="datePublished">Aug 14, 2021</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>This post is about statistical models for timeseries analysis in Python. We will cover the ARIMA model to a certain depth.</p>
+<h3 id="linear-regression-and-timeseries">Linear Regression and Timeseries</h3>
+<p>Using a statistical tools such as linear regression with time series can be problematic. Linear regression  assumes you have independently and normally distributed data, while, in time series data, points near in time tend to be strongly correlated with one another. This is precisely the property that makes timeseries analysis important as, if there aren’t temporal correlations, it would be impossible to perform tasks such as predicting the future or understanding temporal dynamics. </p>
+<p>Linear regression can be used with timeseries when linear regression assumptions hold, for instance when the predicted variable is fully dependent on its predictors and the errors preserve the normality assumption with no autocorrelation. In such a case, the timeseries element is entirely embedded in one of the features.</p>
+<h3 id="the-statistics-of-time-series">The Statistics Of Time Series</h3>
+<p>An excellent introduction on time series can be found <a href="https://www.youtube.com/playlist?list=PLvcbYUQ5t0UHOLnBzl46_Q6QKtFgfMGc3">here</a>.</p>
+<p>Timeseries bring several concepts of interest</p>
+<ul>
+<li>Stationarity: constant statistical properties of the timeseries (mean, variance, no seasonality)</li>
+<li>Self-correlation: correlation between subsequent values of a timeseries</li>
+<li>Seasonality: time-based patterns tha repeat at set intervals</li>
+<li>Spurious correlations: the propensity of timeseries to correlate with other unrelated timeseries especially when seasonality or trends are present.</li>
+</ul>
+<p>A log transformation or a square root transformation are two usually good options for making a timeseries stationary,particularly in the case of changing variance over time. </p>
+<p>Most of the timeseries have a trend, that is the mean is not constant - <a href="https://en.wikipedia.org/wiki/Trend-stationary_process">trend-stationarity</a> and <a href="https://en.wikipedia.org/wiki/Unit_root">difference-stationarity</a>. Removing a trend is most commonly done by differencing. Sometimes a series must be differenced more than once. However, if you find yourself differencing too much (more than two or three times) it is unlikely that you can fix your stationarity problem with differencing.</p>
+<p>If <code>v(t_i+1) - v(t_i)</code> is random and stationary, then the process generating the series is a random walk, else a more refined model is required. </p>
+<p>The test that is mainly used for testing stationarity is called the <a href="https://en.wikipedia.org/wiki/Augmented_Dickey%E2%80%93Fuller_test">Augmented Dickey Fuller Test</a>. It removes the autocorrelation and tests for equal mean and equal variance throughout the series. The null hypothesis is the non-stationarity. </p>
+<p>The Dickey Fuller test assumes that the time series is an AR1 process (auto-regressive one), that is, it can be written as <code>y(t) = phi * y(t-1) + constant + error</code>. The DF test's null hypothesis is <code>phi &gt;= 1</code>. The alternate hypothesis is that <code>phi &lt; 1</code>.  This <code>phi == 1</code> is called a unit root. A good explanation of unit roots can be found <a href="https://www.youtube.com/watch?v=ugOvehrTRRw">here</a>.</p>
+<p>ADF extends the test to ARn series and this null hypothesis is that <code>sum(phi_i)&gt;=1</code>. The difference between the basic DF test and the ADF test is that the latter makes is to account for more lags. The test of whether a series is stationary is a test of whether a series is integrated. An integrated series of order <code>n</code> is a series that must be differenced <code>n</code> times to become stationary.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.tsa.stattools</span><span class="w"> </span><span class="kn">import</span> <span class="n">adfuller</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">gen_ts</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+  <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefs</span><span class="p">))</span>
+  <span class="k">assert</span><span class="p">(</span><span class="n">count</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
+
+  <span class="n">lst</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
+
+  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="n">count</span><span class="p">):</span>
+    <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">error</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+      <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coefs</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">]</span>
+
+  <span class="k">return</span> <span class="n">lst</span>
+
+<span class="n">v</span> <span class="o">=</span> <span class="n">gen_ts</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="c1"># sum of coefficients &lt; 1</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+<span class="c1"># automatically test for the best lag to use</span>
+<span class="c1"># AIC comes from https://en.wikipedia.org/wiki/Akaike_information_criterion</span>
+<span class="n">p_value</span> <span class="o">=</span> <span class="n">adfuller</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">autolag</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
+</code></pre></div>
+
+<p>For detecting auto correlation, we introduce two measures:<br />
+- The <em>ACF</em> - the autocorrelation between the value at <code>t</code> and <code>t-n</code>, <em>including</em> the intermediary values, <code>(t-1 .. t-n-1)</code>. E.g. the effect of prices 2 months ago vs the prices today, including the effect of the prices 2 months ago on the prices 1 month ago and the prices from 1 month ago on today's prices.<br />
+- The <em>PACF</em> - the autocorrelation between the value at <code>t</code> and <code>t-n</code> <em>excluding</em> the intermediary values. </p>
+<p>The ACF is the Pearson correlation between the values <code>ti</code> and the lagged <code>ti-k</code> values. For the PACF we do a regression on the values of the timeseries at time <code>ti</code> on the <code>ti-k</code> of the form <code>ti=phi_1*ti_-1 + phi_2*ti_-2 + ... + phi_k*ti_-k + error_term</code> - autoregressive lag <code>k</code>. <code>phi_k</code> is our PACF(k).</p>
+<p>To plot these a real dataset:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">lynx_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;/content/drive/MyDrive/Datasets/LYNXdata.csv&quot;</span><span class="p">,</span> 
+    <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+    <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;trappings&#39;</span><span class="p">])</span>
+</code></pre></div>
+
+<p>And then transform it to time-annotated series:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">lynx_ts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+    <span class="n">lynx_df</span><span class="p">[</span><span class="s2">&quot;trappings&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> 
+    <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s1">&#39;31/12/1821&#39;</span><span class="p">,</span> 
+    <span class="n">periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">lynx_df</span><span class="p">),</span> 
+    <span class="n">freq</span><span class="o">=</span><span class="s1">&#39;A-DEC&#39;</span><span class="p">))</span>
+
+<span class="n">lynx_ts</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Lynx TS" src="../../../../assets/tsa_lynx.png" /></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.graphics.tsaplots</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_acf</span><span class="p">,</span> <span class="n">plot_pacf</span>
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="ACF" src="../../../../assets/tsa_acf.png" /></p>
+<p><img alt="PACF" src="../../../../assets/tsa_pacf.png" /></p>
+<p>We see in these charts that autocorrelation decreases as we look backwards in the series. This means that we are likely dealing with an auto-regressive process. If we are to build an auto-regressive model for this series we'll probably consider the coefficients for the 1, 2, 4 and 6 lags. The blue bands are the error margin; everything within the bands are not statistically significant. The coefficient with index 0 is always 1, as it is the correlation of the timeseries with itself. </p>
+<p>A series can be stationary, that is the mean is 0 and the variance constant with time, but with no lag auto-correlation, no matter the lag value. Such a series is called white noise and it is not predictable. </p>
+<p>Let's plot some generated time series to explore the PCF and PACF charts for various cases.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">white_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">white_noise</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">white_noise</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="ACF White Noise" src="../../../../assets/ts_acf_white_noise.png" /></p>
+<p><img alt="PACF White Noise" src="../../../../assets/ts_pacf_white_noise.png" /></p>
+<p>Let's plot a perfect AR(1) model, with no noise.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># ar(1) process</span>
+<span class="n">ts2</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">phi_0</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">phi_1</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># 0 = perfectly noiseless, 1 = very noisy</span>
+
+<span class="c1"># Expected value of the timeseries (perfect timeseries converges to this value)</span>
+<span class="n">miu</span> <span class="o">=</span> <span class="n">phi_0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi_1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Expected value: &quot;</span><span class="p">,</span> <span class="n">miu</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="c1"># note that without the error term this goes fast to the mean</span>
+    <span class="c1"># AR(1)</span>
+    <span class="n">ts2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phi_0</span> <span class="o">+</span> <span class="n">ts2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_1</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+<span class="n">ts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts2</span><span class="p">)</span>
+
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">ts2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">ts2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p>The time series converges to <code>miu=phi_0 / (1-phi_1) = 50</code>. </p>
+<p><img alt="Perfect AR converges to expected value" src="../../../../assets/ts_perfect_ar_1.png" /></p>
+<p><img alt="Perfect AR(1) ACF" src="../../../../assets/ts_perfect_ar_1_acf.png" /></p>
+<p><img alt="Perfect AR(1) PACF" src="../../../../assets/ts_perfect_ar_1_pacf.png" /></p>
+<p>The same expected value can be observed if we increase the noise:</p>
+<p><img alt="Noisy AR(1)" src="../../../../assets/ts_ar1_noisy.png" /></p>
+<p>Now, let's plot an MA (moving average) process:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">ts3</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">phi_1</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="c1"># MA(1) - coef applied to the previous error</span>
+    <span class="n">ts3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span> <span class="o">+</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_1</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">ts3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts3</span><span class="p">)</span>
+
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">ts3</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">ts3</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="MA(1)" src="../../../../assets/ts_ma1.png" /></p>
+<p><img alt="MA(1) ACF" src="../../../../assets/ts_ma1_acf.png" /></p>
+<p><img alt="MA(1) PACF" src="../../../../assets/ts_ma1_pacf.png" /></p>
+<p>Unlike an autoregressive process, which has a slowly decaying ACF, the definition of the MA process ensures a sharp cutoff of the ACF for any value greater than q, the order of the MA process. This is because an autoregressive process depends on previous terms, and they incorporate previous impulses to the system, whereas an MA model, incorporating the impulses directly through their value, has a mechanism to stop the impulse propagation from progressing indefinitely. This also means that, forecasting beyond the value lag value of q will only return the mean, since there is no more noise to incorporate.</p>
+<p>To summarize, when trying to identify what kind of model we try to fit, we have the following rules:</p>
+<ul>
+<li><code>AR(p)</code> - ACF falls off slowly, PACF has sharp drop after lag = p</li>
+<li><code>MA(q)</code> - ACF has a sharp drop after lag = q,  PACF falls off slowly</li>
+<li><code>ARMA(p,q)</code> - No sharp cutoff, neither for ACF nor for PACF</li>
+</ul>
+<h3 id="fitting-arima-models">Fitting ARIMA Models</h3>
+<p>An ARIMA model has 3 parameters:</p>
+<ul>
+<li><code>p</code> : the order of autoregression (the summation of the weighted lags) - <code>AR</code></li>
+<li><code>d</code> : the degree of differencing (used to make the dataset stationary if it is not) - <code>I</code></li>
+<li><code>q</code> : the order of moving average (the summation of the lags of the forecast errors) - <code>MA</code></li>
+</ul>
+<p>Examples (<code>ARIMA(p, d, q)</code>):</p>
+<ul>
+<li><code>ARIMA (p=1, d=0, q=0) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + error(t)</code> - lag 1 autoregressive model</li>
+<li><code>ARIMA (p=1, d=0, q=1) &lt;=&gt; Y(t) = coef + phi_1 * Y(t-1) + theta_1 * error(t-1) + error(t)</code> - </li>
+<li><code>ARIMA (p=0, d=1, q=0) &lt;=&gt; Y(t) = coef + Y(t-1) + error(t)</code> is a random walk. The differencing equation, <code>Y(t) - Y(t-1) = coef + error(t)</code>, is needed so that the remaining <code>ARMA</code> model is applied on stationary data. A random walk is not stationary.</li>
+<li><code>ARIMA(p=0, d=1, q=1)</code> is an exponential smoothing model</li>
+</ul>
+<h3 id="arima-model-parameter-selection">ARIMA Model Parameter Selection</h3>
+<p>First step is to check for stationarity using the Augmented Dickey-Fuller test. If the data is not stationary, we need to set the <code>d</code> parameter.</p>
+<p>The second step is to set the <code>p</code> and <code>q</code> parameters by inspecting the <code>ACF</code> and <code>PACF</code> plots, as described before.</p>
+<p>To avoid over-fitting, a rule of thumb is to start the parameter selection with the plot that has the least amount of lags outside of the significance bands and then consider the lowest reasonable amount of lags. The ARIMA model is not necessary unique, as we will see in the following example where we start from a complex timeseries which can be approximated very well with a simpler model.</p>
+<p>Let's generate some data:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">arma_series</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">white_noise</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">phi_1</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">phi_2</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">theta_1</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">theta_2</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+<span class="c1"># AR(2) I(0) MA(2)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="n">arma_series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> \
+        <span class="n">m</span> <span class="o">+</span> \
+        <span class="n">arma_series</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_1</span> <span class="o">+</span> <span class="n">arma_series</span> <span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">phi_2</span> <span class="o">+</span> \
+        <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_1</span> <span class="o">*</span> <span class="n">white_noise</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta_2</span> <span class="o">*</span> <span class="n">white_noise</span> <span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">adf</span> <span class="o">=</span> <span class="n">adfuller</span><span class="p">(</span><span class="n">arma_series</span><span class="p">,</span> <span class="n">autolag</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">adf</span><span class="p">)</span> <span class="c1"># stationary</span>
+
+<span class="n">arma_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+
+<span class="c1"># fit the model</span>
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Time Series" src="../../../../assets/ts_ts.png" /></p>
+<p><img alt="Time Series ACF" src="../../../../assets/ts_ts_acf.png" /></p>
+<p><img alt="Time Series PACF" src="../../../../assets/ts_ts_pacf.png" /></p>
+<p>We observe a sharp cutoff in the PACF after lag 1 and slow decay in the ACF. This leads to try to fit an <code>ARIMA(1, 0, 0)</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.tsa.arima.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ARIMA</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">ARIMA</span><span class="p">(</span><span class="n">arma_series</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">arma_series</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">arparams</span><span class="p">)</span> <span class="c1"># 0.78</span>
+</code></pre></div>
+
+<p><img alt="Fitted time series (orange)" src="../../../../assets/ts_ts_fitted.png" /></p>
+<p>A pretty good approximation of the initial complex model can be obtained with an AR(1) model. Let's analyse the residuals to see how much information did we capture in our model and if there are autoregressive behaviors we have missed. In our case residuals are normally distributed as seen in the histogram and proven by the Shapiro test and in the ACF and PACF plots we do not see any autoregressive tendencies we might have missed.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resid</span> <span class="o">=</span> <span class="n">arma_series</span> <span class="o">-</span> <span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stats</span>
+<span class="c1"># visual inspection of the residuals</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="c1"># Shapiro test for normality</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">shapiro</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">resid</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># no autocorrelation</span>
+<span class="n">plot_acf</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plot_pacf</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Residuals Histogram" src="../../../../assets/ts_residuals.png" /></p>
+<p><img alt="Residuals ACF" src="../../../../assets/ts_residuals_acf.png" /></p>
+<p><img alt="Residuals PACF" src="../../../../assets/ts_residuals_pacf.png" /></p>
+<p>Returning to our Lynx timeseries which was shown earlier, let's train an ARIMA model and see how it fits.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.tsa.arima.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ARIMA</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">ARIMA</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lynx_ts</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fittedvalues</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">arparams</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="Lynx model fit" src="../../../../assets/tsa_lynx_arima.png" /></p>
+<p>Exported notebook is <a href="https://alexandrugris.ro/timeseries.html">here</a></p>
+<p>A good introductory video <a href="https://www.youtube.com/watch?v=xg2-9DhE5vc&amp;list=PLvcbYUQ5t0UHOLnBzl46_Q6QKtFgfMGc3&amp;index=18">here</a></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2021/02/26/golang-annealing.html">Simulated Annealing in Go</a></span><span><a href="../../../../machine/learning/2022/05/19/timeseries-pytorch.html">Timeseries Analysis with PyTorch</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

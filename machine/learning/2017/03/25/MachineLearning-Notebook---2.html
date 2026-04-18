@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simple and Multiple Linear Regression | From The Trenches - The Code</title>
+  <meta name="description" content="This is the second part of my Machine Learning notebook. It talks about simple and multiple linear regression, as well as polynomial regression as a special case of multiple linear regression. It provides several methods for doing regression, both with library functions as well as implementing the…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Simple and Multiple Linear Regression</h1>
+    <p class="post-meta">
+      <time datetime="2017-03-25" itemprop="datePublished">Mar 25, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>This is the second part of my Machine Learning notebook. It talks about simple and multiple linear regression, as well as polynomial regression as a special case of multiple linear regression. It provides several methods for doing regression, both with library functions as well as implementing the algorithms from scratch.</p>
+<h3 id="simple-linear-regression-with-plot">Simple Linear Regression With Plot</h3>
+<p>Let's draw a plot with the following convesion:<br />
+- Pink dots - training set X<br />
+- Blue line - regression line on the train set<br />
+- Red dots - values to predict (test set)<br />
+- Green dots - predicted values for the test set (situated on the blue line)</p>
+<p>We consider sets of <code>y</code>s and <code>x</code>s, derived from experiments. Assuming that <code>y = ax + b</code>,  what value for <code>a</code> and <code>b</code> minimize the error of <code>sum ((yi-(axi + b))^2)</code>? <code>b</code> is called intercept and <code>a</code> is the slope.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;.</span><span class="se">\\</span><span class="s2">Data</span><span class="se">\\</span><span class="s2">Salary_Data.csv&quot;</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># scatter plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;pink&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;lightgreen&quot;</span><span class="p">)</span>
+
+<span class="c1"># line plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Salary vs Experience&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Years&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Salary&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Results" src="../../../../../assets/ml_3_1.png" /></p>
+<p>The implementation of a simple linear regressor using the ordinary least squares method is straight forward:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w">  </span><span class="nf">ols_train_predict</span><span class="p">(</span><span class="n">_X_train</span><span class="p">,</span> <span class="n">_Y_train</span><span class="p">,</span> <span class="n">_X_test</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    f = sum( (Y - (aX+b)) ** 2) == minimum &lt;=&gt;</span>
+<span class="sd">    df / da = 0 and df / db = 0 </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># secure the same dimensions</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">_X_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">Y_train</span> <span class="o">=</span> <span class="n">_Y_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">_X_test</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">xi_2_sum</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X_train</span> <span class="o">*</span> <span class="n">X_train</span><span class="p">)</span>
+    <span class="n">xi_sum</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+    <span class="n">xi_yi_sum</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X_train</span> <span class="o">*</span> <span class="n">Y_train</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">yi_sum</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y_train</span><span class="p">)</span>
+
+    <span class="c1"># we now have to solve the following equations:</span>
+    <span class="c1"># a * xi_2_sum + b * xi_sum - xi_yi_sum = 0</span>
+    <span class="c1"># a * xi_sum + b * N  - yi_sum = 0</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">xi_yi_sum</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">xi_sum</span> <span class="o">*</span> <span class="n">yi_sum</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">xi_2_sum</span> <span class="o">-</span> <span class="n">xi_sum</span> <span class="o">*</span> <span class="n">xi_sum</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">yi_sum</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">xi_sum</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+
+    <span class="k">return</span> <span class="n">X_test</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="n">Y</span> <span class="o">=</span> <span class="n">ols_train_predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">)</span>
+
+<span class="c1"># line plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The basic idea for all least squares methods is that the function <code>S=sum((yi-f(xi, B))^2)</code> should be minimized, where <code>B</code> is a vector of variables we need to identify. In the particular case of linear regression, <code>B = [a, b]</code> and <code>f(xi, B) = axi + b</code>. Minimized means the conditions <code>dS / dB[i] = 0</code>. In the case above, we have a system of two equations with two unknowns, <code>d(sum ((yi-(axi + b))^2))/da = 0</code> and <code>d(sum ((yi-(axi + b))^2))/db = 0</code>.</p>
+<p>Results:</p>
+<p><img alt="Dataset" src="../../../../../assets/ml_3_5.png" /></p>
+<p>Note:</p>
+<p>I kept the function above simple, but it is not numerically friendly. Numbers <code>xi_2_sum</code>, <code>xi_yi_sum</code>, etc. might get very high. Therefore some rearangement of the computation should be performed for production code.</p>
+<h3 id="linear-regression-and-correlation">Linear Regression And Correlation</h3>
+<p>Another method for obtaining similar results is to use the corellation coefficient for determining <code>a</code> and <code>b</code>. <code>a = R * stddev(y) / stddev(x), b = mean(y) - a * mean(x)</code> where <code>R = dot(z_score(x), z_score(y)) / sizeof(x)</code> and <code>z_score(x) = (x - mean(x)) / stddev(x)</code>. This is clearly simpler to read and also provides more context to the results of the method - corellation coefficient (<code>R</code>) is between -1 and 1, with 0 meaning there is no corellation. This correlation coefficient is also known as the <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson coefficient</a></p>
+<p>Here is the python code:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 50 points, x between 10, 100, a = 2, b = 126, variation of y = 20</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">generate_noisy_linear_data</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">126</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># z-score</span>
+<span class="n">x_</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scale_std_dev</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y_</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scale_std_dev</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">correlation</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">x_</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x_</span> <span class="p">,</span> <span class="n">y_</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">correlation</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">correlation</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Giving very close results for <code>corellation=0.994670853834</code>, <code>a = 2.01623520593</code> and <code>b = 125.614041068</code>.</p>
+<h3 id="multiple-linear-regression">Multiple linear regression</h3>
+<p>Formula: <code>y = b + a1 * x1 + a2 * x2 + a3 * x3 + ...</code></p>
+<p>Assumptions that need to be checked first:</p>
+<ul>
+<li>Linearity</li>
+<li>Homoscedasticity (<a href="https://en.wikipedia.org/wiki/Homoscedasticity">all random variables in the sequence or vector have the same finite variance</a>)</li>
+<li>Multivariate normality of error distribution - <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution">https://en.wikipedia.org/wiki/Multivariate_normal_distribution</a></li>
+<li>Independence of errors</li>
+<li>Lack of multicolinearity - <a href="https://en.wikipedia.org/wiki/Multicollinearity">is a phenomenon in which two or more predictor variables in a multiple regression model are highly correlated, meaning that one can be linearly predicted from the others with a substantial degree of accuracy</a></li>
+</ul>
+<p>For categorial variables, we need to transform them in dummy binary variables, but <em>not include all of them in the regression model - dummy variable trap</em>. The idea is that if we include all the categories in the multiple regression we break the rule of lack of multicolinearity. Afterall, if a value does not belong to a category, it will belong to another. The rule is "always omit one dummy variable". </p>
+<p>Methods for building a multiple regression model:</p>
+<ul>
+<li>
+<p><em>All variables in</em> - not really recommended because of the noise some variables might bring to the prediction. Some variables might simply be bad predictors and they would only pollute the model space. Useful if you have prior knowledge of the problem domain and you know that these variables matter.</p>
+</li>
+<li>
+<p><em>Backward elimination</em> - Steps: </p>
+</li>
+</ul>
+<ol>
+<li>Select a significance level to stay in the model (SL = 0.05, for instance), </li>
+<li>Fit the model with all possible predictors (all variables in), </li>
+<li>Consider the predictor with the highest <a href="https://en.wikipedia.org/wiki/P-value">P-value</a>. </li>
+<li>If P &gt; SL, go to next step. Otherwise finish. Step 5. Fit the model without this predictor and go to Step 3. </li>
+</ol>
+<p>In the end we have a model in which all variables have their P-value less than our chosen significance level.</p>
+<ul>
+<li><em>Forward selection</em> - Steps: </li>
+</ul>
+<ol>
+<li>Select a significance level to enter the model. E.g. SL = 0.05. </li>
+<li>Fit all simple regression models y ~ xi. Select the one with the lowest P-value</li>
+<li>Construct all possible models with this variable AND with another predictor added to this one.</li>
+<li>Select the predictor with the lowest P-value. If P-value &lt; SL, go to 3. Else finish and keep the previous model.</li>
+</ol>
+<ul>
+<li><em>Bidirectional elimination (stepwise regression)</em> - Steps:</li>
+</ul>
+<ol>
+<li>Select a significance level to enter and a significance level to say.</li>
+<li>Perform next step from forward selection.</li>
+<li>Perform all steps from backward elimiation.</li>
+</ol>
+<p>The model is considered finished when no more variables can enter or stay.</p>
+<ul>
+<li><em>Score comparison</em></li>
+</ul>
+<ol>
+<li>Build several models</li>
+<li>Select the one that fits best a specific criterion </li>
+</ol>
+<p>TODO in a future post: how to numerically compute the <a href="http://www.wikihow.com/Calculate-P-Value">P-value</a></p>
+<h3 id="multiple-linear-regression-the-code">Multiple linear regression - the code</h3>
+<p>The dataset:</p>
+<p><img alt="Dataset" src="../../../../../assets/ml_3_2.png" /></p>
+<p>Preparing the data:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># load data</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;.</span><span class="se">\\</span><span class="s2">Data</span><span class="se">\\</span><span class="s2">50_Startups.csv&quot;</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+ <span class="c1"># encode categorical data to numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelEncoder</span>
+
+<span class="c1"># transforms categorical data from strings to numbers (our State column)</span>
+<span class="n">X</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">LabelEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># since we don&#39;t want in our model to have order between categories,</span>
+<span class="c1"># we need to create dummy variables, one column per each category</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotEncoder</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">categorical_features</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+<span class="c1"># Remove the dummy variable trap - we remove the first colum, which is equivalent to &quot;California&quot;</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+
+<span class="c1"># split data into training and test</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<p>And the output: </p>
+<p><img alt="Dataset" src="../../../../../assets/ml_3_3.png" /></p>
+<p>For the actual regression:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</code></pre></div>
+
+<p>*** Backward Elimination ***</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+<span class="c1"># add a 1 column to X. our formula for linear regression is </span>
+<span class="c1"># y = b0 + b1 * x1 + b2 * x2 ... &lt;=&gt; y = b0 * x0 + b1 * x1 + ... where x0 == [1, ..]</span>
+<span class="c1"># we add the column in the beginning so it is easier to interpret the result</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="New X" src="../../../../../assets/ml_3_4.png" /></p>
+<p>To remember: the lower the P-value, the more statistically relevant the independent variable is going to be in our regression model.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># the optimum matrix of features that contains the </span>
+<span class="c1"># optimum set of variables to predict the outcome - setatistically significant</span>
+<span class="c1"># initially add all columns, all rows</span>
+<span class="n">X_opt</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+<span class="c1"># use the ordinary least squares algorithm</span>
+<span class="n">regressor_ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">endog</span> <span class="o">=</span> <span class="n">y</span><span class="p">,</span> <span class="n">exog</span> <span class="o">=</span> <span class="n">X_opt</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">regressor_ols</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div>
+
+<p>We get the following table, with the P-values in the P&gt;t column. <code>const, x1, ... x5</code> are the coefficients <code>b0, b1, .. b5</code> specified above.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">|</span><span class="w">         </span><span class="o">|</span><span class="w">       </span><span class="n">coef</span><span class="o">|</span><span class="w">    </span><span class="n">std</span><span class="w"> </span><span class="n">err</span><span class="o">|</span><span class="w">          </span><span class="n">t</span><span class="o">|</span><span class="w">        </span><span class="n">P</span><span class="o">&gt;</span><span class="n">t</span><span class="o">|</span><span class="w">      </span><span class="p">[</span><span class="mf">95.0</span><span class="o">%</span><span class="w"> </span><span class="n">Conf</span><span class="o">.</span><span class="w"> </span><span class="n">Int</span><span class="o">.</span><span class="p">]</span><span class="o">|</span>
+<span class="o">|----------------------------------------------------------------------------------|</span>
+<span class="o">|</span><span class="k">const</span><span class="w">    </span><span class="o">|</span><span class="w">  </span><span class="mf">5.013e+04</span><span class="o">|</span><span class="w">   </span><span class="mf">6884.820</span><span class="o">|</span><span class="w">      </span><span class="mf">7.281</span><span class="o">|</span><span class="w">      </span><span class="mf">0.000</span><span class="o">|</span><span class="w">      </span><span class="mf">3.62e+04</span><span class="w">   </span><span class="mf">6.4e+04</span><span class="o">|</span>
+<span class="o">|</span><span class="n">x1</span><span class="w">       </span><span class="o">|</span><span class="w">   </span><span class="mf">198.7888</span><span class="o">|</span><span class="w">   </span><span class="mf">3371.007</span><span class="o">|</span><span class="w">      </span><span class="mf">0.059</span><span class="o">|</span><span class="w">      </span><span class="mf">0.953</span><span class="o">|</span><span class="w">     </span><span class="o">-</span><span class="mf">6595.030</span><span class="w">  </span><span class="mf">6992.607</span><span class="o">|</span>
+<span class="o">|</span><span class="n">x2</span><span class="w">       </span><span class="o">|</span><span class="w">   </span><span class="o">-</span><span class="mf">41.8870</span><span class="o">|</span><span class="w">   </span><span class="mf">3256.039</span><span class="o">|</span><span class="w">     </span><span class="o">-</span><span class="mf">0.013</span><span class="o">|</span><span class="w">      </span><span class="mf">0.990</span><span class="o">|</span><span class="w">     </span><span class="o">-</span><span class="mf">6604.003</span><span class="w">  </span><span class="mf">6520.229</span><span class="o">|</span>
+<span class="o">|</span><span class="n">x3</span><span class="w">       </span><span class="o">|</span><span class="w">     </span><span class="mf">0.8060</span><span class="o">|</span><span class="w">      </span><span class="mf">0.046</span><span class="o">|</span><span class="w">     </span><span class="mf">17.369</span><span class="o">|</span><span class="w">      </span><span class="mf">0.000</span><span class="o">|</span><span class="w">         </span><span class="mf">0.712</span><span class="w">     </span><span class="mf">0.900</span><span class="o">|</span>
+<span class="o">|</span><span class="n">x4</span><span class="w">       </span><span class="o">|</span><span class="w">    </span><span class="o">-</span><span class="mf">0.0270</span><span class="o">|</span><span class="w">      </span><span class="mf">0.052</span><span class="o">|</span><span class="w">     </span><span class="o">-</span><span class="mf">0.517</span><span class="o">|</span><span class="w">      </span><span class="mf">0.608</span><span class="o">|</span><span class="w">        </span><span class="o">-</span><span class="mf">0.132</span><span class="w">     </span><span class="mf">0.078</span><span class="o">|</span>
+<span class="o">|</span><span class="n">x5</span><span class="w">       </span><span class="o">|</span><span class="w">     </span><span class="mf">0.0270</span><span class="o">|</span><span class="w">      </span><span class="mf">0.017</span><span class="o">|</span><span class="w">      </span><span class="mf">1.574</span><span class="o">|</span><span class="w">      </span><span class="mf">0.123</span><span class="o">|</span><span class="w">        </span><span class="o">-</span><span class="mf">0.008</span><span class="w">     </span><span class="mf">0.062</span><span class="o">|</span>
+</code></pre></div>
+
+<p>According to algorithm, we remove x2 and redo the ordinary least square fit.</p>
+<p>In the end, if we continue to run the backwards elimination algorithm, we notice that the only variable that significantly influences the profit is the R&amp;D Spent. :)</p>
+<h3 id="multiple-linear-regression-from-scratch">Multiple Linear Regression From Scratch</h3>
+<p>We consider the line <code>Y = b0 + b1 * x1 + b2 * x2 + ...</code>.</p>
+<p><em>Theorem:</em> The regression line has the following form: <code>Y - y_mean = sum(bj * (xj - xj_mean))</code>, where <code>bj</code> solve the following system of equations: <code>cov(y, xj) = sum(bm * cov(xm, xj))</code> <a href="http://www.real-statistics.com/multiple-regression/least-squares-method-multiple-regression/">here</a></p>
+<p>We are going to do precisely this. The <a href="https://en.wikipedia.org/wiki/Covariance">covariation</a> between two vectors is expressed through the following function:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">####################################</span>
+<span class="c1">### multiple regression</span>
+<span class="c1"># y = b0 + x1 * b1 + x2 * b2 + x3 * b3 ...</span>
+<span class="c1"># line has the form</span>
+<span class="c1"># (y - y_mean) = sum(b(x - x_mean))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;x and y should have the same size&quot;</span><span class="p">)</span>
+
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
+</code></pre></div>
+
+<p>However, we are not going to use it, but rather use directly numpy's matrices for faster computation.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cov_matrix</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">_x</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Shapes do not match&quot;</span><span class="p">)</span>
+
+    <span class="c1"># make sure we use matrix multiplication, not array multiplication</span>
+    <span class="n">_xm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">_ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">_y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">_y</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">((</span><span class="n">_x</span> <span class="o">-</span> <span class="n">_xm</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="n">_y</span> <span class="o">-</span> <span class="n">_ym</span><span class="p">))</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_b0_bn</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">ym</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s2">&quot;ym should be a vector with shape [n, 1]&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">Xm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ym</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s2">&quot;Xm should have the same amount of lines as ym&quot;</span><span class="p">)</span>
+
+    <span class="n">C_y_x</span> <span class="o">=</span> <span class="n">cov_matrix</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
+    <span class="n">C_x_x</span> <span class="o">=</span> <span class="n">cov_matrix</span><span class="p">(</span><span class="n">Xm</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
+
+    <span class="n">b1_bn</span>  <span class="o">=</span> <span class="n">C_x_x</span><span class="o">.</span><span class="n">I</span> <span class="o">*</span> <span class="n">C_y_x</span>
+
+    <span class="n">x_mean</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Xm</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">y_mean</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ym</span><span class="p">)</span>
+
+    <span class="n">b0</span> <span class="o">=</span> <span class="o">-</span><span class="n">x_mean</span> <span class="o">*</span> <span class="n">b1_bn</span> <span class="o">+</span> <span class="n">y_mean</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">b0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1_bn</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+
+<span class="n">Xm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="n">ret</span> <span class="o">=</span> <span class="n">compute_b0_bn</span><span class="p">(</span><span class="n">ym</span><span class="p">,</span> <span class="n">Xm</span><span class="p">)</span>
+</code></pre></div>
+
+<p>In order to test my function, I have compared its results with the results of algorithm from the library. They are identical.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">coef</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">coef_</span>
+<span class="n">intercept</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">intercept_</span>
+</code></pre></div>
+
+<p><img alt="Identical results between library and own function" src="../../../../../assets/ml_3_6.png" /></p>
+<h3 id="polynomial-regression">Polynomial regression</h3>
+<p>Given the two ecuations, one for multiple linear regression ( <code>y= b0 + b1*x1 + b2*x2 + ...</code>) and the other one for polynomial regression (<code>y = b0 + b1*x + b2*x^2 +...</code>), we can obviously substitute <code>xi</code> for <code>x^i</code> in the first ecuation and apply the multiple linear regression algorithm to compute the polynom. </p>
+<h3 id="linearization-models">Linearization models</h3>
+<p>In case of non-linear functions (power law, exponential decay), the standard way to do the regression is to apply a logarithm and then compute the coefficients according to the newly obtained linear model. E.g. <code>y = a*x^b -&gt; log(y) = log(a) + b * log(x)</code>, a linear ecuation. However, computing the regression coefficients this way is prone to large errors due to the fundamentally non-linear underlying relationship. A solution which yields much better results is to consider the function as it originally is and then find its regression coefficients using an optimization method like, for instance, a nature inspired optimization - see post about nature inspired optimizations.  </p>
+<h3 id="ridge-regression">Ridge regression</h3>
+<p>To keep the model simple (few, small coefficients), for multiple regression we can opt to minimize the following function:</p>
+<p><code>sum( (yi - (b0 + b1x1 + b2x2 + .. + bnxn)) ^ 2 + C(b0^2 + b1^2 + ... + bn^2) )</code></p>
+<p>The idea with <code>C</code> and is based on the analogy between a simple model and a model with small coefficients. <code>C</code> is called regularization term. The first (the sum) term keeps the model close to the truth (training data) while second term instructs the model to keep the coefficients small. <code>C</code> is a number and can be computed through nested cross validation. Ridge regression helps us not overfit the model.</p>
+<h3 id="support-vector-machines">Support vector machines</h3>
+<p>Similar to ridge regression, the difference comes from the first term. Instead of using the sum of error squares, <br />
+it uses a function <code>g(y - f(x)) = 0 if |y-f(x)| &lt; epsilon and  y-f(x) otherwise</code></p>
+<p>Below you can see the difference in error function between ridge regression and svm regression (screenshots from a MVA class on Machine Learning)</p>
+<p><img alt="Ridge Regression" src="../../../../../assets/ml_3_7.png" /><br />
+<img alt="SVM Regression" src="../../../../../assets/ml_3_8.png" /></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../machine/learning/2017/03/18/Statistics_1.html">Statistics, continued</a></span><span><a href="../../../../../statistics/2017/04/03/optimizations.html">Nature Inspired Optimizations</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

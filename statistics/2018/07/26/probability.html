@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probability Notes | From The Trenches - The Code</title>
+  <meta name="description" content="A short introduction to probability. A collection of notes I took for myself, published here.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Probability Notes</h1>
+    <p class="post-meta">
+      <time datetime="2018-07-26" itemprop="datePublished">Jul 26, 2018</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>A short introduction to probability. A collection of notes I took for myself, published here.</p>
+<h3 id="counting">Counting</h3>
+<p><em>Given 3 locations, A, B, C, and 3 roads from A to B and 2 roads from B to C, how many possible routes are from A to C?</em>  <code>3 x 2 = 6</code></p>
+<p><em>Given a bag with 3 balls, R, G and B. Provided that we take balls out of the bag one by one and don't put them back (no replacement), how many possible ways of extracting the balls there are?</em>  <code>3 x 2 x 1 = 6</code>, called permutations.</p>
+<p><em>Given a bag with <code>N</code> balls, provided that we take k balls from the bag without replacement, how many possible ways of extracting the balls are there?</em>  <code>N x (N-1) x .. x k = N! / (N-k)!</code> and the number is called arrangements.</p>
+<p><em>What if I put the balls back?</em>  <code>N^k</code></p>
+<p><em>Given a room with <code>k</code> people, <code>k &lt; 365</code>, what is the probability of at least 2 people in the room have the same birthday?</em>  there are <code>365^k</code> ways of arranging birthdays (sample space). Number of arrangements when each birthday is different is <code>365 x 364 x .. x k</code> (first one can be born any day of the year, second any day except the day of the first one etc). This leads to a probability of <code>P = (N! / (N-k)!) / (N^k) = A(365, k) / 365^k</code> of no two people being born in the same day. Thus, the answer is <code>P = 1 - P</code></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">arrangements</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; We will not use this function as it will overflow for large values. Provided just fo example&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">kk</span> <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">)))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">at_least_two_people_in_same_day</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; If we use arrangements function, it will overflow &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="p">((</span><span class="mi">365</span><span class="o">-</span><span class="n">kk</span><span class="p">)</span> <span class="o">/</span> <span class="mi">365</span> <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">)))</span>
+
+<span class="n">at_least_two_people_in_same_day</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">at_least_two_people_in_same_day</span><span class="p">(</span><span class="mi">360</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">[</span><span class="n">at_least_two_people_in_same_day</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+</code></pre></div>
+
+<p>Note: at aroung 60 people in the room, the probability is basically 1 for two people to have the same birthday.</p>
+<p><em>The number of subsets of a set</em> is a similar problem to extractions without replacement, but this time the order does not matter. That is, given the example with the bag of <code>R</code>, <code>G</code>, <code>B</code> balls earlier, the <code>R-G-B</code> and <code>B-G-R</code> extractions are the same. How many possible ways of extracting the balls are there? <br />
+- We take the number of picks (arrangements): <code>A(N, k) = N x (N-1) x ... (N-k) = N! / (N-k)!</code><br />
+- We divide this number by the total number of permutations possible in each pick as we count each pick as one:  <code>A(N, k) / k!</code><br />
+- We call this number <em>combinations</em> <code>C(N, k) = N! / (k! * (N-k)!)</code>, sometimes also called <em>choose k out of N</em>.<br />
+Small note: <code>C(N, k) = C(N, N-k)</code></p>
+<p><em>Given a set of <code>N</code> coin tosses, what is the probability of getting exactly <code>k</code> heads?</em> <br />
+- There are <code>2^N</code> possible ways of extracting the coins - extraction with replacement.<br />
+- There are precisely <code>C(N, k)</code> ways you can get <code>k</code> heads in a string of <code>N</code> tosses<br />
+- <code>P = n / sample-space-size = C(N, k) / 2^N</code></p>
+<p>Obiously, if we want to compute the probability of having k heads or less, we get:</p>
+<div class="codehilite"><pre><span></span><code>P = P(0) + P(1) +.. +P(k) = (C(N, 0) + C(N, 1) + ... C(N, k)) / 2^N`
+</code></pre></div>
+
+<p><em>Given a class of <code>N</code> boys and <code>M</code> girls, pick <code>k</code> children at random, what is the probability of picking precisely <code>g</code> girls?</em> </p>
+<div class="codehilite"><pre><span></span><code>P(g girls out of M girls) = C(M, g)
+P(k-g boys ot of N boys) = C(N, k-g)
+</code></pre></div>
+
+<p>The total number of possible picks is <code>C(M+N, k)</code></p>
+<div class="codehilite"><pre><span></span><code>P = (C(M, g) + C(N, k-g)) / C(M+N, k)
+</code></pre></div>
+
+<p><em>Given a group of <code>N</code> people, how any ways can people be assigned to <code>n</code> groups of <code>k1, k2.., kn</code> people respectively?</em> </p>
+<div class="codehilite"><pre><span></span><code>G1 = C(N, k1)
+G2 = C(N-k1, k2)
+...
+Gn = C(N - sum(k1, .., kn-1), kn)
+
+Total count: 
+T = G1 x G2 x ... x Gn = N! / (k1! x k2! x ... x kn!)
+</code></pre></div>
+
+<p><em>Given <code>a</code> a's, <code>b</code> b's, <code>c</code> c's, how many ways can these be arranged?</em><br />
+We have <code>N = a + b + c</code> numbers<br />
+<code>G1 = C(N, a)</code><br />
+<code>G2 = C(N, b)</code><br />
+<code>G3 = C(N, c)</code></p>
+<p>Total count: <code>T = G1 x G2 x G3 = (a+b+c)! / (a! x b! x c!) = C(N, a, b, c)</code> - multinomial coefficient.</p>
+<h3 id="conditional-probability">Conditional Probability</h3>
+<p>By definition, <code>P(A given B) = P (A | B) = P(A and B) / P(B)</code>, is called conditional probability.</p>
+<p>We say that two events are independent if <em>any</em> of the following holds:</p>
+<ul>
+<li><code>P(A | B) = P(A)</code></li>
+<li><code>P(B | A) = P(B)</code></li>
+<li><code>P(A and B) = P(A) x P(B)</code></li>
+</ul>
+<p>If <em>none</em> of the above holds true, we say the events are dependent.</p>
+<p><em>Given 3 events and a 6-sided die, A: odd number rolled, B: even number rolled, C: {1, 2}, what is the relationship of dependence / independence between these events?</em></p>
+<ul>
+<li><code>P(A | B) = P(odd number rolled given even number roll) = 0</code>. <code>P(A and B) = 0</code> which is different from <code>P(A) * P(B)</code>, thus the events are <em>dependent</em>.</li>
+<li><code>P(A | C) = 1/2 = P(A)</code>, thus the two events are <em>independent</em></li>
+</ul>
+<p>Obviously:<br />
+<code>P(A and B) = P(B) x P(A given B) = P(A) x P(B given A)</code></p>
+<p><em>Law of total probability</em> says that, given a probability space <code>S</code> and a partition <code>S1,..., Sn</code> with <code>S = S1 U S2 U ... U Sn</code>, <code>P(A) = sum(P(Bk) * P(A | Bk), for k from 1 to n)</code>. In other words, probability of an event A is equal to the sum of probabilities of us being in a partition multiplied by the probability of A given we are in that partition.</p>
+<p><em>Bayes theorem:</em> given a sample space <code>S</code> and events <code>B1, ... ,Bk</code> forming a partition over <code>S</code>, and a random event A, </p>
+<div class="codehilite"><pre><span></span><code>P(Bi | A) = P(Bi) <span class="gs">* P(A | Bi) / sum(P(Bj) *</span> P(A | Bj), j = 1..k)
+</code></pre></div>
+
+<p>Let's apply this theorem to the well know problem of tests and probability of disease. Given the following:</p>
+<ul>
+<li><code>P(positive | have the disease) = 0.9</code></li>
+<li><code>P(positive | you don't have the disease) = 0.1</code></li>
+<li><code>P(you have the disease) = 1 in 10000</code></li>
+</ul>
+<p>If you test positive, what i the probability that you have the disease?</p>
+<ul>
+<li>The sample space <code>S = B1 + B2</code>, you have the disease or you don't have the disease, the partition fully covers the space.</li>
+<li>Event A = you tested positive</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>P(B1 = you have the disease) = P(B1) <span class="gs">* P(A | B1) / sum (...) </span>
+<span class="gs">P(B1) = (1/10000 *</span> 0.9) / (P(B1) <span class="gs">* P(A | B1)) + P(B2) *</span> P(A | B2))
+P(B1) = (0.9 / 10000) / (1/10000 <span class="gs">* 0.9 + 9999/10000 *</span> 0.1)
+p(B1) = approx 1 in 1000
+</code></pre></div>
+
+<h3 id="random-variables-and-distributions">Random variables and distributions</h3>
+<p><em>Probability function</em> is defined as <code>f(x) = P(X = x)</code>, where X is a random variable. E.g. : <code>f(x) = { 1/6 for x in 1..6, 0 otherwise }</code>. This is also <em>called probability mass function (pmf)</em>. </p>
+<p><em>Uniform distribution</em> has `pmf(X = x, a &lt;= x &lt;= b, a, b natural numbers) = { 1/(b-a +1) for x = a...b, 0 otherwise }</p>
+<p><em>Binomial distribution</em> deals with items that can be in in two distinctive states, each with probability <code>p</code> or <code>1-p</code>. A single experiment is called a <em>Bernoulli trial</em>. For instance, given a string of <code>N</code> coin tosses, with <code>p</code> the probability of turning head, the probability of getting exactly <code>k</code> heads and thus <code>N-k</code> tails is <code>C(N, k) x p^k x (1-p)^(N-k)</code>.</p>
+<ul>
+<li>Probability of a single string of events is <code>p^k x (1-p)^(N-k)</code></li>
+<li>There are <code>A(N, k)</code> arrangements of such strings, each representing one of the <code>k!</code> possible permutations, which is precisely the definition for <code>C(N, k)</code>.</li>
+</ul>
+<p><em>Geometric distribution</em> still refers to a string of Bernoulli trials, just like the binomial distribution, but, unlike the binomial distribution which answers the question <em>what is the probability of an event to occur X times</em>, the geometric distribution answers the question <em>what is the probability that the first success occurs after the X trials</em>.</p>
+<p>The events are:</p>
+<div class="codehilite"><pre><span></span><code>E1 = Success (x=1, p(E1) = p)
+E2 = Failure, Success (x=2, P(E2) = (1-p) <span class="gs">* p)</span>
+<span class="gs">E3 = Failure, Failure, Success (x=3, P(E3) = (1-p) *</span> (1-p) <span class="gs">* p)`</span>
+<span class="gs">...</span>
+
+<span class="gs">Thus `pmf(x) = (1-p)^(x-1) *</span> p`
+</code></pre></div>
+
+<p><em>An example:</em></p>
+<p>Suppose we have an airplane which has a probability to crash on each flight equals to <code>p</code>, with this probability independent on the number of flights previously performend. Thus, on the first flight probability to crash is <code>p</code>, on the second flight probability to crash if <code>(1-p) * p</code> and so on. The question is, what is the probability the plane will at least N flights? Answer: <code>P(N flights) = 1 - SUM( p(x), x = 1...N )</code>.</p>
+<ol start="5">
+<li><em>Hypergeometric distribution</em> still deals with items that can be in two possible states, but unlike the binomial distribution, extractions are without replacement. For instance, assuming a bag of balls each of two colors, red or blue, we would use the binomial distribution to compute the probability of N red balls extracted if the red ball is put back in the bag and the hypergeometric distribution if the ball is not. </li>
+</ol>
+<p><em>Assuming we have a bag with <code>N</code> balls, <code>R</code> red and <code>B</code> blue, with <code>R+B=N</code> and we extract balls from the bag without putting them back, after extracting <code>n</code> balls from the bag, what is the probability of having extracted <code>k</code> red balls?</em></p>
+<p><code>pmf(x) = C(R, x) * C(N-R, n-x) / C(N, n)</code> where:</p>
+<ul>
+<li><code>R</code> is the number of success states (in our case the number of red balls)</li>
+<li><code>n</code> is the number of draws</li>
+<li><code>x</code> is the number of observed successes, in this case we would replace it with <code>k</code></li>
+<li><code>N</code> is the population size</li>
+</ul>
+<p><em>Assuming a a box with <code>N</code> newly built CPUs. We know that 1 in <code>X</code> is defective. We are invited to pick <code>K</code>. What is the probability of none being defective?</em></p>
+<p><code>P(none defective) = C(N - N/X, K) * C(N/X, 0) / C(N, K)</code> with <code>R = N - N/X</code>, <code>x = K</code> and <code>n = K</code> if we are to use the terminology from the formula above.</p>
+<p><em>Continuous distributions</em> are those distributions for which <code>P(X = x) = 0</code> thus it would only make sense to talk about <code>P(a &lt;= X &lt;= b)</code>. For continuous distributions we define the <em>cummulative distribution function</em>, <code>cdf</code>, as <code>cdf(x) = P(X &lt;= x)</code> and <em>probability density function</em>, <code>pdf</code>, as <code>pdf(x) = cdf(x)dx / dx = cdf'(x)</code> with <code>integral(-infinty, infinity)(pdf(x)) = 1</code>. Looping back to computing the <code>P(a &lt;= X &lt;= b )</code>, <code>P(a &lt;= x &lt;= b) = integral(a, b)(pdf(x))</code>.</p>
+<p><em>Standard normal distribution</em> has the expected value <code>miu = 0</code> and standard deviation <code>sigma = 1</code>. One can transform any normal distribution of a given <code>miu</code> and <code>sigma</code> to the standard by applying <code>z=(x-miu)/sigma</code> as in the following example: assuming that the scores for an exam are centered around 75%, with a standard deviation of 10%, what fraction of the scores lie between 80% and 90%? </p>
+<div class="codehilite"><pre><span></span><code>z1 = (80-75)/10 = 0.5
+z2 = (90-75)/10 = 1.5
+answer = cdf_normal(1.5) - cdf_normal(0.5)
+</code></pre></div>
+
+<p><em>Gamma distribution</em>, link <a href="https://en.wikipedia.org/wiki/Gamma_distribution">here</a>, is a two-parameter family of continuous probability distributions. The exponential distribution, Erlang distribution, and chi-squared distribution are special cases of the gamma distribution.  </p>
+<p><em>Beta distribution</em>, link <a href="https://en.wikipedia.org/wiki/Beta_distribution">here</a>, used in Bayesian inference to solve problems which follow a pattern similar to the following: "given our belief of the world at a certain point of time, if new evidence becomes available, how do these affect our beliefs?". A good example is spam filtering.</p>
+<h3 id="expectation">Expectation</h3>
+<p>Expected value is defined as <code>E[V] = sum(p1*v1 + p2*v2+ ... pn*vn)</code> where <code>pi</code> is the probability for <code>vi</code> to occur. It is called also mean or average. For example, the expectation for a binomial distribution with the probability <code>p</code> for <code>1</code>  and <code>1-p</code> for <code>0</code> is <code>E[X] = (1-p)*0 + 1*p = p</code>. </p>
+<p>For continuous distributions, the <code>E[X] = integral(-inf, +inf, dx)(x * pdf(x))</code>.</p>
+<p>Considering a part that has the fail probability density function <code>pdf = 2*x, for 0&lt;=x&lt;=1 and 0 otherwise</code>, the expected time to fail is <code>E[X] = integral(0, 1, dx)(2 * x^2) = 2/3 * x^3 for x = 1 - 2/3 * x^3 for x = 0 = 2/3</code>. Note: <code>2*x</code> is a valid pdf, with <code>cdf=x^2</code>, monotonically increasing, and <code>integral(0,1)(pdf) = cdf(1) - cdf(0) = 1</code>. It can be explained as the probability of defect as it reaches the end-of-life increases squarely.</p>
+<p><a href="https://en.wikipedia.org/wiki/Law_of_the_unconscious_statistician">Law of the unconscious statistician</a> helps calculate the expected value of a function g(X) of a random variable X when one knows the probability distribution of X but one does not explicitly know the distribution of g(X). </p>
+<p>For the discrete case, the formula is:</p>
+<p><code>E[g[X]] = sum(g(x) * f_X(x))</code></p>
+<p>for the continuous case: </p>
+<p><code>E[g[X]] = integral(-inf, inf, dx)(g(x) * f_X(x))</code></p>
+<p><em>Variance</em> is a measure of how spread out the values are spread around the mean. We define the variance for a random variable as <code>V[X] = E[(x - mean)^2]</code>. We define also the standard deviation as <code>sigma[X] = sqrt(V[X])</code>.</p>
+<p>For a binomial distribution, with <code>p=0.5</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">X</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="n">V</span><span class="o">[</span><span class="n">X</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">(X-mean)^2</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.25</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.25</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span>
+<span class="n">sigma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">sqrt</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="err">`</span>
+</code></pre></div>
+
+<p>Another way to computing the variance is:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">V</span><span class="o">[</span><span class="n">X</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">(X-mean)^2</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">X^2 - 2*X*mean + mean^2</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">X^2</span><span class="o">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">X</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">mean</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E</span><span class="o">[</span><span class="n">X^2</span><span class="o">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mean</span><span class="o">^</span><span class="mi">2</span>
+</code></pre></div>
+
+<p>A nice property of variance is that <code>V[a1X1 + a2X2 + ... +b] = a1^2 * V[X1] + ... + an^2 * V[Xn]</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">expected_values</span><span class="p">(</span><span class="n">events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Events is a collection of (probability, value) pairs, independent of each other, </span>
+<span class="sd">    covering the whole spectrum of possible values (sum(pi) == 1) &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">events</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)</span>
+
+    <span class="n">ev</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span> <span class="n">p</span><span class="o">*</span><span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">))</span>
+    <span class="n">variance</span> <span class="o">=</span>  <span class="nb">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="o">-</span><span class="n">ev</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">events</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">variance</span><span class="p">)</span>
+</code></pre></div>
+
+<p>If we are to assess the variance of a population based on a sample of that population, consider using Bessel's correction formula: <a href="https://en.wikipedia.org/wiki/Bessel%27s_correction">Bessel's correction</a></p>
+<p><em>The joint probability mass function for two random variables X and Y</em> is defined as <code>P_XY(x,y) = P(X=x, Y=y)</code> with <code>sum(P_XY(x, y)) = 1</code></p>
+<p>To compute the measure of two variables varying together, we introduce the notion of <em>covariance</em>, which standardizes to <em>correlation</em> (covariance is dependend of the values of the two variables).</p>
+<p><code>cov(X, Y) = sigma(x, y) = E[(X-mean(X)) * (Y - mean(Y))]</code></p>
+<p>and</p>
+<p><code>corr(X, Y) = cov(X, X) / (stddev(X) * stddev(Y))</code></p>
+<p>Correlation is constrained to the interval <code>(-1, 1)</code>, with <code>0</code> meaning that <code>X</code> and <code>Y</code> are totally uncorrelated. A value over <code>0.6</code> means strongly correlated, <code>0.2</code> weakly correlated or almost uncorrelated. One point to note is that correlation only measures linear relationships. Thus a relationship like <code>(X, X^2)</code> would score very low on the correlation spectrum.</p>
+<h3 id="other-interesting-distributions">Other interesting distributions</h3>
+<p><em>Poisson distribution</em> models the number of occurences of an event within a given period of time. E.g. goals per match.</p>
+<p><em>Lognormal distribution</em> has very interesting applications, described <a href="https://en.wikipedia.org/wiki/Log-normal_distribution#Occurrence_and_applications">here</a>. For instance, In reliability analysis, the lognormal distribution is often used to model times to repair a maintainable system.<br />
+The lognormal distribution is a distribution of a random variable <code>X</code> whose <code>log(X)</code> is normally distributed.  </p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../architecture/2017/12/03/design-patterns-python.html">Common Design Patters Implemented In Python [WIP]</a></span><span><a href="../../../../statistics/2018/08/15/risk.html">Risk Models</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

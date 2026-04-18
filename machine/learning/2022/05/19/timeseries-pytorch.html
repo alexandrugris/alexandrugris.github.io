@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timeseries Analysis with PyTorch | From The Trenches - The Code</title>
+  <meta name="description" content="PyTorch is a widely used machine learning library, has an beautiful pythonic syntax and, above all, runs extremely fast on my M1 MacBook with no hacking required to make it run. I write this post following the steps I made to learn the library, by roughly translating the Time series forecasting…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Timeseries Analysis with PyTorch</h1>
+    <p class="post-meta">
+      <time datetime="2022-05-19" itemprop="datePublished">May 19, 2022</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>PyTorch is a widely used machine learning library, has an beautiful pythonic syntax and, above all, runs extremely fast on my M1 MacBook with no hacking required to make it run. I write this post following the steps I made to learn the library, by roughly translating the <a href="https://www.tensorflow.org/tutorials/structured_data/time_series">Time series forecasting with TensorFlow</a> tutorial to PyTorch, while making changes to it along the line to satisfy my curiosity. </p>
+<h3 id="hello-world">Hello World</h3>
+<p>Before starting, let's make sure we have the right libraries installed. </p>
+<div class="codehilite"><pre><span></span><code>$pip install torch matplotlib numpy pandas torchvision torchaudio
+</code></pre></div>
+
+<p>Then, import the right libraries and select a device for running accelerated PyTorch code.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span> 
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToTensor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">path</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;cuda&quot;</span>
+    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
+    <span class="k">else</span> <span class="s2">&quot;mps&quot;</span>
+    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
+    <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</code></pre></div>
+
+<p>In my case, the device will be <code>mps</code>, as I am running this on a MacBook Pro M1 Max.</p>
+<h3 id="loading-and-processing-the-data">Loading and processing the data</h3>
+<p>For this example I will use the <a href="https://www.kaggle.com/datasets/mnassrib/jena-climate">Jena Climate dataset</a> and the goal will be to predict the temperature (Celsius) over the future 1 or more hours. We are going to use 4 different approaches, a basic linear regression, a simple neural network, a convolutional neural network and, then, a recurrent neural network. They all give pretty good results and we will discuss the differences throughout the post. </p>
+<p>Unlike in the TensorFlow tutorial on which this code is based, I will remove the temperature-related features from the training data and only keep them in the target variable. As such, we make the work of the ML models a bit harder.</p>
+<p>The first step is loading the data and separating the <code>date_time</code> variable. We will process the <code>date_time</code> a bit later to include it back in the trianing set.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># df contains hourly data</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;jena_climate_2009_2016.csv&quot;</span><span class="p">)[</span><span class="mi">5</span><span class="p">::</span><span class="mi">6</span><span class="p">]</span>
+<span class="n">date_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;Date Time&#39;</span><span class="p">),</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">.%m.%Y %H:%M:%S&#39;</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Results" src="../../../../../assets/ts-pytorch1.jpg" /></p>
+<p>Next, we are going to do a bit of data cleanup and transform some of the variables:<br />
+- Ensure there is no windspeed lower than 0<br />
+- Convert wind direction from degrees to vectors (maintaining magnitude)<br />
+- Standardize all numeric features for better processing by the neural networks<br />
+- Validate the periodicity of the time signal and transform from <code>date_time</code> to continuous variables that can be used in training. </p>
+<p>One by one, in the order specified above.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">df</span><span class="p">[</span><span class="s1">&#39;wv (m/s)&#39;</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;wv (m/s)&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;max. wv (m/s)&#39;</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;max. wv (m/s)&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">df</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+</code></pre></div>
+
+<p><img alt="Highlighted the wind speed and direction" src="../../../../../assets/ts-pytorch2.jpg" /></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># convert the wind degrees and wind speed to a wind vector</span>
+<span class="n">wv</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;wv (m/s)&#39;</span><span class="p">)</span>
+<span class="n">max_wv</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;max. wv (m/s)&#39;</span><span class="p">)</span>
+
+<span class="c1"># Convert to radians.</span>
+<span class="n">wd_rad</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;wd (deg)&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
+
+<span class="c1"># Calculate the wind x and y components.</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Wx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wv</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">wd_rad</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Wy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wv</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">wd_rad</span><span class="p">)</span>
+
+<span class="c1"># Calculate the max wind x and y components.</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;max Wx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_wv</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">wd_rad</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;max Wy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_wv</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">wd_rad</span><span class="p">)</span>
+
+<span class="c1"># show wind vectors looking great</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Wx&#39;</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Wy&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Wind X [m/s]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Wind Y [m/s]&#39;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img alt="Wind as vector with direction and magnitude" src="../../../../../assets/ts-pytorch3.jpg" /></p>
+<p>Nothing fancy so far, just similar procesing as in the <a href="https://www.tensorflow.org/tutorials/structured_data/time_series">TensorFlow tutorial</a>.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># standardize all numeric features</span>
+<span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">-</span><span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">df</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">&quot;T (degC)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">&quot;p (mbar)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</code></pre></div>
+
+<p>The following snippet of code is slightly more intersting. While in this case our intuition tells us that we have yearly and daily periodicity, the safest way to approach the problem of timeseries is to validate. We are going to analyse the spectrum of the signal and confirm our intuition. Comments inline, in the code.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># check for seasonality</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="c1"># confirm the data is sampled hourly</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">date_time</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">])</span>
+
+<span class="c1"># compute the fast fourier transform of the temperature</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;T (degC)&quot;</span><span class="p">])</span>
+<span class="n">fft</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
+<span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="c1"># length</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># sample frequency, 1/hour</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">N</span> <span class="o">*</span> <span class="n">T</span> <span class="c1"># duration</span>
+<span class="c1"># the following line computes the actual frequencies in the spectrum</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftfreq</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+
+<span class="c1"># we are interested only in the first half of the array</span>
+<span class="c1"># the second half is filled with the conjugates for the first half</span>
+<span class="n">fft</span> <span class="o">=</span> <span class="n">fft</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+
+<span class="c1"># take the highest 10 frequencies and compute their amplitude</span>
+<span class="nb">max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fft</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span>
+
+<span class="c1"># compute the lengh of the period (1/freq) an the magnitudes</span>
+<span class="n">periods</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">frequency</span><span class="p">[</span><span class="nb">max</span><span class="p">])</span> <span class="o">/</span> <span class="mi">24</span> <span class="c1"># 24 == convert from hours to days</span>
+<span class="n">magnitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fft</span><span class="p">[</span><span class="nb">max</span><span class="p">])</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">N</span>
+
+<span class="c1"># sampling is not perfect, hence some of the frequencies may fall in </span>
+<span class="c1"># two different buckets: e.g. 0.99h and 1.01h</span>
+<span class="n">cnt</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">periods</span><span class="p">],</span> <span class="n">magnitudes</span><span class="p">):</span>
+    <span class="n">cnt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+
+<span class="c1"># plot the frequencies and their magnitude</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">cnt</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">cnt</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="c1"># we see clearly there is a yearly fundamental and a daily fundamental </span>
+<span class="c1"># (2920 days == 8 years - the number of years we have data for)</span>
+</code></pre></div>
+
+<p>Periods in days - outstanding at 365 days and 1 day, as expected:</p>
+<p><img alt="Periods in days - outsanding at 365 days and 1 day" src="../../../../../assets/ts-pytorch4.jpg" /></p>
+<p>Given the information above, we can safely encode time as <code>sin</code> and <code>cos</code> for two different periods - yearly and daily. We are using both <code>sin</code> and <code>cos</code> in order to not confuse the algorithm as each <code>sin</code> and <code>cos</code> cross the 0 axis twice, having twice the same values over a period.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">timestamp_s</span> <span class="o">=</span> <span class="n">date_time</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+
+<span class="n">day</span> <span class="o">=</span> <span class="mi">24</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span>
+<span class="n">year</span> <span class="o">=</span> <span class="p">(</span><span class="mf">365.2425</span><span class="p">)</span><span class="o">*</span><span class="n">day</span> <span class="c1"># a bit of correction</span>
+
+<span class="c1"># normalized already</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Day sin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">timestamp_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">day</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.5</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Day cos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">timestamp_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">day</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.5</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Year sin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">timestamp_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">year</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.5</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Year cos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">timestamp_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">year</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.5</span>
+</code></pre></div>
+
+<h3 id="generating-the-datasets">Generating the datasets</h3>
+<p>After ensuring we have clean data, we are going to generate 3 data splits: training, validation and test. </p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># timeseries, so no random split</span>
+<span class="n">train_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.7</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+<span class="n">val_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.7</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+<span class="n">test_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span> <span class="p">:</span> <span class="p">]</span>
+</code></pre></div>
+
+<p>In PyTorch, data is fed to the training loop through a <code>DataLoader</code> object. It handles batching and shuffling, and wraps a user-defined <code>Dataset</code>. The <code>Dataset</code> object needs to implement the standard <code>__len__</code> and <code>__getitem__</code> functions, so it behaves like an array.</p>
+<p>For our code, we will implement a custom <code>Dataset</code> which wraps a <code>Pandas</code> dataframe and returns a specified number of time points as features and another number of time points as targets. In addition, it will have plotting functions for easier debugging and vizualization.</p>
+<p>The parameters for the <code>Dataset</code> construction are as follows:</p>
+<ul>
+<li><code>df</code> - the Pandas dataframe to wrap</li>
+<li><code>input_window_len</code> - how many past points of time (hours in our case) to return as features</li>
+<li><code>target_len</code> - how many points in the future to return as target, for one-shot predictions</li>
+<li><code>shift</code> - when moving through the dataset, by how many datapoints to advance the cursor,</li>
+<li><code>var_columns</code> - which columns to include in the features </li>
+<li><code>target_columns</code> - which columns to include in the target</li>
+<li><code>transform</code> and <code>target_transform</code> - how to transform the resulting data, in our case it will be transformed to a <code>torch.Tensor</code> and dispatched to the GPU.</li>
+</ul>
+<p>One thing to note is to never-ever use Pandas in the training loop as it will slowdown training by at least 100x. Only use numpy arrays and do the conversion outside of the <code>__getitem__</code> function. We do this update in the <code>preprocess</code> method of the class.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">WindowedDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span>  
+                        <span class="n">input_window_len</span><span class="p">,</span> 
+                        <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">v</span>
+                        <span class="n">ar_columns</span><span class="p">,</span> <span class="n">target_columns</span><span class="p">,</span> 
+                        <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                        <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="o">=</span> <span class="n">input_window_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_len</span> <span class="o">=</span> <span class="n">target_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_transform</span> <span class="o">=</span> <span class="n">target_transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span> <span class="o">=</span> <span class="n">target_columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span> <span class="o">=</span> <span class="n">var_columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">precompute</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_target_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_len</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">count_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_len</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">precompute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables_</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span><span class="p">]</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_</span><span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_len</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_transform</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_transform</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">variables</span><span class="p">,</span> <span class="n">target</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">var_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span>
+            <span class="n">target_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precompute</span><span class="p">()</span>
+
+            <span class="n">cnt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_len</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_len</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">)</span>
+
+            <span class="n">start</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="n">v_</span><span class="p">,</span> <span class="n">t_</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="n">ii</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+                <span class="n">v</span> <span class="p">[</span><span class="n">ii</span> <span class="p">:</span> <span class="n">ii</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v_</span> 
+                <span class="n">t</span> <span class="p">[</span><span class="n">ii</span> <span class="p">:</span> <span class="n">ii</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_</span><span class="p">)]</span> <span class="o">=</span> <span class="n">t_</span>
+
+            <span class="n">axis</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">cnt</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)],</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_window_len</span> <span class="p">:</span> <span class="n">cnt</span><span class="p">],</span> <span class="n">t</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">axis</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">cnt</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_columns</span> <span class="o">=</span> <span class="n">var_tmp</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_columns</span> <span class="o">=</span> <span class="n">target_tmp</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precompute</span><span class="p">()</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="n">axis</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">col_name</span><span class="o">=</span><span class="n">col_name</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">preds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># slow way to infer</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="n">X</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="c1"># add batch dimension</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+                    <span class="n">preds</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="n">cnt</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span> <span class="p">:</span> <span class="n">cnt</span><span class="p">],</span> <span class="n">preds</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p>Let's test the <code>WindowedDataset</code> and ask it to plot something.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># build a test dataset based on train_df</span>
+<span class="c1"># return 100 points for each index</span>
+<span class="c1"># return 10 points for each target</span>
+<span class="c1"># advance by 1</span>
+<span class="n">wds</span> <span class="o">=</span> <span class="n">WindowedDataset</span><span class="p">(</span><span class="n">train_df</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="s2">&quot;T (degC)&quot;</span> <span class="p">)</span>
+
+<span class="c1"># print the last object from the set</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">wds</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">wds</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># plot the series starting at index 10</span>
+<span class="c1"># and use only the temperature</span>
+<span class="c1"># the feature will be plotted with continuous line</span>
+<span class="c1"># the target with dots</span>
+<span class="n">wds</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;T (degC)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>And the result of the plot - 100 points for the features, only the degrees Celsius (continous line) and the target, 10 points, as dots. The X-axis starts from 10 (starting index) to 120 (10 + 100 + 10).</p>
+<p><img alt="Plot result" src="../../../../../assets/ts-pytorch5.jpg" /></p>
+<p>We finish this part of data preparation and dataset construction by presenting the functions that construct 3 <code>Dataloader</code> objects for train, validation and test respectively. To note the <code>transform</code> lambda which transforms from <code>numpy</code> to a <code>torch.Tensor</code> of <code>float32</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_dataloader</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="c1"># make it a bit more complicated, remove the temperature completely</span>
+    <span class="c1"># usually this is not needed for timeseries prediction</span>
+    <span class="c1"># but more interesting to see how the models behave</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;T (degC)&quot;</span><span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;Tpot (K)&quot;</span><span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;Tdew (degC)&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">WindowedDataset</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">,</span> <span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;T (degC)&quot;</span><span class="p">],</span>  
+            <span class="n">transform</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="n">target_transform</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">),</span> 
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> 
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_loaders</span><span class="p">(</span><span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+    <span class="n">train_loader</span> <span class="o">=</span> <span class="n">make_dataloader</span><span class="p">(</span><span class="n">train_df</span><span class="p">,</span> <span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+    <span class="n">valid_loader</span> <span class="o">=</span> <span class="n">make_dataloader</span><span class="p">(</span><span class="n">val_df</span><span class="p">,</span> <span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+    <span class="n">test_loader</span> <span class="o">=</span> <span class="n">make_dataloader</span><span class="p">(</span><span class="n">test_df</span><span class="p">,</span> <span class="n">input_window_len</span><span class="p">,</span> <span class="n">target_len</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">test_loader</span>
+</code></pre></div>
+
+<h3 id="training-loop-and-evaluating">Training loop and evaluating</h3>
+<p>PyTorch uses Autograd and a pretty straightforward training loop. To note are:<br />
+- Transferring the tensors to the GPU with the <code>.to(device)</code> calls.<br />
+- Defining a custom loss (<code>RMSELoss</code>)<br />
+- <code>with torch.not_grad()</code> when making predictions<br />
+- How backpropagation is implemented and using the optimizer<br />
+- Saving and loading a model</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">RMSELoss</span><span class="p">(</span><span class="n">yhat</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">yhat</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dl</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dl</span><span class="p">):</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RMSELoss</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="c1"># take only the first 20 batches top</span>
+            <span class="k">if</span> <span class="n">batch</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_ds</span><span class="p">,</span> <span class="n">valid_ds</span><span class="p">,</span> <span class="n">test_ds</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training loss:&quot;</span><span class="p">,</span> <span class="n">eval_</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dl</span><span class="o">=</span><span class="n">train_ds</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation loss:&quot;</span><span class="p">,</span> <span class="n">eval_</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dl</span><span class="o">=</span><span class="n">valid_ds</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Test loss:&quot;</span><span class="p">,</span> <span class="n">eval_</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dl</span><span class="o">=</span><span class="n">test_ds</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_trainer</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">_dynamo</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">suppress_errors</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;torch.compile() not available.&quot;</span><span class="p">)</span>
+
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">model</span>
+
+    <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">RMSELoss</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">2e-4</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">():</span>
+        <span class="c1"># loop through the dataset and perform backpropagation&quot;</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="c1"># Compute prediction error</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+            <span class="c1"># Backpropagation</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="c1"># save losses for plotting</span>
+            <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">batch</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">loss</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="p">(</span><span class="n">batch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s2">&gt;7f</span><span class="si">}</span><span class="s2">  [</span><span class="si">{</span><span class="n">current</span><span class="si">:</span><span class="s2">&gt;5d</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">&gt;5d</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">trainer</span><span class="p">():</span>
+        <span class="c1"># load a model if already exists</span>
+        <span class="c1"># else loop (epochs) times through the train function</span>
+
+        <span class="n">model_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">model_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">model_str</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()])</span>
+        <span class="n">model_str</span> <span class="o">=</span> <span class="n">model_str</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_str</span><span class="p">))]</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">model_str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Epoch &quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">train</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">model_str</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">m</span>
+
+    <span class="k">return</span> <span class="n">trainer</span>
+</code></pre></div>
+
+<h3 id="basic-linear-regression">Basic Linear Regression</h3>
+<p>The simplest model will take the atmospheric parameters for one hour and predicts the temperature for the next hour. It's a basic neural network with 1 neuron and no activation, equivalent to a simple linear regression.</p>
+<p>The interesting things to note are:<br />
+- The structure of a neural network in PyTorch, inheriting from the <code>nn.Module</code> base class<br />
+- The <code>forward()</code> function which performs the forward propagation and evalution step<br />
+- The use of an <code>nn.Linear</code> object which is the equivalent of a Dense layer<br />
+- The use of <code>.to(device)</code> to ensure all parameters are submitted to the GPU</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BasicLinear</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">target_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear_stack</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">target_size</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_stack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># one hour of data and predict the following hour</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tt</span> <span class="o">=</span> <span class="n">make_loaders</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">BasicLinear</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_input_size</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_target_size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</code></pre></div>
+
+<p>As a side note, if I were to build a custom linear layer, <code>CustomDense</code>, which does exactly the same thing as the <code>nn.Linear</code>, it would be as follows. Please note the use of <code>nn.Parameter()</code> to allow the system to keep track of the trainable weights.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CustomDense</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size_in</span><span class="p">,</span> <span class="n">size_out</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1">#1. Explicit what is trainable parameters</span>
+        <span class="c1"># nn.Parameter - trainable parameters</span>
+        <span class="c1"># it&#39;s what we send to the constructor of the Optimizier.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">size_out</span><span class="p">,</span> <span class="n">size_in</span><span class="p">)</span>
+        <span class="p">)</span>  
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">size_out</span><span class="p">)</span>
+        <span class="p">)</span> 
+
+        <span class="c1">#2. Initialize weights and biases</span>
+        <span class="c1"># He initialization</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># w times x + b</span>
+        <span class="n">w_times_x</span><span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">t</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">w_times_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Now let's use the basic network above. </p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># train for 5 epochs</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">create_trainer</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="mi">5</span><span class="p">)()</span>
+<span class="nb">eval</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tt</span><span class="p">)</span>
+
+<span class="c1"># plot the temperature - actual: blue dots, predicted: organge dots</span>
+<span class="n">v</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">plot_prediction</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">&quot;T (degC)&quot;</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We observe the loss values for all sets, showing we don't overfit but also not fit too well the data.</p>
+<p><img alt="Plot result" src="../../../../../assets/ts-pytorch6.jpg" /></p>
+<h3 id="deep-neural-network">Deep Neural Network</h3>
+<p>We are going to proceed similarly as before but add more neurons to the mix. We now send 24h of data to predict 1h in advance. The code can be changed to predict as many hours as we want in advance, buy changing only the second parameter in the <code>make_loaders(24, 1, 1)</code> call.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># deep learning, dense, given 24h of data, predict 1h in advance,</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DNNRegressor</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">target_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear_stack</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+            <span class="c1">#nn.Dropout(p=0.2),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">target_size</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_stack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tt</span> <span class="o">=</span> <span class="n">make_loaders</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">DNNRegressor</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_input_size</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_target_size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total params: &quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">))</span>
+</code></pre></div>
+
+<p>With the model structure and number of parameters:</p>
+<div class="codehilite"><pre><span></span><code>DNNRegressor(
+  (linear_stack): Sequential(
+    (0): Linear(in_features=384, out_features=384, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=384, out_features=64, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=64, out_features=64, bias=True)
+    (5): ReLU()
+    (6): Linear(in_features=64, out_features=1, bias=True)
+  )
+)
+Total params:  176705
+</code></pre></div>
+
+<p>The results are as follows, and we immediately notice the lower loss while still not overfitting the dataset. Also visually, the predictions look more precise than in the linear regression case, which is expected.</p>
+<p><img alt="Plot result" src="../../../../../assets/ts-pytorch7.jpg" /></p>
+<h3 id="convolutional-neural-network">Convolutional Neural Network</h3>
+<p>We are now going to replace one of the dense layers above with a convolutional layer. CNNs tend to have less parameters than basic DNNs due to the locality of the convolutional transform. They also tend to incorporate better local relationships in the data and extract patterns. This is why they are widely used for image processing.</p>
+<p>To ensure the right data format is sent to the <code>Conv1D</code> layer, we first play a bit with arrays. Fortunately PyTorch allows immediate results, so here they are:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</code></pre></div>
+
+<p>Outputting</p>
+<div class="codehilite"><pre><span></span><code><span class="k">[[[1. 3. 5. 7.]</span>
+<span class="w">  </span><span class="k">[2. 4. 6. 8.]]</span>
+
+<span class="w"> </span><span class="k">[[1. 3. 5. 7.]</span>
+<span class="w">  </span><span class="k">[2. 4. 6. 8.]]</span>
+
+<span class="w"> </span><span class="k">[[1. 3. 5. 7.]</span>
+<span class="w">  </span><span class="k">[2. 4. 6. 8.]]]</span>
+</code></pre></div>
+
+<p>This is inline with our expectation that Conv1D operation will convolve along the time dimension. With this knowledge, we build our network.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CNNRegressor</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">target_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">in_channels</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_stack</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">(</span><span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool1d</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">target_size</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">))</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_stack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tt</span> <span class="o">=</span> <span class="n">make_loaders</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">CNNRegressor</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">count_channels</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_target_size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total params: &quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">))</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>CNNRegressor(
+  (seq_stack): Sequential(
+    (0): Conv1d(16, 256, kernel_size=(5,), stride=(1,), padding=same)
+    (1): ReLU()
+    (2): AdaptiveAvgPool1d(output_size=8)
+    (3): Flatten(start_dim=1, end_dim=-1)
+    (4): Linear(in_features=2048, out_features=64, bias=True)
+    (5): ReLU()
+    (6): Linear(in_features=64, out_features=64, bias=True)
+    (7): ReLU()
+    (8): Linear(in_features=64, out_features=1, bias=True)
+  )
+)
+Total params:  156097
+</code></pre></div>
+
+<p>We immediately see the number of total parameters is smaller, even if I did no real tuning to the layer shapes, while the end results are not significantly different from the DNN. For this toy example, I did not expect much improvement.</p>
+<p><img alt="Plot result" src="../../../../../assets/ts-pytorch8.jpg" /></p>
+<h3 id="recurrent-neural-network">Recurrent Neural Network</h3>
+<p>I will finish my post by showing the same algorithm, but this time using RNNs. I will replace all the deep layers with 4 LSTM layers. We will notice a huge decrease (3x compared to the CNN) in the number model parameters, while keeping the same performance, even a notch better. To note the way data is transmitted to the LSTM block; again we make sure the series is sent to the network along the time axis.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LSTMRegressor</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">target_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LSTM</span><span class="p">(</span>
+            <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> 
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">input_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> 
+            <span class="n">num_layers</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">batch_first</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span> <span class="c1"># number of channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">target_size</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">seq_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">seq_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">))</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ret_lstm</span><span class="p">,</span> <span class="p">(</span><span class="n">hn</span><span class="p">,</span> <span class="n">cn</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">lin_input</span> <span class="o">=</span> <span class="n">ret_lstm</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="c1"># take the last output from the sequence</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">lin_input</span><span class="p">)</span>
+
+
+<span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tt</span> <span class="o">=</span> <span class="n">make_loaders</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LSTMRegressor</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">count_channels</span><span class="p">(),</span> <span class="n">target_size</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_target_size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total params: &quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">))</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>LSTMRegressor(
+  (lstm): LSTM(16, 32, num_layers=4, batch_first=True)
+  (linear): Linear(in_features=32, out_features=1, bias=True)
+)
+Total params:  31777
+</code></pre></div>
+
+<p>The LSTM cells will memorize the most important features of th data, processing the input as a sequence passed through the network in one timestep at a time.</p>
+<p>The results applying this network to the validation data, below:</p>
+<p><img alt="Plot result" src="../../../../../assets/ts-pytorch9.jpg" /></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../programming/2021/08/14/timeseries-analysis.html">Timeseries Analysis in Python</a></span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

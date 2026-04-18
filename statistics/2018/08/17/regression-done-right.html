@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linear Regression Done Right | From The Trenches - The Code</title>
+  <meta name="description" content="In several of my previous posts I wrote about linear regression, but in none I wrote about when and how to use it correctly and how to interpret the results. Computing a simple regression line is easy, but applying it blindly will surely lead to incorrect results.">
+  <link rel="stylesheet" href="../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Linear Regression Done Right</h1>
+    <p class="post-meta">
+      <time datetime="2018-08-17" itemprop="datePublished">Aug 17, 2018</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>In several of my previous posts I wrote about linear regression, but in none I wrote about when and how to use it correctly and how to interpret the results. Computing a simple regression line is easy, but applying it blindly will surely lead to incorrect results.</p>
+<h3 id="residuals">Residuals</h3>
+<p>Let's assume the following two vectors, <code>X=[x1, .., xn] and Y=[y1, ... yn]</code>. Let us assume the regression line <code>y=ax+b</code>. We have the following definitions:</p>
+<ol>
+<li>
+<p><em>Residuals</em> are a vector <code>R=[r1, ...,rn]</code> with <code>ri = a * xi + b - yi</code>, that is, the difference between the points given by the regression line and the observed values of <code>Y</code></p>
+</li>
+<li>
+<p><em>Least square method</em> minimizes the function <code>f(a, b) = sum(ri^2)</code> by solving the system of equations <code>df(a,b)/da = 0</code> and <code>df(a, b)/db = 0</code></p>
+</li>
+<li>
+<p><em>R^2</em>, the coefficient of determination, is the proportion of the variance in the dependent variable that is predictable from the independent variable(s) and is defined by <code>R^2 = Var(ax+b) / Var(Y)</code>. It is located between 0 and 1.</p>
+</li>
+<li>
+<p><em>Lag 1 autocorrelation</em> defined as <code>CORREL([x2, .. ,xn], [x1, .. xn-1])</code> and is a measure of how much values at point <code>i</code> are similar to the values at point <code>i-1</code></p>
+</li>
+</ol>
+<p>In order to check that a linear regression model is correct, we need to examine the residuals. These residuals need to have the following properties:</p>
+<ul>
+<li>Have 0 mean</li>
+<li>All of them should have the same variance, meaning all the residuals are drawn from the same distribution</li>
+<li>Be independent of each other</li>
+<li>Be independent of X</li>
+<li>Be normally distributed</li>
+</ul>
+<p>In general:</p>
+<ul>
+<li>Low R^2, plot of Y vs X has no pattern - no cause-effect relationship</li>
+<li>Hi R^2, residuals not independent of each other - not properly defined relathionship, maybe non-linear</li>
+<li>Low R^2, residuals not independent of X - incomplete relationship, there is something other factor to be taken into consideration.</li>
+</ul>
+<h3 id="a-good-regression-example">A good regression example</h3>
+<p>Let's do an example in Excel. Let's consider <code>X = RANDBETWEEN(10,100)</code> and <code>Y = 100 + 3 × X + RANDBETWEEN(−100, 100)</code>. This leads to Y being in linear relationship with X with the paramenters <code>b=100</code> and <code>a=3</code>. In Excel, slope (<code>a'</code>) and intercept (<code>b'</code>) are computed with the formulas <code>a' = SLOPE(Y, X)</code> and <code>b' = INTERCEPT(Y, X)</code>. Running these lead to <code>a'=3.06</code> and <code>b'=91.56</code> and an <code>R^2=0.81</code>, where <code>R^2 = Var(Regressed Y) / Var(Y)</code> as noted before. This means that 81% of the variation of Y is explained by the regression model. More on the interval of confidence for these values later in this post.</p>
+<p>Let's look now at the residuals:</p>
+<ul>
+<li>Lag 1 autocorrelation of the residuals is 0.12, which is low enough (check that residuals are independent of each other)</li>
+<li>R^2 is high enough, but not too high. An R^2 higher than 90% almost surely means that the lag 1 autocorrelation is too high and we need to revise the model</li>
+<li>And then we inspect the distribution of residuals vs X. Should be highly uncorrelated.</li>
+</ul>
+<p><img alt="Residuals vs X" src="../../../../assets/regression_1.png" /></p>
+<p>and the regression line</p>
+<p><img alt="Regression Line" src="../../../../assets/regression_2.png" /></p>
+<h3 id="a-not-so-good-regression-example">A not so good regression example</h3>
+<p>Let's consider now the same X as before, but this time Y defined in a square relationship to Y. We apply the regression steps described before and we obtain:</p>
+<ul>
+<li>Regression line <code>y = 326.66 * x - 6660</code></li>
+<li><code>R^2 = 0.9586</code> - very high, over <code>0.9</code>, which hints the model is problematic</li>
+<li><code>Lag 1 autocorrelation = 0.16</code> - low, but is low from a mistake. <em>We should have sorted by X the data series before to see the real correlation.</em></li>
+</ul>
+<p>When we inspect the scatter plot of residuals vs X we see a pattern where should be none:</p>
+<p><img alt="Residuals vs X" src="../../../../assets/regression_3.png" /></p>
+<p>And the regression line showing also that the linear relationship does not properly capture the data:</p>
+<p><img alt="Regression Line" src="../../../../assets/regression_4.png" /></p>
+<h3 id="improving-the-regression">Improving the regression</h3>
+<p>When we have a series that has an underlying pattern, we need to deflate the series in order to bring the residuals as close as possible to their desired properties. Usually, a series that has an underlying pattern exhibits large variations towards its ends. Examples of such series is price evolution of stocks which need to be deflated by the inflation, prices vs demand, any time series as they usually tend to follow either periodic patterns or exhibit some kind of growth or both. If we don't want to (or can't) find such underlying patterns, the most simple general method of deflating the series with good results is switching to percentage returns. These can be calculated by one of the following formulas:</p>
+<ul>
+<li><code>%return(t) = ln(value(t)) - ln(value(t-1))</code> or</li>
+<li><code>%return(t) = (value(t) - value(t-1)) / value(t-1)</code></li>
+</ul>
+<p>For small variations, up to 20%, the two formulas give almost identical results due to the mathematical properties of the natural logarithm. For higher variation, the logarithm shows excessive dampening of the values. See the chart below for <code>%returns</code> for a series computed through both methods.</p>
+<p><img alt="Percentage returns ln vs difference" src="../../../../assets/regression_5.png" /></p>
+<p>Better than mine explanations <a href="http://people.duke.edu/~rnau/411log.htm">here</a>:</p>
+<blockquote>
+<p>Logging a series often has an effect very similar to deflating: it straightens out exponential growth patterns and reduces heteroscedasticity (i.e., stabilizes variance).<br />
+Logging is therefore a "poor man's deflator" which does not require any external data (or any head-scratching about which price index to use).<br />
+Logging is not exactly the same as deflating--it does not eliminate an upward trend in the data--but it can straighten the trend out so that it can be better fitted by a linear model.  <br />
+Deflation by itself will not straighten out an exponential growth curve if the growth is partly real and only partly due to inflation.</p>
+</blockquote>
+<p>And</p>
+<blockquote>
+<p>The logarithm of a product equals the sum of the logarithms, i.e., LOG(XY) = LOG(X) + LOG(Y), regardless of the logarithm base. Therefore, logging converts multiplicative relationships to additive relationships, and by the same token it converts exponential (compound growth) trends to linear trends.</p>
+</blockquote>
+<p>And</p>
+<blockquote>
+<p><code>LN(X * (1+r))  =  LN(X) + LN(1+r)  ≈ LN(X) + r</code><br />
+Thus, when X is increased by 5%, i.e., multiplied by a factor of <code>1.05</code>, the natural log of X changes from <code>LN(X)</code> to <code>LN(X) + 0.05</code>, to a very close approximation.  Increasing X by 5% is therefore (almost) equivalent to adding 0.05 to LN(X).</p>
+</blockquote>
+<h3 id="going-back-to-the-regression">Going back to the regression</h3>
+<p>We will use logging in this example. Steps below:</p>
+<ol>
+<li>Sort the series by the X term. Only doing this skyrockets the lag 1 autocorrelation to 0.75.</li>
+<li>Add an additional column with formula <code>X' = ln(X(t)) - ln(X(t-1))</code></li>
+<li>Add an additional column with formula <code>Y' = ln(Y(t)) - ln(Y(t-1))</code></li>
+<li>Do the regression on <code>Y' = aX' + b</code>, which basically say <em>for an increase of x% in X, corresponds a linear increase of y% in Y</em>, this being the reason for transforming both X and Y to percentage returns.</li>
+<li>Inspect the residuals of the linear regression</li>
+<li>If the residuals exhibit the desired properties, compute Y as regression from X (undo the transformations). Please note that since the regression was based on increases, the whole process now is integrative, depending on the previous value. Therefore, the errors tend to accumulate the more periods we aim to forecast but also due to the high amplitude of the exponential transform. <code>Y-regressed(t) = EXP(y' + LN(y(t-1)))</code></li>
+<li>Finally inspect the residuals of the full regression</li>
+</ol>
+<p><img alt="All computation" src="../../../../assets/regression_6.png" /></p>
+<p>Results inspection:</p>
+<p>Low <code>R^2</code>, lag 1 autocorrelation of only <code>0.08</code>, highly independent of X, seem rather normally distributed:</p>
+<p><img alt="Log residuals" src="../../../../assets/regression_7.png" /></p>
+<p>Reverting to initial scale (before the percentage returns transformation), residuals show a tendency to accumulate errors towards the right extreme.</p>
+<p><img alt="Final residuals" src="../../../../assets/regression_11.png" /></p>
+<p>Plots of originally observed Y vs X and regressed Y vs X show good capture of the fundamental <code>X^2</code> coefficient as well as a good fit:</p>
+<p><img alt="Observed data" src="../../../../assets/regression_8.png" /></p>
+<p>and</p>
+<p><img alt="Regressed data" src="../../../../assets/regression_10.png" /></p>
+<p>And finally, observed Y vs Y regressed show a strong linear relatinon of slope almost 1, but with visibly increasing errors towards the right extreme:</p>
+<p><img alt="Y observed vs Y regressed" src="../../../../assets/regression_9.png" /></p>
+<h3 id="conclusions-simple-linear-regression">Conclusions - simple linear regression</h3>
+<ol>
+<li>Residuals <em>must</em> be inspected in order to make sure the regression is correct and captures the underlying movement of data.</li>
+<li>Timeseries usually need to be transformed to percentage gains.</li>
+<li>Obviously, while the transformation towards percentage returns still tends to accumulate errors as X grows, it still captures much better the data.</li>
+<li>In the example above, a significant part of the increase in error is due to the way I generated the Y vector in the first place: <code>Y = 3 * X * (X+RANDBETWEEN(-10, 10)) + RANDBETWEEN(-200, 200)</code>. Simply by using this formula, the errors increase towards the end because the generated (observed) data has proportionally more variation towards the end.</li>
+<li>As with any model, visual inspection of the end result is very important.</li>
+<li>Using the percentage gain obtained by difference will lead to slightly different results.</li>
+</ol>
+<h3 id="multiple-linear-regression">Multiple linear regression</h3>
+<p>A multiple regression is a function <code>y = c0 + c1 * f1 + ... + cn * fn</code>, a generalization of the simple linear regression described above.</p>
+<p>In Excel, the function to perform multiple linear regression in <code>LINEST</code> - attention, the returned coefficients are in reversed order. </p>
+<p>Things to check for in a multiple linear regression:</p>
+<ul>
+<li>Multicollinearity between factors</li>
+<li>Adjusted R^2 - penalizes regression models that has included irrelevant factors. R^2 is misleading with multiple regression as it only goes up as we add more and more variables. <a href="https://en.wikipedia.org/wiki/Coefficient_of_determination#Adjusted_R2">Wikipedia</a></li>
+<li>Residuals</li>
+<li>F-statistic</li>
+<li>Standard errors of coefficients</li>
+</ul>
+<p>Here is how to compute adjusted R^2 for a multiple regression:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+<span class="n">lr</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c1"># sample size</span>
+<span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="c1"># number of explanatory variables</span>
+<span class="n">adj_r2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;r2=</span><span class="si">{</span><span class="n">r2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;adjusted r2=</span><span class="si">{</span><span class="n">adj_r2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="dummy-variables-for-categorical-data">Dummy variables for categorical data</h3>
+<p>Let's consider a 2-category model, let's say male and female. For this we introduce two dummy variables (c1 and c2), one for intercept and one for slope. The variable for intercept (c1) will be <code>0</code> if male and <code>1</code> if female, while the variable for slope will be <code>0</code> if male and <code>x</code> if female. If we want do to a regression, the regression line would look like:</p>
+<p><code>y = a1 + (a2-a1) * c1 + (b2-b1) * c2 + b1 * x</code> which is equivalent with the generic multiple regression equation</p>
+<p><code>y = f0 + f1 * c1 + f2 * c2 + f3 * x</code></p>
+<p>Explanation is simple. If the character is a male, c1 and c2 will be 0 thus leading to <code>y_male = a1 + b1*x</code>. If the character is femaile, <code>c1=1</code> and <code>c2=x</code>, leading to <code>y_female=a2 + b2*x</code>.</p>
+<p>We may not want the <em>slope</em> influence to be reflected, but only the intercept. In this case, we would only add a single binary dummy variable.</p>
+<p>We can generalize this to <code>k</code> categories. To avoid multicollinearity, we will introduce <code>k-1</code> dummy variables for intercept and <code>k-1</code> for slope, if we want to consider slope as well.</p>
+<h3 id="polynomial-regression">Polynomial regression</h3>
+<p>Assuming we want to fit a model that looks like <code>Y = b0 + b1 * X + b2 * X^2 + ...</code>, we can simply reduce it to multiple linear regression by selecting our features as <code>X = [1, X, X^2, X^3, ...]</code>. In this case, we should seriously consider scaling the features <code>[X, X^2, ..., X^n]</code> if we want our model to converge sufficiently fast.</p>
+<h3 id="standard-errors-of-coefficients">Standard errors of coefficients</h3>
+<p>Given the multiple regression line from above, the points <code>(xi, yi)</code> for which we estimate the regression coefficients are just a sample of the total population of possible <code>(xi, yi)</code> pairs. Thus each coefficient, <code>c0 ... cn</code>, is normally distributed and we can estimate the mean and sigma for each of these coefficients. Obviously, the lower the standard error (<code>SE</code>) of each coefficient, the higher confidence we can have that that parameter is close to correctness.</p>
+<p>Now, what we have is a coefficient <code>ci</code> for each of the factors. The question is, is each of these factors relevant? Differently said, if <code>ci == 0</code>, that factor would be irrelevant. Now we need to see if <code>ci == 0</code> is probable enough so that it cannot be discarded that is, if the <code>ci</code> for the whole population would actually be 0 (null hypothesis), how probable would it be for us to observe the value obtained from performing the regression?</p>
+<p>To answer the question above we compute what is called <em>the t-statistic</em>. <code>t-statistic(ci) = ci / SE(ci)</code>. The <code>t-statistic</code> measures how many standard errors we are away from the mean if the mean were 0, that is if the <code>ci</code> coefficient for the entire population were 0. </p>
+<p>Here is an example on <a href="http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis">how to compute</a> the <code>SE</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">ols</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+
+<span class="c1"># add the intercept</span>
+<span class="n">X_</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X_</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">We will consider to compute the t-test for income</span>
+<span class="sd">H0: income has no predictive power on the outcome of the regression</span>
+
+<span class="sd">Given ci as the coefficients of the regression, </span>
+<span class="sd">t-statistic(ci) = ci / SE(ci)</span>
+
+<span class="sd">and </span>
+<span class="sd">SE(ci) = sqrt(residuals_sigma^2 * diagonal((X.T * X)^-1))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">X_arr</span> <span class="o">=</span> <span class="n">X_</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">SE_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">resid</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_arr</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X_arr</span><span class="p">))</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+<span class="n">SE</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">SE_arr</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">X_</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">t_statistic</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;income&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">SE</span><span class="p">[</span><span class="s1">&#39;income&#39;</span><span class="p">]</span>
+
+<span class="c1"># t-statistic is the same in both the library implementation and or implementation</span>
+</code></pre></div>
+
+<p>From this we extract the following rule of thumb:</p>
+<p><em>The value of each coefficient divided by its standard error should ideally be greater than 3. If the ratio slips below 1, we should remove the variable from the regression. <a href="https://en.wikipedia.org/wiki/Simple_linear_regression#Confidence_intervals">Wikipedia 1</a> and <a href="https://en.wikipedia.org/wiki/Simple_linear_regression#Numerical_example">Wikipedia 2</a></em></p>
+<p>From the <em>t-statistic</em> we compute the <em>p-value</em>, which quantifies the probability that we obtain for <code>ci</code> a value greater or equal to what we obtained through regression, provided that <code>ci</code> were actually 0. That means, we look for a very low <em>p-value</em> which corresponds to a high <em>t-statistic</em> in order to determine the relevance of this particular factor in the model. Equivalent to a <em>t-statistic</em> of 3 is a <em>p-value</em> of roughly <code>0.05%</code> (3 deviations from the mean, two-sided p-value).</p>
+<h3 id="the-f-statistic">The F-statistic</h3>
+<p>How good, overall, is our model? That is, if <em>all</em> our regression parameters were 0, how far would our residuals be from residuals that would be generated from an intercept-only model.</p>
+<p><a href="http://www.statisticshowto.com/probability-and-statistics/f-statistic-value-test/">F-Statistic</a></p>
+<blockquote>
+<p>The F value in regression is the result of a test where the null hypothesis is that all of the regression coefficients are equal to zero. In other words, the model has no predictive capability.<br />
+Basically, the f-test compares your model with zero predictor variables (the intercept only model), and decides whether your added coefficients improved the model. If you get a significant result, then whatever coefficients you included in your model improved the model’s fit.</p>
+</blockquote>
+<p>If all <code>ci == 0</code>, then the total variance of the residuals in this case would be the total variance of Y, which is the absolute maximum variance the model can have.  If our model were to bring value, then the variance of the residuals would be much lower than the total variance of Y. Just like the <em>t-statistic</em>, the <em>f-statistic</em> measures how far from the maximum variance our residual variance is, that is how far <code>Var(Residuals) / Var(Y)</code> is from 1.</p>
+<h3 id="stepwise-selection-for-model-features">Stepwise selection for model features</h3>
+<p>We use the tests before to get which model coefficients are truly relevant for our model. The actual model determined gradually, starting from all features available (usually) and reducing one by one the features which don't have enough relevance. In the example below we also plot the Akaike Information Criterion (AIC) to show how it evolves while features are gradually pruned.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># stepwise selection</span>
+
+<span class="n">all_coefs_are_relevant</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">X_</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">to_plot</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">all_coefs_are_relevant</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X_</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+    <span class="n">all_coefs_are_relevant</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">0.05</span>
+
+    <span class="n">to_plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">aic</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Iteration AIC=</span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">aic</span><span class="si">}</span><span class="s1">, continue=</span><span class="si">{</span><span class="ow">not</span><span class="w"> </span><span class="n">all_coefs_are_relevant</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_coefs_are_relevant</span><span class="p">:</span>
+        <span class="n">X_</span> <span class="o">=</span> <span class="n">X_</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">pvalues</span> <span class="o">&lt;</span> <span class="n">results</span><span class="o">.</span><span class="n">pvalues</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">to_plot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p>In Python, another way to perform feature selection is by employing this class from <a href="https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html">SKLearn</a>. It has options for selecting features for both regression and classification tasks.</p>
+<h3 id="worked-example">Worked example</h3>
+<p>I have generated some data to create a regression model <a href="../../../../assets/task-data.xlsx">here</a>. The data assumes a team of 3 people working on a software module, with 3 types of tasks: front-end, backend and data. As time passes, the complexity of the code base increase thus also estimations tend to increase. The data includes a measure for code complexity, the type of task, initial estimation given by each developer, which developer worked on each task (there is an affinity for developers for task types, but not 100%) and what was the final duration. We want a model which aims to predict the final duration of a new task.</p>
+<p>The data is chosen in such a way that it presents multicollinearity and categorical components.</p>
+<p>First step is to see if maybe a simple regression based on the average estimation given by developers is enough. We notice than, while the trend in task duration correlates with both average estimation and the code complexity, neither are good predictors - rather low R^2 in both cases as well as two divergent trends in the first chart. Both elements hint towards more factors needed to be included in the regression.</p>
+<p><img alt="Exploratory analysis - regression against one variable" src="../../../../assets/regression_12.png" /></p>
+<p>A second step, which we will skip now, is to analyse the duration based solely on time. If we were to do this, we would have to switch to percentage returns to remove the trendiness in data, as explained in a previous section.</p>
+<p>The third step is to analyse muticollinearity. When we start scatter-plotting one variable against the other, we notice very strong correlations - note that, for estimations, they are from the start based on Fibonnaci numbers, thus the several parallel lines instead of a cloud of points.</p>
+<p><img alt="Exploratory analysis - multicollinearity" src="../../../../assets/regression_13.png" /></p>
+<p>From the multicollinear variables, seems the "Average Estimation" explains the best the variation in duration, thus we will keep it and discard the rest.</p>
+<p><img alt="Exploratory analysis - select one variable out of several" src="../../../../assets/regression_14.png" /></p>
+<p>After doing our analysis, we will take into consideration the following factors:<br />
+- Backend task<br />
+- Frontend task<br />
+- Average estimation<br />
+- Worked R - slope dummy variable, multiplied by the predictor "average estimation"; we want to see how who worked on the task influenced the end-duration<br />
+- Worked D<br />
+- Number of incidents</p>
+<p>we don't include also the <code>Worked R, D</code> slope dummy because they highly lag 1 autocorrelate to <code>Frontend task</code> and <code>Backend task</code>. </p>
+<h3 id="python-code">Python code</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">y_regressed</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">coef_matrix</span><span class="p">):</span>
+    <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coef_matrix</span><span class="p">)</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">factors</span><span class="p">)</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">factors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">factors</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">r_squared</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">):</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    <span class="n">Y_regressed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y_regressed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Y_regressed</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">adjusted_r_squared</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">,</span> <span class="n">no_of_factors</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Number of factors DOES NOT include the intercept &quot;&quot;&quot;</span>
+    <span class="c1"># the level at which adjusted R2 reaches a maximum, and decreases afterward, </span>
+    <span class="c1"># would be the regression with the ideal combination of having the best fit </span>
+    <span class="c1"># without excess/unnecessary terms. </span>
+
+    <span class="n">r_sq</span> <span class="o">=</span> <span class="n">r_squared</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">)</span>
+    <span class="n">sample_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r_sq</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">-</span> <span class="n">no_of_factors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">residuals</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">):</span>
+    <span class="c1"># add a column of ones in front to ease with multiplication</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    <span class="n">Y_regressed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y_regressed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y_regressed</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">_y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;x and y should have the same size&quot;</span><span class="p">)</span>
+
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mean_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean_y</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cov_mtx</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cov</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">lin_regress_mtx</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Fs</span><span class="p">):</span>
+
+    <span class="c1"># Multiple regression: Y = As + sum(i, Bi * Fi)</span>
+    <span class="c1"># Bs = cov(Y, F) * cov (F, F)^(-1)</span>
+    <span class="c1"># As = mean_Y - sum(bi * mean_xi)</span>
+    <span class="c1"># Does multiple regressions of the same factors at the same time</span>
+    <span class="c1"># if Y is a matrix, instead of a single column</span>
+    <span class="c1"># useful for regressing various stocks on a single set of factors, in one operation</span>
+
+    <span class="c1"># convert to numpy array</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="n">Fs</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">Cxx</span> <span class="o">=</span> <span class="n">cov_mtx</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">Fs</span><span class="p">)</span>
+    <span class="n">Cyx</span> <span class="o">=</span> <span class="n">cov_mtx</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Fs</span><span class="p">)</span>
+
+    <span class="n">Bs</span> <span class="o">=</span> <span class="n">Cyx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Cxx</span><span class="p">))</span>
+
+    <span class="n">mean_Fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">As</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">mean_Fs</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Bs</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">As</span><span class="p">,</span> <span class="n">Bs</span><span class="p">)))</span> 
+</code></pre></div>
+
+<p>And the usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;task-data.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;Task ID&#39;</span><span class="p">)</span>
+<span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Backend Task&#39;</span><span class="p">,</span> <span class="s1">&#39;FrontEnd Task&#39;</span><span class="p">,</span> <span class="s1">&#39;Avg Estimation&#39;</span><span class="p">,</span> <span class="s1">&#39;Worked R&#39;</span><span class="p">,</span> <span class="s1">&#39;Worked D&#39;</span><span class="p">,</span> <span class="s1">&#39;No of Incidents Per Period of Time&#39;</span><span class="p">]</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Actual Duration&#39;</span><span class="p">]</span>
+
+<span class="c1"># get the coefficients</span>
+<span class="n">coef_matrix</span> <span class="o">=</span> <span class="n">lin_regress_mtx</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">result</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">factors</span><span class="p">])</span>
+
+<span class="c1"># compute the results of the regression on the original data</span>
+<span class="n">Y_regressed</span> <span class="o">=</span> <span class="n">y_regressed</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">factors</span><span class="p">],</span> <span class="n">coef_matrix</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">result</span><span class="p">])</span>
+
+<span class="c1"># compute R^2</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">r_squared</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">))</span>
+
+<span class="c1"># plot Y against Y_regressed to visually assess the quality of the regression</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># plot the residuals to inspect their properties</span>
+<span class="n">resid</span> <span class="o">=</span> <span class="n">residuals</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># adjusted R^2</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">adjusted_r_squared</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_regressed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">)))</span>
+</code></pre></div>
+
+<p>With the following results:</p>
+<p><img alt="Regression analysis" src="../../../../assets/regression_15.png" /></p>
+<p>It is obvious that except some outliers the residuals are quite normally distributed. However, they have a trend upwards which should be investigated.</p>
+<p>It also is quite obvious that the results of the regression are not far from the observed data. This is numerically highlighted also by the rather high R^2 and adjusted R^2.</p>
+<p>Coefficients are a little bit strange though: <code>17.674954 -0.244873 -1.934692  0.933654  0.383172 -0.031911 -1.19284</code>. A high intercept and a negative correlation with the number of incidents. The number of incidents is selected to be Poisson distributed with a mean of 5, no matter the code complexity. This, together with a high margin of error in the way the Inverse Poisson  was computed in Excel which leads to a predisposition towards lower numbers, might be interpreted as "as the code complexity increases, the team becomes less confident in its ability, but still finishes faster than their too pessimistic estimates". The extra average added by the incidents is included in the intercept, while the predisposition for lower numbers is included in the negative factor for the incidents.</p>
+<p>The next steps are:</p>
+<ul>
+<li>Compute the SE for the coefficients</li>
+<li>Analyse the T-Statistic</li>
+<li>Analyse the F-Statistic</li>
+</ul>
+<p>I am not going to do them now, but add a link to a paper which show how to compute these values: <a href="http://mezeylab.cb.bscb.cornell.edu/labmembers/documents/supplement%205%20-%20multiple%20regression.pdf">link here</a></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../statistics/2018/08/15/risk.html">Risk Models</a></span><span><a href="../../../../statistics/2018/08/22/pca.html">Dimensionality Reduction</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

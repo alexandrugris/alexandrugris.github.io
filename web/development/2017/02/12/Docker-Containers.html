@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docker And Containers | From The Trenches - The Code</title>
+  <meta name="description" content="In this blogpost I write about Docker. My personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies.  I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible. The good…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Docker And Containers</h1>
+    <p class="post-meta">
+      <time datetime="2017-02-12" itemprop="datePublished">Feb 12, 2017</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>In this blogpost I write about Docker. My personal Docker cheatsheet. So why Docker? Because I am interested in distributed computing and I want to play with various technologies. <br />
+I want to be able to spin quickly complex setups and, at the same time, keep my desktop as clean as possible. The good news is that I can find all the software I need as docker containers. Even SQL Server or IIS, if I want.<br />
+Beside a huge collection of sofware already configured and the means of keeping tidy your deployments, Docker offers process isolation / sandboxing, simplified updates and ability to build your own repositories. <br />
+This post also touches Windows Containers running on Windows Nano Server or Windows Server Core - new features available in the Docker for Windows space.</p>
+<h3 id="running-mongodb-in-a-container">Running MongoDB in a container:</h3>
+<div class="codehilite"><pre><span></span><code>c:\&gt;docker pull mongo:latest
+c:\&gt;docker run mongo
+</code></pre></div>
+
+<p>In another console:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker ps -a
+c:&gt;docker exec -it zealous_meninsky mongo
+</code></pre></div>
+
+<p><code>docker ps -a</code> lists containers and their names. <code>docker run -it zealous_meninsky mongo</code> runs interactively in the container named <code>zealous_meninsky</code> the <code>mongo</code> command. <br />
+<code>-it</code> wires both the stdin and stdout from the container, not just the stdout.</p>
+<p><img alt="Output" src="../../../../../assets/docker_1.png" /></p>
+<p>If you don't like the default name, in this case <code>zealous_meninsky</code>, just pass the <code>--name _Name_I_Like_</code> after the <code>docker run</code>:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run --name ThisIsMyContainerName mongo
+</code></pre></div>
+
+<p>To stop a container, just type (in this case):</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker stop zealous_meninsky
+</code></pre></div>
+
+<p>To restart, just the same:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker start zealous_meninsky
+</code></pre></div>
+
+<p>To remove a container completely, stop it and then:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker rm zealous_meninsky
+</code></pre></div>
+
+<p>To remove all stopped containers (clean the system - Windows):</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;FOR /f &quot;tokens=*&quot; %i IN (&#39;docker ps -a -q&#39;) DO docker rm %i
+</code></pre></div>
+
+<p>In order to list the images:</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker images
+</code></pre></div>
+
+<p><img alt="Docker Images" src="../../../../../assets/docker_4.png" /></p>
+<p>And, of course, </p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker rmi mongo
+</code></pre></div>
+
+<p>to remove the MongoDB image.</p>
+<h3 id="containers-and-host-memory">Containers and host memory</h3>
+<p>In order to run Linux containers, Docker spins off a Linux virtual machine. Attention: docker may run out of memory in this VM as, by default, it is set to only 2GB. </p>
+<p><img alt="Hyper-V VM with Docker" src="../../../../../assets/docker_2.png" /></p>
+<p>Setting the memory limit can be done through the Docker Settings UI, accessible from the tray icon. In my installation I set it to 4GB.</p>
+<p><img alt="Docker Settings" src="../../../../../assets/docker_3.png" /></p>
+<h3 id="mapping-a-port-in-the-container-to-a-port-on-localhost">Mapping a port in the container to a port on localhost</h3>
+<p>In the following, the port 27017 from MongoDB docker container is mapped to localhost:27017</p>
+<div class="codehilite"><pre><span></span><code>c:\&gt;docker run -p 27017:27017 mongo
+</code></pre></div>
+
+<p>When we type only <code>mongo</code> we run the default command in the container which, in this case, is the MongoDB daemon. If we want to see the default command, just issue a <code>docker ps</code>. In the "COMMAND" column the command will appear.</p>
+<p>If we want to run a command in a container, we do:</p>
+<div class="codehilite"><pre><span></span><code>c:\&gt;docker run -it mongo ps -ax
+</code></pre></div>
+
+<p>This will run the <code>ps -ax</code> command by launching a new mongo container and running it in its environment. It is different fom the previous <code>exec</code>, which runs in the same named container instance.</p>
+<p>Let's connect to the mongo server we have just launched, but instead of connecting from the same container, I would like to connect from a different container. </p>
+<p>First we run</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;ipconfig
+</code></pre></div>
+
+<p><img alt="ipconfig" src="../../../../../assets/docker_5.png" /></p>
+<p>Then we launch a new container, this time not with the server but with the <code>mongo</code> client. Please notice the <code>run</code> (not <code>exec</code>) command the the double <code>mongo mongo</code></p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -it mongo mongo mongodb://172.18.144.1
+</code></pre></div>
+
+<p>We get the following:</p>
+<p><img alt="Mongo connected" src="../../../../../assets/docker_6.png" /></p>
+<p>So what we did was to connect an application (the mongo client) launched in a new container to the localhost, where we had previously mapped the default mongo port from another container.</p>
+<h3 id="docker-for-windows-windows-containers">Docker for Windows - Windows Containers</h3>
+<p>First thing, right-click on the Docker For Windows tray icon and in the context menu press <em>"Switch to Windows Containers"</em>.</p>
+<p>Let's try to run IIS in a container. This time, I will not bind ports to localhost (although it should work like that) but rather connect directly to the IP address of the container. <br />
+I will run IIS in a nanoserver instance, as it is an only 400 MB download. :) The full Server Core is 4GB.</p>
+<div class="codehilite"><pre><span></span><code>c:&gt;docker run -d --name My_IIS microsoft/iis:nanoserver
+c:&gt;docker inspect My_IIS
+</code></pre></div>
+
+<p><img alt="IIS IP Address" src="../../../../../assets/docker_7.png" /></p>
+<p>And, of course, in Edge, connecting directly to the address obtained from <code>docker inspect</code>:</p>
+<p><img alt="IIS IP Address" src="../../../../../assets/docker_8.png" /></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../native/coding/2017/02/11/C++-PLay-multithreading-Cont.html">C++ Play - Multithreading Part 2</a></span><span><a href="../../../../../native/coding/2017/02/20/C++-Play-multithreading-Cont-Queues.html">C++ Play - Multithreading (Queues)</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
