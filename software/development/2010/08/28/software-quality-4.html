@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software Quality (4) | From The Trenches - The Code</title>
+  <meta name="description" content="In my previous post, I started a quick pass through the most common methods for ensuring quality at the lowest level: the day to day production activities. My assumption is that, if we are able to maintain a high level of quality throughout the entire development process, we will end up with a…">
+  <link rel="stylesheet" href="../../../../../assets/main.css">
+  <link rel="alternate" type="application/rss+xml" title="From The Trenches - The Code" href="../../../../../feed.xml">
+</head>
+<body>
+<div class="page-wrapper">
+
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <div class="site-nav">
+      <a class="site-title" href="../../../../../index.html">From The Trenches - The Code</a>
+    </div>
+    <nav class="site-nav">
+      <div class="trigger">
+        <a class="page-link" href="../../../../../index.html">Home</a>
+        <a class="page-link" href="../../../../../about/index.html">About</a>
+        <a class="page-link" href="../../../../../sm/index.html">Social Media</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+  <div class="wrapper">
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Software Quality (4)</h1>
+    <p class="post-meta">
+      <time datetime="2010-08-28" itemprop="datePublished">Aug 28, 2010</time>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+<p>In my <a href="http://blog.alexandrugris.ro/2010/08/software-quality-3.html">previous post</a>, I started a quick pass through the most common methods for ensuring quality at the lowest level: the day to day production activities. My assumption is that, if we are able to maintain a high level of quality throughout the entire development process, we will end up with a better, easier to maintain product, sustainable over several generations, and, as a side effect, a happier team.</p>
+<p>We need to find cost-effective, lightweight processes, that maximize ROI. These processes should, ideally, not increase the number of collateral activities required, but, instead, should provide some easy to implement practices, acknowledged by everyone as valuable. Only by acquiring consensus, coupled with self discipline, they will be maintained when the pressure sets in. I am talking about a way of working that  should ensure:</p>
+<ul>
+<li>
+<p>Better understanding of the quality level; clear visibility for everyone of what has been correctly done and what are the current issues</p>
+</li>
+<li>
+<p>Predictable results</p>
+</li>
+<li>
+<p>Increased return of investment (see footnote 1) </p>
+</li>
+</ul>
+<p>A healthy development process should also have positive side effects:</p>
+<ul>
+<li>
+<p>Shorter develop-prototype-test cycles (2)</p>
+</li>
+<li>
+<p>Better spreading of knowledge throughout the team</p>
+</li>
+<li>
+<p>Increased ownership and pride</p>
+</li>
+<li>
+<p>Friendlier environment</p>
+</li>
+<li>
+<p>A better distribution of effort throughout the entire length of the project</p>
+</li>
+</ul>
+<p>Some practices are team-wise, while others are linked to self management and can be employed even without a team-spread acknowledged process (3).</p>
+<p><strong>Working outside the product code - a workbench for rapid iterations:</strong></p>
+<p>Few things are as annoying as <a href="http://blog.alexandrugris.ro/2008/12/flow.html">frequent interruptions</a> or uncovering poor quality work that you have to deal with - like digging through messy code that has side-effects. These usually happen in a large code base, that has high coupling between components or that starts very slow. These two symptoms work hand in hand and, I think, are the biggest two impediments to constant re-factoring and team morale (starting slow leads to fewer runs which means less testing and fewer recompilations, which, in turn, means that programmers won't spend time improving existing code and will only add new layers on top of it). On the other hand, small applications have a very short modify-run-test cycle, that allows them to mature quickly and with fewer bugs. However, this advantage is usually lost in time, as the code and data gets bigger and bigger.</p>
+<p>Is it possible to maintain the advantages of extremely short iterations over time? One solution that can often be applied is to isolate development from the main product, something that can be done easier especially when coding a new feature from scratch. The main goal would be to eliminate as much as possible the interruptions, by initially constructing a sandbox that (9):</p>
+<ul>
+<li>
+<p>Compiles and starts fast</p>
+</li>
+<li>
+<p>Allows to write dirty modifications and test them incrementally</p>
+</li>
+<li>
+<p>Allows to re-factor constantly what has been written, without impacting the rest of the code</p>
+</li>
+<li>
+<p>Allows to focus only on new code, without worrying about other changes</p>
+</li>
+</ul>
+<p>Such a sandbox should allow very short prototype-compile-start-test-modify cycles. Even one at 2-3 lines of code modified - priceless! A programmer could hack test cases directly into the dev-code and run them tens of times a day to see the effects of his latest additions. He could easily re-factor everything until he is fully satisfied with the results (4):</p>
+<ul>
+<li>
+<p>Code that gets fast prototype-improved cycles matures faster.</p>
+</li>
+<li>
+<p>When integrated, it has very few bugs because it was extensively tested and went through. </p>
+</li>
+<li>
+<p>Keeping the development sandbox in sync with future additions permits to quickly check future bugs and ensure consistency in time.</p>
+</li>
+<li>
+<p>The amount of dependencies to existing system is kept to a minimum. The code becomes self-contained, reusable.</p>
+</li>
+<li>
+<p>Having more than one client for your code (5) requires that boundaries are well cut an clear. This helps maintain the code clean, as artificial dependencies cannot be created. </p>
+</li>
+</ul>
+<p>Sometimes it is not possible to work outside the main product. Many times, the code has been developed directly inside the main branch and, therefore, the amount of dependencies to other areas is so big that they cannot be decoupled. In the rush of development, it is very easy to create artificial links and not maintain clean cuts between modules, just because there is no system in place to enforce these boundaries. After all, it compiles! (6)</p>
+<p>When developing outside the main branch, this kind of borders are naturally enforced by the development system, thus they cannot be crossed easily. However, if the development sandbox is not kept in sync with future additions and boundaries are not enforced further, dependencies will start to spread and the system will start to decay (7).</p>
+<p><strong>Test Oriented Development</strong></p>
+<p>In my previous paragraphs, I basically described an approach that resembles somehow to test driven development (<a href="http://en.wikipedia.org/wiki/Test-driven_development">TDD</a>). It allows programmers to develop their code in separate applications (or test cases), iterate fast to get results fast and then integrate when ready. If these test cases are run and maintained throughout development, the benefits could be even higher as they require that the code is written in a modular fashion, they serve as test-bed for new features and bug-hunting and, equally important, they can be used as an entry point to understand functionality. </p>
+<p>I will not get into more details regarding TDD, as I have not practiced it first-hand beyond what I've described above, but I think that great attention should be put into integrating automated testing during the production phase and, equally important, to find a framework and a state of mind within the team that fosters quality at this level, even in times of great pressure. Sometimes it may seem like a chore that tests need to be maintained as well but, at least from my perspective, it is easier and cheaper to maintain tests or develop functionality outside the main product then to dive into unknown, hacky code, that has side effects and unexpected links to other obscure areas. </p>
+<p>Some may argue that this kind of test oriented development is not suited for all sorts of tasks and I agree. From what I've seen, however, I believe that greenfield development can be isolated from the main branch at least in its initial phases (be it UI or network or anything else). And, although the initial phases have passed, why not try to keep this isolation further and also maintain the sandbox in a working state? It can be used as a priceless testbed for future development and regression testing.</p>
+<p><strong>Other disciplines need fewer interruptions and rapid prototyping as well:</strong></p>
+<p>In order to spread the benefits of rapid iterations, the team should foster the development of such tools that require that the designers, programmers, artists restart the game (or the product at large) as few times as possible as fast as possible. The best development tool for a designer or for an artist is that one that allows him to see his work directly inside the engine, live, as he performs his changes. This would allow him to prototype as much as possible, ideally continuously.  It is essentially the same need that programmers have regarding their code. Example of such tools include editors that have accelerated, game-identical, simulation capabilities, live connections to 3DS Max, tuning tools that connect to the running game, live editors. The shorter the produce-export-test cycle is, the more time is left for iterations and more time the team has to creatively play and improve the product.</p>
+<p>On the other hand, a lot of bugs appear because, during frequent changes, something is lost on the way. Very useful are the tools that automatically validate integrity before the asset gets into the game. The more checks the better and, therefore, such tools should be developed and spread to other teams as well, reducing implementation cost through sharing of technology and knowledge.</p>
+<p>Similar processes to TDD should be implemented in the art and design departments, to ensure fewer bugs at release time, less overtime and a clearer picture of where the project stands. Activities that support high quality also help spread the knowledge and reuse of existing and well tested modules. Code / asset reviews, tools that verify content, tests, using 3rd party APIs, creating sand-boxes, may seem, sometimes, as to provide an additional burden, but in the end, if applied wisely, should decrease effort, decrease costs and unleash creativity.</p>
+<p><strong>Sum-up</strong></p>
+<p>The more iterations the better the product has the chances to be. The lowest level at which a developer can iterate is the source code or asset production. When people iterate very fast, they can try new things, have less fear of failure and their work product is better tested and crafted. Even more, the productivity loss and frustration associated with going in and out of flow is diminished. Coupled with discipline and peer reviews, constant iteration and continuous testing is key to attaining high quality, both during day-to-day activities and, at a higher level, feature and product-wise.</p>
+<p><strong>Implementation</strong></p>
+<p>Although sometimes difficult to see from the developer's seat, a healthy development process has the tendency to accumulate value as it rolls on. I assimilate positive practices to a snow-ball: they are difficult to establish in the first place but they grow in value faster and faster as the team acquires more and more success stories (8).</p>
+<p><strong>Some practices will not be seen as valuable by all the team from the very beginning. As such, they need to be implemented in less stressful times, when people are more prepared to try new things. Their value is usually seen in time, after they have become established methods, adapted to each organization. Feedback from the team is very important, as it removes implementation barriers and increases commitment to respecting the new ways. I think that, when implementing such changes in methodology, to understand that there isn't a-size-that-fits-everyone solution. Therefore, management and people should invest time and thought into finding the right way of adapting industry proven practices to their line of work, through collaboration, based on common goals. (<a href="http://www.amazon.com/Our-Iceberg-Melting-Succeeding-Conditions/dp/031236198X">Our Iceberg Is Melting</a>)</strong></p>
+<p>In the following post I will depart from the code level perspective, and reach into some  higher level management frameworks:</p>
+<ul>
+<li>
+<p>Scrum and quality management (two previous posts <a href="http://blog.alexandrugris.ro/search/label/scrum">here</a>)</p>
+</li>
+<li>
+<p>A process for quality management, that includes test driven development, white-box testing and black-box testing (mixing developers with testers and making testers part of the development team).</p>
+</li>
+<li>
+<p>Case study: radical approach: one day per week, developer self managed time</p>
+</li>
+<li>
+<p>Lean thinking</p>
+</li>
+<li>
+<p>The importance of having all the team experience the product first hand, as its first beneficiaries (play the game!)</p>
+</li>
+</ul>
+<p><strong>Footnotes:</strong><strong><em>*</em></strong>(1) The production cost should decrease, both on the short run and on the lung run, by diminishing the need for suffocating debug periods right before the deadlines and turnover. Even more, remember that 80% of programming time is lost into digging and trying to understand what their predecessors have done. Decreasing this 80% should definitely reduce project costs or allow for more improvements. *</p>
+<p>*(2) Actually, a well implemented quality strategy should have the side effect of prototype-ability. That is, a product that allows new changes to be integrated, tested and removed quickly, without major side-effects. *</p>
+<p><em>To achieve that, the number of extra activities that are needed to prepare the prototype should be decreased to a minimum. That can be done only if the code is well understood by everyone: concise, clean and modular. I will not get into the details of what clean code is, but I'd like to recommend two books on the matter: one is "</em><a href="http://www.pragprog.com/the-pragmatic-programmer"><em>The Pragmatic Programmer</em></a><em>" and the other one is "</em><a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882"><em>Clean Code</em></a><em>". Why clean code? Because no stakeholder is interested in</em><em>productivity drops or having a product that has sluggish performance or frequent crashes.</em></p>
+<p>*(3)  One practice I am not talking here about is <a href="http://en.wikipedia.org/wiki/Pair_programming">pair programming</a>.  Some of the most rewarding moments I had in my professional life (and also moments of intense knowledge transfer) are related to pair programming experiences I had with more experienced engineers. I believe it should be encouraged as a good practice inside a team - formally or informally. *</p>
+<p>*(4) Just to give some examples I've worked on, that used this kind of approach: *</p>
+<p>*The character animation system from SH4 (together with a co-worker and friend): developed as a DLL loaded by a basic engine viewer. Start-up times? Few seconds. We could easily export animations from 3DS Max to the engine and test our system tens of times a day. *</p>
+<p><em>The pathfinding algorithm from SH4 AddOn: I've started hacking a C# GUI app that allowed me to visually check paths on a simple world map generated from game-data, without having to start the game. Again, compilation and start-up times? Seconds.</em></p>
+<p><em>The AIFramework dll from SH5: hacked as a Python prototype, then coded it in C++ as a dll, loaded by a console application that hosted the test-cases. Restart time? Again seconds.</em><strong>(5) At least, you have the main product and the application that was used to develop that code.</strong>*(6) Thus, even for simple changes like tuning a hard-coded parameter, the programmer suffers a compilation and a full restart, which is a very lengthy process. Sometimes, the boundaries are so poorly cut that even a slight change could trigger a major recompilation. When this cases occur, the only solution is to locally re-factor every time a problem is encountered, thus slowly improving code over time. *</p>
+<p>(7) <em>Adding scripting support to a project, for instance, could, potentially, bring this kind of benefit as well. Since the boundary is naturally enforced by the compiler, the developer is forced to pay more attention to how he organizes his code.  Also, well implemented scripting allows code modules to be developed and tested in an already started application, reducing the compile-start-test-modify overhead.</em></p>
+<p><em>(8) The <a href="http://en.wikipedia.org/wiki/Not_Invented_Here">not-invented-here syndrome</a> should be avoided at any cost. Good tools are expensive to build and they may not be justified financially if developed for a single project. However, the more sharing goes on and the more projects benefit from valuable technologies and practices, the ratio between initial investment and its returns becomes more and more favorable. Initial development cost is covered by multiple teams and, as sharing is increased, technologies  converge and become more and more useful and easier to use. Again, the snowball effect.</em></p>
+<p><em>(9) This is not conflicting with the <a href="http://en.wikipedia.org/wiki/Continuous_integration">continuous integration</a> principle.The idea is to build a sandbox that allows fast prototyping and short modification times for (new) features, integrate when the feature is almost complete and then keep this sandbox in sync with next changes (an example: a new data import / export pipeline should be developed separately while the previous system continues to work and commit when ready and well tested). It does not mean working on an old branch or separated from the rest of the team. By contrary, changes should be presented continuously and designers and testers asked to validate functionality on a frequent basis.</em></p>
+  </div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../management/software/development/2010/08/25/software-quality-3.html">Software Quality (3)</a></span><span><a href="../../../../../agile/management/2010/09/25/planning.html">Planning</a> →</span></div>
+
+</article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <h2 class="footer-heading">From The Trenches - The Code</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Alexandru Gris</li>
+          <li><a href="mailto:alexandru.gris2006@gmail.com">alexandru.gris2006@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          <li><a href="https://github.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            alexandrugris</a></li>
+          <li><a href="https://twitter.com/alexandrugris" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="fill:#828282;vertical-align:middle;margin-right:4px"><path d="M15.969 3.058a.5.5 0 0 0-.179.245l-.003.019a.5.5 0 0 0-.025.125V3.5a.5.5 0 0 0 .511.5h.001l-.002-.001h-.001a6.942 6.942 0 0 1-1.008.34 3.97 3.97 0 0 0 .732-1.722.5.5 0 0 0-.806-.355 8 8 0 0 1-2.588 1.178A4 4 0 0 0 8 2a4 4 0 0 0-4 4 4 4 0 0 0 .04.54A11.5 11.5 0 0 1 .96 2.755a.5.5 0 0 0-.81.05 4 4 0 0 0 1.17 5.098A3.98 3.98 0 0 1 .5 7.5a.5.5 0 0 0-.5.542 4 4 0 0 0 2.668 3.588 3.98 3.98 0 0 1-1.166.116.5.5 0 0 0-.362.844A4 4 0 0 0 4 13.5a8 8 0 0 1-5 1.5.5.5 0 0 0-.285.916A11.5 11.5 0 0 0 5.5 17 11.5 11.5 0 0 0 17 5.5a11.5 11.5 0 0 0-.029-.632 8 8 0 0 0 1.845-1.908.5.5 0 0 0-.847-.052z"/></svg>
+            alexandrugris</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-col-3">
+        <p>Sometimes I take a few hours over the weekends or in the airports to try new things. I love technology and the randomness of the topics below is largely driven by my curiosity and the experiments I have done during these periods.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
