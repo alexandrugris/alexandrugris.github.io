@@ -56,7 +56,7 @@
 <li>it is continuous</li>
 <li>has an inflection point from which <code>f(x)</code> grows quickly from close to 0 to close to 1</li>
 </ul>
-<p><img alt="Logistic function" src="../../../../assets/logistic_regression_8.png" /></p>
+<p><img alt="Logistic function" src="../../../../assets/logistic_regression_8.webp" /></p>
 <p>And the wikipedia link: <a href="https://en.wikipedia.org/wiki/Logistic_function">Logistic function</a></p>
 <p>Therefore, we will find a mathematical model that uses the logistic function to map from causes to probabilities. The model aims to find a vector <code>B</code> that, when plugged into the logistic function multiplied by the factors <code>X</code>, the observed results match as closely as possible to the results determined by our model. In this case, our logistic function looks like <code>f(X_i) = 1 / (1+e^-(b1 * xi_1 + ... bn * xi_n)</code>, where <code>Xi = [xi_1, ... xi_n]</code> are the observed <code>X</code> factors at point <code>i</code>.</p>
 <p>We will further define our problem like this:</p>
@@ -95,11 +95,11 @@
 <li>Check the test data.</li>
 </ol>
 <p>Excel file <a href="../../../../assets/iris.xlsx">here</a></p>
-<p><img alt="Solver Dialog" src="../../../../assets/logistic_regression_1.png" /></p>
+<p><img alt="Solver Dialog" src="../../../../assets/logistic_regression_1.webp" /></p>
 <p><em>Note:</em></p>
 <p>Performing the same steps for <em>virginica</em> leads also to very good results, while for <em>versicolor</em> the results are barely above random choice. </p>
 <p>In the second iteration of the file, I have modified the regression so that it operates on standardized factors. This way, we can interpret the coefficients and see which factor contributes the most for classification. The picture below also contains the <code>log(odds)</code> vs <code>most important factor</code> chart, sorted by <code>odds = P(1) / P(0)</code>, the ratio between the probability of <code>1</code> and <code>0</code>. This is also a reminder that data for logistic regression should pe pepared in a similar manner to that for linear regression. </p>
-<p><img alt="Standardized Data" src="../../../../assets/logistic_regression_2.png" /></p>
+<p><img alt="Standardized Data" src="../../../../assets/logistic_regression_2.webp" /></p>
 <p><em>Note:</em></p>
 <p>The factor we are minimizing, <code>ce = -(y * ln(p) + (1 - y) * ln(1-p))</code>, where y is the observed value (0 or 1) and <code>p</code> is the probability given by our model, is called <em>cross entropy</em>. <a href="https://www.quora.com/Whats-an-intuitive-way-to-think-of-cross-entropy">Awesome explanation here</a> </p>
 <h3 id="linear-regression-and-logistic-regression">Linear Regression and Logistic Regression</h3>
@@ -108,10 +108,10 @@
 <p>By simple arithmetic, we conclude that <code>Odds(p) = EXP(SUMPRODUCT(Beta, X))</code> which leads to <code>LN(Odds(p)) = SUMPRODUCT(Beta, X)</code> which is a linear function.</p>
 <p>Please remember that <code>p</code> is the probability for the event to happen, that is proability for the flower to be setosa, in the example above.</p>
 <p>This function, <code>ln(Odds(p)) = ln(p/1-p)</code>, called the <em>logit function</em>, maps the probability space <code>[0,1]</code> to a linear space <code>[-inf, inf]</code> in which we can do the regression.</p>
-<p><img alt="Logit function" src="../../../../assets/logistic_regression_3.png" /></p>
+<p><img alt="Logit function" src="../../../../assets/logistic_regression_3.webp" /></p>
 <p>In order to use linear regression to compute the probabilities and thus build our classifier, we need in our input data probabilities as well. The Iris dataset, as presented above, has only 0 and 1 inputs, so we need to collapse it to intervals on which meaninful probabilities can be computed. </p>
 <p>In this example we will use another dataset which is already collapsed:</p>
-<p><img alt="Hypertensive men" src="../../../../assets/logistic_regression_4.png" /></p>
+<p><img alt="Hypertensive men" src="../../../../assets/logistic_regression_4.webp" /></p>
 <p>The data is described as follows:<br />
 - Number of men analysed<br />
 - Number of men with hypertension<br />
@@ -123,7 +123,7 @@
 <p><em>Linear regression on the raw, unprocessed, original data, just to have a benchmark</em></p>
 <p>If we include an intercept, the intercept will reflect the amount of men included in the test, so, for a single man, the results for the prediction will be completely off. We will see that these results are pretty close to what we will obtain from logistic regression, because the probabilities themselves are in the lower part of the spectrum, where the logistic regression itself is quite linear. However, we expect that, as the risk factors increase significantly, for instance by codifying a "heavy smoker" or a "highly obese", the results from the linear regression to diverge from the real probabilities.</p>
 <p>Please see how the variables for smoking, obese and snoring are codified. We want them to affect the slope of the regression, not the intercept.</p>
-<p><img alt="Linear Regression" src="../../../../assets/logistic_regression_5.png" /></p>
+<p><img alt="Linear Regression" src="../../../../assets/logistic_regression_5.webp" /></p>
 <p><em>Logistic Regression</em></p>
 <p>We will do two types of logistic regression - one that does not account for the amount of men included in the sample and one which does. The problem with not ballancing the regression for the amount of men is equivalent to discarding the precision of the initial estimation of probability given by the sample (no of hypertensives / no of men). E.g., the more men we include, the more confident one can be that the expected value of the sample is closer to the actual expected value of the population.</p>
 <p>First step for both regression is to remove from the regression the line where only 2 men are counted. This line does not contain enough information to be able to codify a probability out of it or, better said, the margin of error is too high.</p>
@@ -141,10 +141,10 @@
 <li>One under the logistic regression for drawing and validating how probabilities change for various fractions of Snoring, Smoking and Obese predictor variables.</li>
 <li>One under the linear regression to validate how many standard deviations the observed ratio (probability) is from the theoretical probability obtained from the logistic regression. That is, assuming the probabilities from the regression are correct, how likely it is to have observed the value we have observed. For this, we used the theoretical mean and variance for the <em>binomial distribution</em>, <code>mean = sample_size * p</code> and <code>variance = sample_size * p * (1-p)</code></li>
 </ul>
-<p>First run, the results without taking into consideration the sample size: <a href="../../../../assets/logistic_regression_6.png">Logistic Regression</a></p>
-<p><img alt="Logistic Regression" src="../../../../assets/logistic_regression_6.png" /></p>
-<p>The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the <code>Bs</code> by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. <a href="../../../../assets/logistic_regression_7.png">Weighted Logistic Regression</a></p>
-<p><img alt="Weighted Logistic Regression" src="../../../../assets/logistic_regression_7.png" /></p>
+<p>First run, the results without taking into consideration the sample size: <a href="../../../../assets/logistic_regression_6.webp">Logistic Regression</a></p>
+<p><img alt="Logistic Regression" src="../../../../assets/logistic_regression_6.webp" /></p>
+<p>The second time we took into consideration the sample size by weightning the square of the residuals with the sample size when computing the square sum of the residuals we want to minimize. This is equivalent to having 1 row in the regression for each men that was considered in the regression. We see that this also minimizes the sum of the square standard scores, meaning that the results are now closer to the reality that was observed in the field. As a side note, I tried computing the <code>Bs</code> by minimizing directly the sum of the square standard scores and the results were very close to the ones predicted by the logistic regression. <a href="../../../../assets/logistic_regression_7.webp">Weighted Logistic Regression</a></p>
+<p><img alt="Weighted Logistic Regression" src="../../../../assets/logistic_regression_7.webp" /></p>
 <p>Excel file <a href="(../assets/hypertensives.xlsx)">here</a></p>
 <h3 id="using-of-linear-regression-to-determe-the-coefficients-for-iris-dataset">Using of linear regression to determe the coefficients for Iris dataset</h3>
 <p>In order to use linear regression to determine the coefficients, the data needs to be binned, put in a form from which we can extract probabilities. For the Iris dataset, I did this with the following Python script:</p>
@@ -212,7 +212,7 @@
 </code></pre></div>
 
 <p>Summarized data looks like this: </p>
-<p><img alt="Summarized table" src="../../../../assets/logistic_regression_9.png" /></p>
+<p><img alt="Summarized table" src="../../../../assets/logistic_regression_9.webp" /></p>
 <p>The predictor rows contain the middle of the group range for that particular bin, which does not reflect the actual mean of the data inside the bin. This is highly sensitive to outliers and thus a bad choice. A better way would have been to first split each predictor in equal-sized groups, compute the median for each group, and then use this number as part of the index for each bin. </p>
 <p>When we compute the odds and log(odds) to use in the regression we notice 3 possible error scenarios:<br />
  - too little data in one bin - we remove that bin from the regression<br />
@@ -223,8 +223,8 @@
   - Assume that the string of 0s or 1s was a random extraction from the all possible extractiobs but that it had a rather high probability to occur (of 50% in this case, a value which seemed right to me :) ). Thus consider <code>p^bin_size = 0.5</code> and compute <code>p=EXP(LN(0.5) / bin_size)</code>.</p>
 <p>Excel file <a href="../../../../assets/iris_processed.xlsx">here</a></p>
 <p>Results for the regression at a <code>0.5</code> threshold were not as good as with direct maximization of the log-of-probabilities, but rasing the threshhold at <code>0.8</code> leads to perfect prediction. Picture below:</p>
-<p><img alt="Logistic regression" src="../../../../assets/logistic_regression_10.png" /></p>
-<p>And link here: <a href="../../../../assets/logistic_regression_10.png">Logistic regression</a></p>
+<p><img alt="Logistic regression" src="../../../../assets/logistic_regression_10.webp" /></p>
+<p>And link here: <a href="../../../../assets/logistic_regression_10.webp">Logistic regression</a></p>
 <h3 id="conclusions">Conclusions</h3>
 <p>We used logistic regression to build a clasifier on the Iris dataset and to predict the probability of a person having hypertension given a set of predictors. We used two ways to compute the regression coefficients: one by maximizing directly a probability function using the gradient descent, the other by applying linear regression to the log-odds function and then computing the probabilities from it. The third example was to process the Iris dataset used in the first regression and to compute the coefficients in a similar manner to that used for determining hypertensives.</p>
 <h3 id="additional-notes-decision-boundary">Additional notes - decision boundary</h3>

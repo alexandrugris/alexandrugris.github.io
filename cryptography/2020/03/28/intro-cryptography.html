@@ -227,14 +227,14 @@ and this property is preserved for modulo n as follows:
 </code></pre></div>
 
 <p>The most important function here is <code>powModulo</code>. We notice that it <code>base^x % modulo == 0</code>, the result of the power function will be <code>0</code> from that point on. So we need to avoid that. </p>
-<p><img alt="Example" src="../../../../assets/crypto_2.png" /></p>
+<p><img alt="Example" src="../../../../assets/crypto_2.webp" /></p>
 <p>Let's look at little bit at the results of <code>powModulo</code>:</p>
 <ul>
 <li>The function starts returning <code>1</code>.</li>
 <li>At each step, it returns a value between <code>0</code> and <code>n-1</code>. We want to avoid <code>0</code>s because, otherwise,from that point on, the function will always return <code>0</code>.</li>
 <li>The function loops through the same values once it returns <code>1</code> again. </li>
 </ul>
-<p><img alt="Example" src="../../../../assets/crypto_3.png" /></p>
+<p><img alt="Example" src="../../../../assets/crypto_3.webp" /></p>
 <p>What does it mean for someone who is listening to this conversation to guess our initial, hidden number? It means that he/she guesses a number <code>g</code> such that <code>INITIAL_BASE^g % n</code> is the observed number transmitted over the network. He/she can do this by substituting numbers from <code>1 ... n</code> in the formula and compare the result with the observed number. It is worth to notice that this <code>g</code> does not necessary need to be the number we initially thought of, but rather any value that satisfies the above condition will also satisfy <code>powModulo (othersRand[i], internalRandoms[i] == powModulo (othersRand[i], g[i]))</code>, which employed when generating the shared password.</p>
 <p>So let's crack our code:</p>
 <div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">test_diffieHellman</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span><span class="w">  </span>
@@ -285,7 +285,7 @@ and this property is preserved for modulo n as follows:
 <p>Since we want for someone in the middle to be as hard as possible to guess which was the initial hidden random number we started with, we want to force them to run through the longest number of trials and errors, thus we want the longest possible sequence of non-1s results, that is we want <code>1</code> to be reached again when <code>x==n-1</code>, while avoiding premature cycles. </p>
 <p><a href="https://en.wikipedia.org/wiki/Fermat%27s_little_theorem"><em>Fermat's Little Theorem</em></a> tells us that <code>INITIAL_BASE^(n-1) % n==1</code> when <code>n</code> is prime and <code>INITIAL_BASE</code> is not a multiple of <code>n</code>. </p>
 <p>Now, even if <code>(INITIAL_BASE^(n-1) mod n) == 1</code>, it might be that <code>1</code> is also reached for factors of <code>n-1</code>. For example, if we set <code>INITIAL_BASE = 3,  n = 23</code>, we have ones also for <code>11</code>. In practice, <code>INITIAL_BASE</code> can be a small number, good choices being <code>2, 3, 5, 7</code>.</p>
-<p><img alt="Example" src="../../../../assets/crypto_1.png" /></p>
+<p><img alt="Example" src="../../../../assets/crypto_1.webp" /></p>
 <p>This example demonstrate three points:</p>
 <ul>
 <li>Why we need to choose a large prime number for <code>n</code>, in our case the <code>COUNT</code> variable, usually selected as a prime <code>n=2*q+1</code>, where <a href="https://en.wikipedia.org/wiki/Sophie_Germain_prime">q is another large prime</a></li>

@@ -129,7 +129,7 @@
 </code></pre></div>
 
 <p>What we get is this:</p>
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_1.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_1.webp" /></p>
 <p>Disclaimer: I know that I am making an error here, because I am including in the source data set the same match that I am trying to predict, which leads to a circular relationship. In a production-ready analysis, at least this match should have been excluded from the source.</p>
 <p>The last 3 columns expand for further analysis the actual match result. These results look nice, but let's compare them to the Bet Brain HDA average index for these odds. There is quite a bit of a difference. A good place to start betting is to have a look at those odds which, in our model, are lower than the bookmaker's. Despite the margin embedded in them, the bookmaker's odds might still be skewed up by their risk management systems, so there is a chance we might find and edge.</p>
 <p>Here are the distribution of probabilities:</p>
@@ -138,7 +138,7 @@ plt.scatter(1/expected_goals[&#39;DOdds&#39;], 1/expected_goals[&#39;BbAvD&#39;]
 plt.scatter(1/expected_goals[&#39;AOdds&#39;], 1/expected_goals[&#39;BbAvA&#39;])
 </code></pre></div>
 
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_2.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_2.webp" /></p>
 <p>Doing linear regression between our values and the bookmakers values we get:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
 
@@ -161,7 +161,7 @@ plt.scatter(1/expected_goals[&#39;AOdds&#39;], 1/expected_goals[&#39;BbAvA&#39;]
             <span class="p">}</span> 
 </code></pre></div>
 
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_3.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_3.webp" /></p>
 <h3 id="conclusions-to-our-first-model">Conclusions To Our First Model</h3>
 <ul>
 <li>There is a strong correlation between our model and the bookmakers models.</li>
@@ -194,7 +194,7 @@ plt.scatter(1/expected_goals[&#39;AOdds&#39;], 1/expected_goals[&#39;BbAvA&#39;]
 <span class="n">atk_def_spread</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Home&#39;</span><span class="p">,</span> <span class="s1">&#39;Away&#39;</span><span class="p">,</span> <span class="s1">&#39;AtkH&#39;</span><span class="p">,</span> <span class="s1">&#39;DefH&#39;</span><span class="p">,</span> <span class="s1">&#39;AtkA&#39;</span><span class="p">,</span> <span class="s1">&#39;DefA&#39;</span><span class="p">,</span> <span class="s1">&#39;Spread&#39;</span><span class="p">]</span>
 </code></pre></div>
 
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_4.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_4.webp" /></p>
 <p>Second step is to do regression analysis. We have chosen as predictor variables the attack and defece strengths of our opponent teams.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">X_train</span> <span class="o">=</span> <span class="n">atk_def_spread</span><span class="p">[[</span><span class="s1">&#39;AtkH&#39;</span><span class="p">,</span> <span class="s1">&#39;DefH&#39;</span><span class="p">,</span> <span class="s1">&#39;AtkA&#39;</span><span class="p">,</span> <span class="s1">&#39;DefA&#39;</span><span class="p">]]</span>
 <span class="n">Y_train</span> <span class="o">=</span> <span class="n">atk_def_spread</span><span class="p">[[</span><span class="s1">&#39;Spread&#39;</span><span class="p">]]</span>
@@ -218,9 +218,9 @@ plt.scatter(1/expected_goals[&#39;AOdds&#39;], 1/expected_goals[&#39;BbAvA&#39;]
 <span class="nx">dtype</span><span class="p">:</span><span class="w"> </span><span class="nx">float64</span>
 </code></pre></div>
 
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_5.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_5.webp" /></p>
 <p>However, the results of the regression are a little bit counter intuitive:</p>
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_6.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_6.webp" /></p>
 <p>Now we are going to do the last step of this analysis and we are going to compute the odds of home draw away based on the residuals. We are going to use cumulative distribution function in this case which, by definition, is <code>p(A &lt;= x) = cdf(x)</code>. Since our distribution of residuals is normal, we will use the <code>norm.cdf</code> function.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">atk_def_spread</span><span class="p">[</span><span class="s1">&#39;Predicted Spread&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="c1"># for eyeballing our predicted spread</span>
 
@@ -230,10 +230,10 @@ plt.scatter(1/expected_goals[&#39;AOdds&#39;], 1/expected_goals[&#39;BbAvA&#39;]
 <span class="n">atk_def_spread</span><span class="p">[</span><span class="s1">&#39;Computed Home Prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
 </code></pre></div>
 
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_7.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_7.webp" /></p>
 <h3 id="comparing-new-odds-to-bookmakers-odds">Comparing New Odds to Bookmaker's Odds</h3>
 <p>The scatter plot: </p>
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_8.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_8.webp" /></p>
 <p>The regression parameters: </p>
 <ul>
 <li><code>'intercept': -0.021273267737595025</code></li>
@@ -275,7 +275,7 @@ Out[9]: 228.83717303756742
 
 <p>So, in theory, the bookmakers are able to predict with lesser accuracy the probability of winnings. However, we don't have much data to support the extreme event cases, thus I'd expect the bookmakers to have corrected for the lack of data.</p>
 <p>In the computation above I have not included the correction factors resulted from regression. When I introduce the factors manually, the results are impressively close:</p>
-<p><img alt="odds_models" src="../../../../assets/odds_and_models_9.png" /></p>
+<p><img alt="odds_models" src="../../../../assets/odds_and_models_9.webp" /></p>
   </div>
   <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../programming/2019/01/22/elixir.html">Elixir Intro</a></span><span><a href="../../../../programming/2019/09/04/realtime-architecture-with-apache-kafka.html">Streaming Architecture Using Apache Kafka And Redis</a> →</span></div>
 

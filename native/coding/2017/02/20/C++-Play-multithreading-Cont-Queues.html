@@ -516,20 +516,20 @@ but I will also skip some steps to keep the post meaningfully short.</p>
 </ul>
 <h3 id="conclusions">Conclusions:</h3>
 <p>In the following pictures I am only looking at the <code>get</code> function. Please note that the <code>put</code> has very similar characteristics.</p>
-<p><img alt="blocking_queue - release" src="../../../../../assets/queue_1.png" /></p>
+<p><img alt="blocking_queue - release" src="../../../../../assets/queue_1.webp" /></p>
 <p><em>Blocking queue with CRITICAL_SECTION synchronization in release mode</em> </p>
 <p>33.73% of CPU time (<code>get</code> function) spent in external code. Only 4% spent in own code, which includes the pushing / popping from the queue. <br />
 Together with a similar percentage in the <code>put</code> function, adds up to about 70% of the time our process in running it spends in code external to our app (mostly synchronization, to be seen below in the debug capture). <br />
 Also noticeable is that CPUs are used to about 70% of their capacity - here we run <code>CRITICAL_SECTION</code> syncrhronization, not the <code>std::mutex</code>.</p>
-<p><img alt="multi-queue - release" src="../../../../../assets/queue_2.png" /></p>
+<p><img alt="multi-queue - release" src="../../../../../assets/queue_2.webp" /></p>
 <p><em>Multi queue with CRITICAL_SECTION synchronization in release mode</em></p>
 <p>Looking at the same <code>get</code> function, only about 12% spent is spent in external code with 21% spent in own code. However, unlike the blocking queue, this 21% also includes active waiting while finding the queue to read to. A clearer breakdown in the debug trace.<br />
 We also notice a much better usage of the CPU, which stays at almost 100%. </p>
 <p>A direct comparison of the CPU time spent might be misleading though. We notice that on 10 million loops per thread, the <code>multi_blocking_queue</code> finishes in approx 25 seconds (on my 6 cores AMD Athlon FX) while the <code>blocking_queue</code> takes more than 1 minute and 35 seconds to finish.</p>
-<p><img alt="multi-queue - debug" src="../../../../../assets/queue_3.png" /></p>
+<p><img alt="multi-queue - debug" src="../../../../../assets/queue_3.webp" /></p>
 <p><em>Multi queue in debug</em></p>
 <p>In the <code>get</code> method, only around 6% spent in trying to actively obtain the lock on the thread. Most of the time, 26%, is spent in dequeuing from the underlying list. Real performance is measured on release, where the queue and all the own code is optimized by the compiler. The debug is just for hints on where the bottlenecks may occur. </p>
-<p><img alt="multi-queue - debug" src="../../../../../assets/queue_4.png" /></p>
+<p><img alt="multi-queue - debug" src="../../../../../assets/queue_4.webp" /></p>
 <p><em>Single queue in debug, with std::mutex</em></p>
 <p>Notice the CPU usage of 90+% and the large amount of time spent in trying to obtain the lock. From this measurement is clear that the <code>std::mutex</code> implementation does  more spinning before reaching to the kernel than the <code>CRITICAL_SECTION</code> implementation with the default spin count.</p>
 <p><em>In short:</em></p>
@@ -543,7 +543,7 @@ We also notice a much better usage of the CPU, which stays at almost 100%. </p>
 <li>Thread contention and locking, if not performed properly, can dramatically affect performance. However, I would advise incremental development: first a system that works correctly, then incrementally find ways to reduce locking while keeping the system running without crashes caused by race conditions, invalid data or deadlocks. </li>
 </ol>
   </div>
-  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../personal/2017/02/17/on-collaboration-again.html">On Collaboration - Again</a></span><span><a href="../../../../../web/development/2017/02/25/Docker-Containers---2.html">Docker And Containers Part 2</a> →</span></div>
+  <div class="post-nav" style="margin-top:30px;padding-top:20px;border-top:1px solid #d5d5d5;display:flex;justify-content:space-between;font-size:14px;"><span>← <a href="../../../../../web/development/2017/02/12/Docker-Containers.html">Docker And Containers</a></span><span><a href="../../../../../web/development/2017/02/25/Docker-Containers---2.html">Docker And Containers Part 2</a> →</span></div>
 
 </article>
   </div>

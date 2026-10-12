@@ -82,7 +82,7 @@
 </code></pre></div>
 
 <p><strong>Result:</strong></p>
-<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_1.png" /></p>
+<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_1.webp" /></p>
 <p>In order to draw the PDF, one needs to normalize the function so that its integral is 1 on the (-infinite,+infinite) interval - see the <code>pdf</code> function above. I kept the <code>pdf</code>, <code>cdf</code>, mean and <code>sigma</code> functions generic, so that they can be applied to any distribution, although for the Gaussian, pdf and cdf analytic formulas already exist. The integrals are computed incrementally, thus errors tend to accumulate. For precise results or for production code analytic formulas should be preferred (if they exist).</p>
 <p>Now, let's compute a random variable distributed according to a specific probability density function.</p>
 <p>Using the functions cdf and pdf from above, I will generate a set a randomly distributed numbers based on the power law distribution. First part generates the numbers. <code>func</code> - the function, <code>pdf_func</code> - probability density of func and <code>cdf_func</code> the cumulative distribution - please note that <code>cdf(func)</code> and <code>cdf(pdf(func))</code> produce similar results because <code>cdf</code> has normalization embedded.</p>
@@ -99,7 +99,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">cdf</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
 </code></pre></div>
 
-<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_2.png" /></p>
+<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_2.webp" /></p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rand_cdf</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">cdf_arr</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">inv_cdf</span><span class="p">(</span><span class="n">cdf_arr</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
@@ -129,9 +129,9 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_distributed_arr</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_3.png" /></p>
+<p><img alt="PDF, CDF" src="../../../../../assets/ml_2_3.webp" /></p>
 <p>The <code>rand_cdf</code> takes as parameters two arrays - a uniform randomly distributed array with values between 0 and 1 and the CDF of the function I want my resulting random numbers to be distributed on. Then it computes the inverse of the CDF and uses the random numbers as indices in this array. Please see the CDF^(-1) below:</p>
-<p><img alt="Inverse CDF" src="../../../../../assets/ml_2_4.png" /></p>
+<p><img alt="Inverse CDF" src="../../../../../assets/ml_2_4.webp" /></p>
 <p>As one can notice, x axis is between (0,1) and y axis between (0, 1000), where 1000 is the size of the random number array. In plain English, it basically reads: "for any number received as parameter between 0 and 0.8, I will output a very small number. For any number higher than 0.8, I will output a larger number.". As my input is uniformly distributed between (0,1), The probability of outputting a smaller number is much higher than outputting a larger number. How much larger? It is precisely based on the CDF received as input. </p>
 <h3 id="entropy-and-gini-index">Entropy and Gini index</h3>
 <p><a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">Entropy</a></p>
@@ -201,7 +201,7 @@ probability p = 1/m  = -Sum(1/p <span class="gs">* log(p)) = -p *</span> (1/p) *
 </code></pre></div>
 
 <p>With the output:</p>
-<p><img alt="Entropy" src="../../../../../assets/ml_2_5.png" /></p>
+<p><img alt="Entropy" src="../../../../../assets/ml_2_5.webp" /></p>
 <p><a href="https://en.wikipedia.org/wiki/Gini_coefficient">Gini index</a> </p>
 <p>Gini index is referred also as categorical variance. It was initially introduced to "represent the income or wealth distribution of a nation's residents, and is the most commonly used measure of inequality." [Wikipedia]. We define it as a measurement for the average level of error for the method of the proportional classifier (proportional clasifier: given a feature which appears with a frequency f, its probability equals its frequency). </p>
 <p>E.g., consider a category with frequency <code>p = 20%</code>, the average error is <code>p*(1-p) = 20% * 80% = 16%</code>. <code>Gmax = (m-1) / m</code> and is obtained for a uniform distribution. <code>G = sum( p_i * (1 - p_i)</code> ).</p>
@@ -228,7 +228,7 @@ probability p = 1/m  = -Sum(1/p <span class="gs">* log(p)) = -p *</span> (1/p) *
 </code></pre></div>
 
 <p>Evolution of Gini index (G) for a set of probabilities (p, 1-p):</p>
-<p><img alt="Gini Index" src="../../../../../assets/ml_2_6.png" /></p>
+<p><img alt="Gini Index" src="../../../../../assets/ml_2_6.webp" /></p>
 <p>Mean, median, entropy index (H) and Gini index (G) are different aggregate indices (summaries) for a distribution. Because our sample size is not large enough, they are subject to measurement errors. If we want to understand a little bit better how much error our computed index on the sample data hides, we can compute its distribution (its mean and its stddev). For instance, if we take the mean as the parameter we want to investigate, we obtain the mean of the mean and the stddev of mean. But any other index can be considered. Two outstanding methods are bootstrapping and K-fold cross validation.</p>
 <h3 id="bootstrapping">Bootstrapping</h3>
 <p>Bootstrapping is a resampling method which works like this:</p>
@@ -248,7 +248,7 @@ probability p = 1/m  = -Sum(1/p <span class="gs">* log(p)) = -p *</span> (1/p) *
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rand_powerlaw_arr</span><span class="p">)</span> <span class="c1"># just check the distribution is power-law-ish</span>
 </code></pre></div>
 
-<p><img alt="First distribution" src="../../../../../assets/ml_2_7.png" /></p>
+<p><img alt="First distribution" src="../../../../../assets/ml_2_7.webp" /></p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># prepare space for mean for 500 trials</span>
 <span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
 
@@ -266,7 +266,7 @@ probability p = 1/m  = -Sum(1/p <span class="gs">* log(p)) = -p *</span> (1/p) *
 </code></pre></div>
 
 <p>And the output - shows the distribution of the mean is Gaussian:</p>
-<p><img alt="First distribution" src="../../../../../assets/ml_2_8.png" /></p>
+<p><img alt="First distribution" src="../../../../../assets/ml_2_8.webp" /></p>
 <div class="codehilite"><pre><span></span><code>Mean of distribution: 0.1402, Mean boostrapped: 0.1408, Stddev mean bootstrapped 0.0346 
 </code></pre></div>
 

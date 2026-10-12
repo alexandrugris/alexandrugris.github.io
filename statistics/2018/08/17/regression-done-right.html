@@ -78,9 +78,9 @@
 <li>R^2 is high enough, but not too high. An R^2 higher than 90% almost surely means that the lag 1 autocorrelation is too high and we need to revise the model</li>
 <li>And then we inspect the distribution of residuals vs X. Should be highly uncorrelated.</li>
 </ul>
-<p><img alt="Residuals vs X" src="../../../../assets/regression_1.png" /></p>
+<p><img alt="Residuals vs X" src="../../../../assets/regression_1.webp" /></p>
 <p>and the regression line</p>
-<p><img alt="Regression Line" src="../../../../assets/regression_2.png" /></p>
+<p><img alt="Regression Line" src="../../../../assets/regression_2.webp" /></p>
 <h3 id="a-not-so-good-regression-example">A not so good regression example</h3>
 <p>Let's consider now the same X as before, but this time Y defined in a square relationship to Y. We apply the regression steps described before and we obtain:</p>
 <ul>
@@ -89,9 +89,9 @@
 <li><code>Lag 1 autocorrelation = 0.16</code> - low, but is low from a mistake. <em>We should have sorted by X the data series before to see the real correlation.</em></li>
 </ul>
 <p>When we inspect the scatter plot of residuals vs X we see a pattern where should be none:</p>
-<p><img alt="Residuals vs X" src="../../../../assets/regression_3.png" /></p>
+<p><img alt="Residuals vs X" src="../../../../assets/regression_3.webp" /></p>
 <p>And the regression line showing also that the linear relationship does not properly capture the data:</p>
-<p><img alt="Regression Line" src="../../../../assets/regression_4.png" /></p>
+<p><img alt="Regression Line" src="../../../../assets/regression_4.webp" /></p>
 <h3 id="improving-the-regression">Improving the regression</h3>
 <p>When we have a series that has an underlying pattern, we need to deflate the series in order to bring the residuals as close as possible to their desired properties. Usually, a series that has an underlying pattern exhibits large variations towards its ends. Examples of such series is price evolution of stocks which need to be deflated by the inflation, prices vs demand, any time series as they usually tend to follow either periodic patterns or exhibit some kind of growth or both. If we don't want to (or can't) find such underlying patterns, the most simple general method of deflating the series with good results is switching to percentage returns. These can be calculated by one of the following formulas:</p>
 <ul>
@@ -99,7 +99,7 @@
 <li><code>%return(t) = (value(t) - value(t-1)) / value(t-1)</code></li>
 </ul>
 <p>For small variations, up to 20%, the two formulas give almost identical results due to the mathematical properties of the natural logarithm. For higher variation, the logarithm shows excessive dampening of the values. See the chart below for <code>%returns</code> for a series computed through both methods.</p>
-<p><img alt="Percentage returns ln vs difference" src="../../../../assets/regression_5.png" /></p>
+<p><img alt="Percentage returns ln vs difference" src="../../../../assets/regression_5.webp" /></p>
 <p>Better than mine explanations <a href="http://people.duke.edu/~rnau/411log.htm">here</a>:</p>
 <blockquote>
 <p>Logging a series often has an effect very similar to deflating: it straightens out exponential growth patterns and reduces heteroscedasticity (i.e., stabilizes variance).<br />
@@ -127,18 +127,18 @@ Thus, when X is increased by 5%, i.e., multiplied by a factor of <code>1.05</cod
 <li>If the residuals exhibit the desired properties, compute Y as regression from X (undo the transformations). Please note that since the regression was based on increases, the whole process now is integrative, depending on the previous value. Therefore, the errors tend to accumulate the more periods we aim to forecast but also due to the high amplitude of the exponential transform. <code>Y-regressed(t) = EXP(y' + LN(y(t-1)))</code></li>
 <li>Finally inspect the residuals of the full regression</li>
 </ol>
-<p><img alt="All computation" src="../../../../assets/regression_6.png" /></p>
+<p><img alt="All computation" src="../../../../assets/regression_6.webp" /></p>
 <p>Results inspection:</p>
 <p>Low <code>R^2</code>, lag 1 autocorrelation of only <code>0.08</code>, highly independent of X, seem rather normally distributed:</p>
-<p><img alt="Log residuals" src="../../../../assets/regression_7.png" /></p>
+<p><img alt="Log residuals" src="../../../../assets/regression_7.webp" /></p>
 <p>Reverting to initial scale (before the percentage returns transformation), residuals show a tendency to accumulate errors towards the right extreme.</p>
-<p><img alt="Final residuals" src="../../../../assets/regression_11.png" /></p>
+<p><img alt="Final residuals" src="../../../../assets/regression_11.webp" /></p>
 <p>Plots of originally observed Y vs X and regressed Y vs X show good capture of the fundamental <code>X^2</code> coefficient as well as a good fit:</p>
-<p><img alt="Observed data" src="../../../../assets/regression_8.png" /></p>
+<p><img alt="Observed data" src="../../../../assets/regression_8.webp" /></p>
 <p>and</p>
-<p><img alt="Regressed data" src="../../../../assets/regression_10.png" /></p>
+<p><img alt="Regressed data" src="../../../../assets/regression_10.webp" /></p>
 <p>And finally, observed Y vs Y regressed show a strong linear relatinon of slope almost 1, but with visibly increasing errors towards the right extreme:</p>
-<p><img alt="Y observed vs Y regressed" src="../../../../assets/regression_9.png" /></p>
+<p><img alt="Y observed vs Y regressed" src="../../../../assets/regression_9.webp" /></p>
 <h3 id="conclusions-simple-linear-regression">Conclusions - simple linear regression</h3>
 <ol>
 <li>Residuals <em>must</em> be inspected in order to make sure the regression is correct and captures the underlying movement of data.</li>
@@ -262,12 +262,12 @@ Basically, the f-test compares your model with zero predictor variables (the int
 <p>I have generated some data to create a regression model <a href="../../../../assets/task-data.xlsx">here</a>. The data assumes a team of 3 people working on a software module, with 3 types of tasks: front-end, backend and data. As time passes, the complexity of the code base increase thus also estimations tend to increase. The data includes a measure for code complexity, the type of task, initial estimation given by each developer, which developer worked on each task (there is an affinity for developers for task types, but not 100%) and what was the final duration. We want a model which aims to predict the final duration of a new task.</p>
 <p>The data is chosen in such a way that it presents multicollinearity and categorical components.</p>
 <p>First step is to see if maybe a simple regression based on the average estimation given by developers is enough. We notice than, while the trend in task duration correlates with both average estimation and the code complexity, neither are good predictors - rather low R^2 in both cases as well as two divergent trends in the first chart. Both elements hint towards more factors needed to be included in the regression.</p>
-<p><img alt="Exploratory analysis - regression against one variable" src="../../../../assets/regression_12.png" /></p>
+<p><img alt="Exploratory analysis - regression against one variable" src="../../../../assets/regression_12.webp" /></p>
 <p>A second step, which we will skip now, is to analyse the duration based solely on time. If we were to do this, we would have to switch to percentage returns to remove the trendiness in data, as explained in a previous section.</p>
 <p>The third step is to analyse muticollinearity. When we start scatter-plotting one variable against the other, we notice very strong correlations - note that, for estimations, they are from the start based on Fibonnaci numbers, thus the several parallel lines instead of a cloud of points.</p>
-<p><img alt="Exploratory analysis - multicollinearity" src="../../../../assets/regression_13.png" /></p>
+<p><img alt="Exploratory analysis - multicollinearity" src="../../../../assets/regression_13.webp" /></p>
 <p>From the multicollinear variables, seems the "Average Estimation" explains the best the variation in duration, thus we will keep it and discard the rest.</p>
-<p><img alt="Exploratory analysis - select one variable out of several" src="../../../../assets/regression_14.png" /></p>
+<p><img alt="Exploratory analysis - select one variable out of several" src="../../../../assets/regression_14.webp" /></p>
 <p>After doing our analysis, we will take into consideration the following factors:<br />
 - Backend task<br />
 - Frontend task<br />
@@ -379,7 +379,7 @@ Basically, the f-test compares your model with zero predictor variables (the int
 </code></pre></div>
 
 <p>With the following results:</p>
-<p><img alt="Regression analysis" src="../../../../assets/regression_15.png" /></p>
+<p><img alt="Regression analysis" src="../../../../assets/regression_15.webp" /></p>
 <p>It is obvious that except some outliers the residuals are quite normally distributed. However, they have a trend upwards which should be investigated.</p>
 <p>It also is quite obvious that the results of the regression are not far from the observed data. This is numerically highlighted also by the rather high R^2 and adjusted R^2.</p>
 <p>Coefficients are a little bit strange though: <code>17.674954 -0.244873 -1.934692  0.933654  0.383172 -0.031911 -1.19284</code>. A high intercept and a negative correlation with the number of incidents. The number of incidents is selected to be Poisson distributed with a mean of 5, no matter the code complexity. This, together with a high margin of error in the way the Inverse Poisson  was computed in Excel which leads to a predisposition towards lower numbers, might be interpreted as "as the code complexity increases, the team becomes less confident in its ability, but still finishes faster than their too pessimistic estimates". The extra average added by the incidents is included in the intercept, while the predisposition for lower numbers is included in the negative factor for the incidents.</p>

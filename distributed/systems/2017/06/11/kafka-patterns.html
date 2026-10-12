@@ -114,14 +114,14 @@ The source code associated with this article can be found <a href="https://githu
 <div class="codehilite"><pre><span></span><code>docker exec -it testkafka_kafka_2 bash
 </code></pre></div>
 
-<p><img alt="Kafka Connection" src="../../../../../assets/kafka_1.png" /></p>
+<p><img alt="Kafka Connection" src="../../../../../assets/kafka_1.webp" /></p>
 <p>However, if JMX is still specified, the <code>JMX_PORT</code> is already set and in use by the Kafka daemon, so in order to run commands to Kafka we need to make a little hack:</p>
 <div class="codehilite"><pre><span></span><code>$&gt;JMX_PORT=1100
 $&gt;KAFKA_JMX_OPTS=&quot;&quot;
 </code></pre></div>
 
 <p>Then we can play:</p>
-<p><img alt="Kafka Commands" src="../../../../../assets/kafka_2.png" /></p>
+<p><img alt="Kafka Commands" src="../../../../../assets/kafka_2.webp" /></p>
 <p>To produce messages to <code>my_topic</code>:</p>
 <div class="codehilite"><pre><span></span><code>bash-4.3# ./kafka-console-producer.sh --topic my_topic --broker-list testkafka_kafka_1:9092
 </code></pre></div>
@@ -157,7 +157,7 @@ $&gt;KAFKA_JMX_OPTS=&quot;&quot;
 </ul>
 <p>Replication factor is set on a topic level, thus can vary from topic to topic but not from partition to partition.</p>
 <p>When we connect to both docker instances that we started in our demo cluster, because we set for topic <code>my_topic</code> 2 partitions and replication factor 2, we see the same picture:</p>
-<p><img alt="One topic, 2 partitions, replication factor 2" src="../../../../../assets/kafka_3.png" /></p>
+<p><img alt="One topic, 2 partitions, replication factor 2" src="../../../../../assets/kafka_3.webp" /></p>
 <p>In the image above, <code>ISR</code> means in-sync replicas. If we decide to kill one docker container, we get:</p>
 <p><code>bash-4.3# /opt/kafka/bin/kafka-topics.sh --describe my_topic --zookeeper zookeeper:2181
 Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
@@ -231,15 +231,15 @@ Topic:my_topic  PartitionCount:2        ReplicationFactor:2     Configs:
 
 <p>And some screenshots:</p>
 <p><em>Debugger Configuration in Idea</em></p>
-<p><img alt="Debugger Config Idea" src="../../../../../assets/kafka_4.png" /></p>
+<p><img alt="Debugger Config Idea" src="../../../../../assets/kafka_4.webp" /></p>
 <p><em>Breakpoint in remote debugging config</em><br />
-<img alt="Debugger Breakpoint" src="../../../../../assets/kafka_5.png" /></p>
+<img alt="Debugger Breakpoint" src="../../../../../assets/kafka_5.webp" /></p>
 <p><em>Cluster up, with bash started on app node</em><br />
-<img alt="Cluster" src="../../../../../assets/kafka_6.png" /></p>
+<img alt="Cluster" src="../../../../../assets/kafka_6.webp" /></p>
 <p><em>Produced messages in the queue</em><br />
-<img alt="Messages" src="../../../../../assets/kafka_7.png" /></p>
+<img alt="Messages" src="../../../../../assets/kafka_7.webp" /></p>
 <p><em>New topic created, ballanced, with 5 partitions and 2 replicas</em></p>
-<p><img alt="Messages" src="../../../../../assets/kafka_8.png" /></p>
+<p><img alt="Messages" src="../../../../../assets/kafka_8.webp" /></p>
 <h3 id="partitioning-and-producing-messages">Partitioning and producing messages</h3>
 <p>Kafka has a simple yet powerful method for selecting to which partition the message is routed at the time of producing. The topic with its associated partitions is created either automatically when the producer is first run, like it is the case in our demo, or using the <code>kafka-topics.sh</code> tool. This behavior is configured through a setting in the <code>config.settings</code> file when the queue is started.</p>
 <p>The algorithm for routing to partitions goes as follows:</p>
@@ -320,7 +320,7 @@ The producer manages a single background thread that does I/O as well as a TCP c
 <div class="codehilite"><pre><span></span><code>$&gt;/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic alexandrugris.my_topic --partition 0 --from-beginning
 </code></pre></div>
 
-<p><img alt="Messages" src="../../../../../assets/kafka_9.png" /></p>
+<p><img alt="Messages" src="../../../../../assets/kafka_9.webp" /></p>
 <h3 id="consuming-messages">Consuming messages</h3>
 <p><em>Basic notions:</em></p>
 <ul>
@@ -382,7 +382,7 @@ The producer manages a single background thread that does I/O as well as a TCP c
 <span class="c1">// consumer.assign(topicPatterns.stream().map( TopicPattern::getPartition).collect(Collectors.toList()));</span>
 </code></pre></div>
 
-<p><img alt="With subscribe not assign" src="../../../../../assets/kafka_10.png" /></p>
+<p><img alt="With subscribe not assign" src="../../../../../assets/kafka_10.webp" /></p>
 <h3 id="topics-not-covered">Topics not covered:</h3>
 <p><em>Kafka Schema Registry:</em> - Avro schema registry and serializers<br />
  - <a href="https://www.confluent.io/blog/schema-registry-kafka-stream-processing-yes-virginia-you-really-need-one/">https://www.confluent.io/blog/schema-registry-kafka-stream-processing-yes-virginia-you-really-need-one/</a><br />
